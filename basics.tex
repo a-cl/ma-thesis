@@ -4,36 +4,38 @@ TODO
 
 \section{Verfahren der Bilderanalyse}
 
-TODO
+Intro
 
-\subsection{Gradienten und Histogramme}
 
-TODO
+Es muss berücksichtigt werden, dass sich ähnliche Bilder in vielen Punkten unterscheiden, die die Suche nicht beeinflussen soll. So muss die Helligkeit und Perspektive normalisiert werden, damit diese nicht negativ die Distanz beeinflussen. 
 
-\subsection{Singulärwertzerlegung}
+Aus den Bildern sollen nur die markanten, ein Bild identifizierende Eigenschaften gefunden und gespeichert werden. Dies wird durch die \textit{intereset point detection} Methode erreicht. Aus dieser Menge an \textit{intereset points} werden dann die Deskriptoren gebildet. Ein Deskriptor einhält die \textit{intereset points}, die zusammen ein markantes Merkmal bilden. Auf Basis dieser Deskriptoren findet dann der Vergleich der Bilder statt. 
 
-TODO
+Die lokalen Features müssen einige Eigenschaften aufweisen, um für einen Vergleich brauchbar zu sein. So kann es vorkommen, dass Bilder auf denen das gleiche Objekt abgebildet ist, aus verschiedenen Perspektiven aufgenommen wurden. 
 
-\subsection{Hauptkomponentenanalyse}
+- Globale vs Lokale Features (robust, effizient, eindeutig, viele)
 
-TODO
-
-\section{Gruppierung von Merkmalen}
-
-TODO
-
-\subsection{Bag of Visual Words}
-
-TODO
+- Detektoren 
+	- Single scale (Hessian, FAST, Harris, SUSAN)
+	- multi scale (Difference of Gaussian, Laplacian of Gaussian, Harris-Laplace, ...)
+	
+- Image Feature Descriptors 
+	- Scale Invariant Feature Transform	(SIFT)
+	- Local Binary Pattern (LBP)
+	- Gradient Location-Orientation Histogram (GLOH)
+	
+- Matching
 
 \subsection{K-Means Clustering}
+
+Um die gefundenen \textit{intereset points} in Gruppen zusammen zu fassen in denen nach Merkmalen gesucht wird, wird das k-Means Clustering Verfahren verwendet. Das k steht hierbei für die Anzahl der zu bildenden Cluster und kann variiert werden, um verschiedene Features zu finden. Die initialen Mittelpunkte der Cluster, die Centroids, können hierbei durch verschiedene Verfahren gewählt werden,  z.B. zufällig oder möglichst weit entfernt voneinander. Der Algorithmus weist nun jedem Punkt einen Cluster zu bis alle Punkte einem Cluster angehören. In jeder Iteration wird die Distanz von jedem Punkt zu jedem Centroiden eines Clusters gemessen. Anschließend wird der Punkt des Paares mit der geringsten Distanz dem entsprechenden Cluster zugewiesen. Diese Bedingungen können beispielsweise durch eine Beschränkung des Radius, der Fläche, ö.Ä. erweitert werden, um verschiedenen Problemen gerecht zu werden.
 
 TODO
 Zitat hier \cite{rum2011}
 
 \section{Maschinelles Lernen}
 
-TODO
+Maschinelles Lernen erlebt seit einigen Jahren einen enormen Aufschwung. Verantwortlich sind hier vor allem die anhaltenden Leistungssteigerungen der Hardware. Dies ermöglicht die Umsetzung und weitere Erforschung vieler Konzepte, die teilweise seit den 50er Jahren existieren, bisher aber zu resourcenfordernd waren. Der Begriffe Maschinelles Lernen summiert hier mehrere Teilbereiche, die unterschiedliche praktische Anwendung finden.
 
 \subsection{Active und Transductive Learning}
 
@@ -41,16 +43,42 @@ TODO
 
 \subsection{Neuronale Netze}
 
-TODO
+Die Konzepte neuronaler Netzen (NN) orientieren sich an der Funktionsweise des Gehirns. Dieses Gebiet wieder bereits theoretisch in den 1940er Jahren begründet und findet seit den 80er Jahren praktische Anwendung. Ein künstliches neuronales Netz (KNN, englisch: artifical neural net, ANN) simuliert die grobe Funktionsweise des Gehirns, bildet aber bei nicht alle Details ab. Für die Berechnung ist vor allem interessant, das solche Netze hoch parallelisierbar sind und weniger sich strikt an das biologische Vorbild zu halten. Bei der Modellierung von NN werden die Neuronen in Schichten (layers) zusammengefasst. Der \textit{InputLayer} besteht aus den Neuronen, welche die Eingangssignale nur an die nächste Ebene weitergeben. Der Outputlayer umfasst die Neuronen, die das Ergebnis enthalten. Zwischen diesen Ebenen liegen liegen beliebig viele \textit{HiddenLayer}. Diese sind nach außen nicht sichtbar und werden trainiert. Die Neuronen zweier Schichten sind durch gewichtete Kanten verbunden. Erreicht ein Neuron $j$ eine Eingabe $net_{j}(t)$, wird zunächst durch die Aktivierungsfunktion $f_{act}$ bestimmt ob es aktiviert wird. Das Eingangssignal selbst berechnet sich, außer im Inputlayer, durch die Propagierungsfunktion $net_{j}(t)$. Als Standard dient hier die Summe der Ausgaben der vorigen Neuronen unter Berücksichtigung des Gewichts der Verbindung: 
+
+$$net_{j}(t) = \sum_{n=0}^N out_{i}(t)w_{i, j}$$
+
+Durch $w_{n, m} \in [0, 1] $ wird hier das Gewicht der Verbindung von Neuron $i$ nach Neuron $j$ bezeichnet. Die Funktion $out_{i}$ berechnet die Ausgabe des vorigen Neurons. Die Aktivierungsfunktion kann problemabhängig gewählt werden, häufig verwendet werden hier die Identitäts-, Schwellwert-, logistische und tangens hyperbolicus Funktion verwendet. 
+
+\begin{enumerate}
+	\item Wertebereiche
+	\item Beispiel
+	\item Backpropagation / Lernregel
+	\item Gradientenverfahren / Fehlerfunktion
+\end{enumerate}
+
+\cite{zs1997}
 
 \subsection{Autoencoder}
 
-TODO
+Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass die Identitätsfunktion lernen soll. AE dienen der Reduzierung der Dimensionen eines Features und können unbeaufsichtigt lernen. Um das Original als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Inputlayers} der Anzahl der Neuronen im \textit{Outputlayer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Layer zu Layer ab um die Anzahl der Dimensionen weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus den komprimierten Feature Ebene für Ebene zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten.
+
+\begin{enumerate}
+	\item Grafik 1 + 5 Layer (Encode / Decode)
+	\item Backpropagation / Lernregel
+\end{enumerate}
 
 \section{GPGPU Programmierung}
 
-TODO
+General Programming on Graphics Processing Units (GPGPU) ist ein Verfahren um die massive Parallelität von Grafikkarten zur Berechnung allgemeiner mathematischer Probleme zu nutzen. Um die Parallelität der Grafikkarte effizient Nutzen zu können, muss das Problem als Matrix vorliegen. Da Alle Kerne eine GPU pro Takt dieselbe Operation ausführen, muss auf Verzweigung möglichst verzichtet werden: Je mehr Kerne  in einem Takt keine Operation ausführen, desto mehr nährt sich die Ausführungsgeschwindigkeit einer seriellen Ausführung an.
 
-\subsection{NVidia cuda}
+\subsection{Nvidia cuda}
+
+Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in der cuda Sprache geschrieben sein. Hierbei handelt es sich um eine Erweiterung von C um primitive und Funktionen für Berechnungen auf der Grafikkarte. Die Hauptfunktion wird als Kernel bezeichnet und wird durch das Schlüsselwort \textit{\textunderscore\textunderscore kernel\textunderscore\textunderscore} identifiziert. Zunächst wird Speicher auf der Grafikkarte entsprechend der Größe der Matritzen allokiert. Nachdem die Daten von Host zur Grafikkarte (Device) kopiert wurden, kann die Berechnung gestartet werden. Nach Durchführung oder zwischen Berechnungen kann dann das Ergebnis zurück zum Host kopiert werden. Diese Operationen weisen, vor allem bei großen Datenmengen, eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten möglichst nur selten erfolgen.
+
+\begin{enumerate}
+	\item Grids, Blocks, Threads
+	\item Optimierungen (?)
+	\item cuda Beispiel
+\end{enumerate}
 
 \subsection{Frameworks}
