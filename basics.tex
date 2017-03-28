@@ -1,79 +1,164 @@
 \chapter{Grundlagen}
 
-TODO
+IMAGES
 
-\section{Verfahren der Bilderanalyse}
+Im Grundlagenkapitel wird zunächst erläutert an welchen Eigenschaften der Bilder wir interessiert sind, den sogenannten Features. 
 
-Intro
+DETECTION / EXTRACTION
+
+Im Bereich der Computer Vision gibt es zahlreiche Detektoren, die sich zur Erkennung verschiedener Features eignen. Anschließend werden verschiedene Verfahren der Feature Extraktion vorgestellt, um die Daten für den Lernalgorithmus zu gewinnen. 
+
+REDUCTION
+
+Als Lernalgorithmus wird hier ein Autoencoder verwendet, eine spezielle Art des neuronalen Netzes. Ein Autoencoder reduziert die Dimensionen eines Features, sodass eine kompaktere Darstellung für den Vergleich resultiert.
+
+GPU
+
+Um die Parallelität neuronaler Netze weiter auszunutzen, soll die Ausführung durch eine GPU erfolgen. Hierfür wird aus dem Bereich des GPGPU Programming die Sprache cuda von Nvidia  
 
 
-Es muss berücksichtigt werden, dass sich ähnliche Bilder in vielen Punkten unterscheiden, die die Suche nicht beeinflussen soll. So muss die Helligkeit und Perspektive normalisiert werden, damit diese nicht negativ die Distanz beeinflussen. 
+\section{Bilder und Features}
 
-Aus den Bildern sollen nur die markanten, ein Bild identifizierende Eigenschaften gefunden und gespeichert werden. Dies wird durch die \textit{intereset point detection} Methode erreicht. Aus dieser Menge an \textit{intereset points} werden dann die Deskriptoren gebildet. Ein Deskriptor einhält die \textit{intereset points}, die zusammen ein markantes Merkmal bilden. Auf Basis dieser Deskriptoren findet dann der Vergleich der Bilder statt. 
+In Bild kann auf viele Weisen dargestellt werden. Eine sehr intuitive Darstellung ist das Bild als Matrix. Diese Form eignet sich aber nur sehr eingeschränkt, wenn Bilder anhand von allgemeinen Merkmalen verglichen werden sollen. Ist so zum Beispiel auf zwei Bildern dasselbe Fahrzeug zu erkennen aber aus zwei verschiedenen Perspektiven und in anderen Lichtverhältnissen, so soll dies vom Programm erkannt werden. Zu diesem Zweck werden die Charakteristika, die sogenannten Features, in dem Bild gesucht. Bei einem Feature handelt es sich dabei um einen Vektor. Dieser enthält die Punkte des Bildes, die ihn charakterisieren. Er kann somit einen Punkt, eine Kurve oder eine Region darstellen. Es hat sich dabei aus vielen Gründen bewährt lokale Features globalen vorzuziehen, u. a. da sie um ein vielfaches schneller zu berechnen sind [ref]. Lokale Verfahren haben jedoch den Nachteil, dass sie oft mehr Speicher benötigen: Ein Bild kann eine beliebig große Anzahl Features enthalten. Aus diesem Grund ist es notwendig die einzelnen Feature Vektoren kompakt darzustellen. Eine Reduzierung der Dimensionen der Feature Vektoren kann durch verschiedene Verfahren erreicht werden, siehe Kapitel [REF].
 
-Die lokalen Features müssen einige Eigenschaften aufweisen, um für einen Vergleich brauchbar zu sein. So kann es vorkommen, dass Bilder auf denen das gleiche Objekt abgebildet ist, aus verschiedenen Perspektiven aufgenommen wurden. 
+Ein Feature eines Bildes kann unterschiedlichen Typs sein.
 
-- Globale vs Lokale Features (robust, effizient, eindeutig, viele)
+Der Bereich Feature Detektoren beschäftigt sich zunächst mit verschiedenen Algorithmen zum Auffinden von \textit{interest points}, den Punkten im Bild die ein Feature bilden können. 
+Durch die Feature Extraktion werden aus den \textit{intereset points} die Deskriptoren des Bildes abgeleitet. Auf Basis dieser Deskriptoren kann ein effizienter Vergleich der Bilder umgesetzt.
 
-- Detektoren 
-	- Single scale (Hessian, FAST, Harris, SUSAN)
-	- multi scale (Difference of Gaussian, Laplacian of Gaussian, Harris-Laplace, ...)
-	
-- Image Feature Descriptors 
-	- Scale Invariant Feature Transform	(SIFT)
-	- Local Binary Pattern (LBP)
-	- Gradient Location-Orientation Histogram (GLOH)
-	
-- Matching
-
-\subsection{K-Means Clustering}
-
-Um die gefundenen \textit{intereset points} in Gruppen zusammen zu fassen in denen nach Merkmalen gesucht wird, wird das k-Means Clustering Verfahren verwendet. Das k steht hierbei für die Anzahl der zu bildenden Cluster und kann variiert werden, um verschiedene Features zu finden. Die initialen Mittelpunkte der Cluster, die Centroids, können hierbei durch verschiedene Verfahren gewählt werden,  z.B. zufällig oder möglichst weit entfernt voneinander. Der Algorithmus weist nun jedem Punkt einen Cluster zu bis alle Punkte einem Cluster angehören. In jeder Iteration wird die Distanz von jedem Punkt zu jedem Centroiden eines Clusters gemessen. Anschließend wird der Punkt des Paares mit der geringsten Distanz dem entsprechenden Cluster zugewiesen. Diese Bedingungen können beispielsweise durch eine Beschränkung des Radius, der Fläche, ö.Ä. erweitert werden, um verschiedenen Problemen gerecht zu werden.
-
-TODO
-Zitat hier \cite{rum2011}
-
-\section{Maschinelles Lernen}
-
-Maschinelles Lernen erlebt seit einigen Jahren einen enormen Aufschwung. Verantwortlich sind hier vor allem die anhaltenden Leistungssteigerungen der Hardware. Dies ermöglicht die Umsetzung und weitere Erforschung vieler Konzepte, die teilweise seit den 50er Jahren existieren, bisher aber zu resourcenfordernd waren. Der Begriffe Maschinelles Lernen summiert hier mehrere Teilbereiche, die unterschiedliche praktische Anwendung finden.
-
-\subsection{Active und Transductive Learning}
-
-TODO
-
-\subsection{Neuronale Netze}
-
-Die Konzepte neuronaler Netzen (NN) orientieren sich an der Funktionsweise des Gehirns. Dieses Gebiet wieder bereits theoretisch in den 1940er Jahren begründet und findet seit den 80er Jahren praktische Anwendung. Ein künstliches neuronales Netz (KNN, englisch: artifical neural net, ANN) simuliert die grobe Funktionsweise des Gehirns, bildet aber bei nicht alle Details ab. Für die Berechnung ist vor allem interessant, das solche Netze hoch parallelisierbar sind und weniger sich strikt an das biologische Vorbild zu halten. Bei der Modellierung von NN werden die Neuronen in Schichten (layers) zusammengefasst. Der \textit{InputLayer} besteht aus den Neuronen, welche die Eingangssignale nur an die nächste Ebene weitergeben. Der Outputlayer umfasst die Neuronen, die das Ergebnis enthalten. Zwischen diesen Ebenen liegen liegen beliebig viele \textit{HiddenLayer}. Diese sind nach außen nicht sichtbar und werden trainiert. Die Neuronen zweier Schichten sind durch gewichtete Kanten verbunden. Erreicht ein Neuron $j$ eine Eingabe $net_{j}(t)$, wird zunächst durch die Aktivierungsfunktion $f_{act}$ bestimmt ob es aktiviert wird. Das Eingangssignal selbst berechnet sich, außer im Inputlayer, durch die Propagierungsfunktion $net_{j}(t)$. Als Standard dient hier die Summe der Ausgaben der vorigen Neuronen unter Berücksichtigung des Gewichts der Verbindung: 
-
-$$net_{j}(t) = \sum_{n=0}^N out_{i}(t)w_{i, j}$$
-
-Durch $w_{n, m} \in [0, 1] $ wird hier das Gewicht der Verbindung von Neuron $i$ nach Neuron $j$ bezeichnet. Die Funktion $out_{i}$ berechnet die Ausgabe des vorigen Neurons. Die Aktivierungsfunktion kann problemabhängig gewählt werden, häufig verwendet werden hier die Identitäts-, Schwellwert-, logistische und tangens hyperbolicus Funktion verwendet. 
-
-\begin{enumerate}
-	\item Wertebereiche
-	\item Beispiel
-	\item Backpropagation / Lernregel
-	\item Gradientenverfahren / Fehlerfunktion
+\begin{enumerate}	
+	\item Globale vs Lokale Features (robust, effizient, eindeutig, viele)
+	\item Lokal: Besser für Skalierungen, Rotationen, Verdeckungen.
+	\item Repräsentation von Image Features (Binary Object?)	
 \end{enumerate}
 
-\cite{zs1997}
+\section{Feature Detektion}
+
+Im Bereich Computer Vision zielt die Feature Detektion darauf ab Muster innerhalb von Bildern zu entdecken. Diese Muster werden durch das lokale Vergleichen von Strukturen, Pixeln und deren Nachbarschaft, effizient ermittelt. Diese entdeckten Muster bilden die Features eines Bildes. Ein Feature Detektor sollte einer Reihe von Eigenschaften genügen um praktisch einsetzbar zu sein. Je nach Anwendung fällt den Eigenschaften unterschiedlich viel Gewicht zu:
+
+\begin{enumerate}
+	\item \textbf{Robustheit} Die Features sollen auch unter Rotation, Skalierung, Translation und Rauschen identifizierbar sein.
+	\item \textbf{Genauigkeit} Der Algorithmus soll die Positionen der Features präzise bestimmen. Notwendig wenn beispielsweise exakte Zusammenhänge berechnet werden sollen.
+	\item \textbf{Allgemeinheit} Bestimmt die generelle Einsetzbarkeit eines Algorithmus. Ein Feature Detektor für medizinische Bilder spezieller Annahmen treffen, als einer für eine allgemeine Online Suche.
+	\item \textbf{Effizienz} Die Verarbeitung sollte in Echtzeit erfolgen.
+	\item \textbf{Wiederholbarkeit} Dieselben Features eines Bildes sollten in wiederholten Läufen erkannt werden.
+\end{enumerate}
+
+\subsection{Harris-Operator}
+
+https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf
+
+\subsection{Scale Invariant Point Detection}
+
+TODO: DoG für SIFT
+
+https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf
+
+\section{Feature Extraktion}
+
+Die Feature Extraktion zielt darauf ab die \textit{intereset point} kompakt darzustellen um sie mit anderen \textit{interest points} zu vergleichen (BSP). Mathematisch handelt es sich um eine Form der Reduzierung von Dimensionen. Dies ist gewünscht, da die unverarbeiteten Daten meist zu groß sind als das ein Algorithmus sie in annehmbarer Zeit verarbeiten könnte. Diese Verfahren sind am Erfolgreichsten, wenn in den Daten nicht viele Informationen bzw. viele Redundanzen vorhanden sind. Die resultierende Darstellung ist der Deskriptor. Dieser enthält den Informationen um den Pixel und seine Nachbarschaft unter Berücksichtigung der Orientierung und Skalierung.
+
+CITE "A local descriptor a compact representation of a point’s local neighborhood. In contrast to global descriptors describing a complete object or point cloud, local descriptors try to resemble shape and appearance only in a local neighborhood around a point and thus are very suitable for representing it in terms of matching." (Dirk Holz et al.).
+
+Im Folgenden werden die Deskriptoren SIFT, LBP und GLOH vorgestellt. Diese Deskriptoren bieten alle eine Kodierung die Rotationen und teilweise Skalierungen berücksichtigen und sich somit prinzipiell für den Einsatz eignen.
+
+\cite{ifd2016}
+
+\subsection{Local Binary Patterns}
+
+Der Local Binary Patterns (LBP) Deskriptor vergleicht jeden Pixel eines Bildes wird mit seiner direkten Nachbarschaft um lokale Beschreibungen zu erzeugen. Auf diese Weise wird für jeden Pixel eine $3 \times 3$ Matrix betrachtet. Für jeden Pixel der Nachbarschaft wird überprüft, ob die Intensität über einem vorgegebenen Schwellwert liegt. Falls dies der Fall ist wird in die resultierende Matrix eine 1, andernfalls eine 0 eingetragen. Zeilenweise konkateniert ergeben diese Matrizen einen acht stelligen Binärstring (der betrachtete Pixel selbst wird nicht mitgezählt).
+
+http://bytefish.de/blog/local\_binary\_patterns/
+
+\subsection{GIST}
+
+http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
+
+\subsection{Scale-invariant feature transform}
+
+SIFT ist sowohl ein Feature Detektor als auch Deskriptor der erstmals 199x von Lowe eingeführt wurde. Der scale-invariant feature transform (SIFT) Detektor findet eine Menge \textit{interest points} durch den Difference of Gaussian (DOG) Operator. 
+
+\subsubsection{Detektor}
+
+Zunächst werden aus dem vorliegen Bild $I(x, y)$ zufällige Patches $P$ entnommen. Innerhalb dieser Ausschnitte werden dann lokale keypoints durch den Difference of Gaussian Operator berechnet. Dieser subtrahiert eine verzerrte Version eines Originalbildes von einer weniger verzerrten Version des selben. Für Graustufenbilder wird dies durch eine Konvolution gausscher Kernel mit verschiedenen Standardabweichungen realisiert. Dadurch das nur räumliche Informationen höherer Bereiche unterdrückt werden, fungiert dies als Band Pass Filter und hebt so die Sichtbarkeit von Kanten hervor.
+
+Bei dem Aufbau des Feature Vektoren pro \textit{interest point} wird die lokale Orientierung abgeschätzt. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogramm der Orientierung der Gradienten. Hierfür werden zufällig Punkte aus der Nachbarschaft ausgewählt. Der Extremwert des Histogramms wird hier als dominante Orientierung verwendet.
+
+\subsubsection{Deskriptor}
+
+Für jeden durch den Detektor gefundenen keypoint wird nun ein Featurevektor gebildet. Der Featurevektor enthält Informationen über die Nachbarschaft in Form der Gradienten eines jeden Punktes in der Nachbarschaft. Das Fenster für die Auswahl der Nachbarschaft wird auf dem keypoint zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen quantisiert, sodass der resultierende Deskriptor 128 Dimensionen enthält.
+
+PRO
+
+\begin{enumerate}
+	\item Änderungen im Grenzwert von Position und Orientierung verändern den Feature Vektor kaum.
+	\item Erreicht eine kompakte Darstellung. Robustheit ist in praktischen Anwendungen enorm hoch, auch wenn der Algorithmus keine affine Invarianz bietet.
+	\item In Vergleichen wurden sehr gute Ergebnisse gegen andere Algorithmen erzielt.
+\end{enumerate}
+
+CON
+
+\begin{enumerate}
+	\item Die Konstruktion des SIFT Deskriptors ist aufwendig
+	\item Hohe Dimensionalität des Feature Vektors, was zu einer langen Berechnungszeit führt.
+\end{enumerate}
+
+\subsection{Distanzmetriken}
+
+TODO Zitat hier \cite{mmd2011}
+
+\section{Dimensionality Reduction}
+
+Für die weitere Verarbeitung sollen nur die Features ausgewählt werden. Da schon pro Bild eine große Menge an Feature Vektoren erzeugt wird, gilt es nur die wichtigsten herauszufiltern. 
+
+\subsection{SIFT-PCA}
+
+EXTENSION: PCA-SIFT
+
+\begin{enumerate}
+	\item reduce the high dimensionality of original SIFT descriptor using the
+standard Principal Components Analysis (PCA)
+	\item extracts a 41 * 41 patch at the given
+scale and computes its image gradients in the vertical and horizontal directions and
+creates a feature vector from concatenating the gradients in both directions
+	\item feature vector is of length 2 * 39 * 39 = 3042 dimensions
+	\item gradient image vector is projected into a pre-computed feature space, resulting a feature vector of length 36 elements
+	\item vector is then normalized to unit magnitude to reduce
+the effects of illumination changes
+\end{enumerate}
 
 \subsection{Autoencoder}
 
-Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass die Identitätsfunktion lernen soll. AE dienen der Reduzierung der Dimensionen eines Features und können unbeaufsichtigt lernen. Um das Original als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Inputlayers} der Anzahl der Neuronen im \textit{Outputlayer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Layer zu Layer ab um die Anzahl der Dimensionen weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus den komprimierten Feature Ebene für Ebene zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten.
+Autoencoder sind eine Art neuronales Netzwerk und werden für unbeaufsichtigtes lernen und Kompression verwendet. Zunächst wird hierfür ein Überblick über neuronale Netze gegeben und dann die Funktionsweise eines Autoencoders erläutert. Im Weiteren werden spezielle Varianten des Autoencoders vorgestellt, die zur Optimierung des Ergebnisses dienen.
+
+\subsubsection{Neuronale Netze}
+
+Künstliche neuronale Netzwerke (ANN, NN) werden seit den 50er Jahren erforscht. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie Deep Learning und Machine Learning finden NN seit Anfang 2000 vermehrt praktische Anwendung und akademische Zuwendung. NN sind dem Aufbau und der Funktionsweise des menschlichen Gehirns nachempfunden. Dadurch das NN von Natur aus hoch parallel arbeiten, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
+
+Ein NN $ TODO $ besteht aus einer Menge Neuronen $ TODO $ die in Schichten im Netzwerk angeordnet sind. Ein Neuron $n_i$ besitzt einen Aktivierungszustand $z_i$.  Neuronen benachbarter Schichten sind durch eine Gewichtsmatrix $d$ "komplett" miteinander verbunden. Solch ein Netzwerk verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ dargestellt wird. Die erste Schicht des Netzwerks, der Input Layer, leitet das Signal nur an die nächste Schicht weiter. Die letzte Schicht, der Hidden Layer, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^n$. Zwischen diesen beiden Schichten können sich beliebig viele Hidden Layer befinden. Sobald ein Neuron in einem HiddenLayer ein Signal erreicht, wird überprüft ob das Neuron aktiviert wird. Die Überprüfung erfolgt durch die Aktivierungsfunktion $s$. Häufig wird hier die sigmoid Funktion $s(x) = \frac{1}{1+e^-x}$ verwendet. Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion $out$ berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. 
+
+\subsubsection{Funktionsweise}
+Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass die Identitätsfunktion lernen soll. AE dienen der Reduzierung der Dimensionen eines Features und können unbeaufsichtigt lernen. Um das Original als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Inputlayers} der Anzahl der Neuronen im \textit{Outputlayer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Layer zu Layer ab um die Anzahl der Dimensionen weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus den komprimierten Feature Ebene für Ebene zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten. Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Dies sind die Parameter, welche durch den AE optimiert werden sollen. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion:$z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$.
 
 \begin{enumerate}
+	\item Vorteile eines Autoencoders gegenüber anderen Verfahren (supervised, pretraining)
 	\item Grafik 1 + 5 Layer (Encode / Decode)
-	\item Backpropagation / Lernregel
+	\item Backpropagation / Lernregel (Gradientenverfahren / Fehlerfunktion)
 \end{enumerate}
+
+\cite{ssn1997}
+
+\subsubsection{Stacked Autoencoder}
+
+\subsubsection{Denoising Autoencoder}
 
 \section{GPGPU Programmierung}
 
-General Programming on Graphics Processing Units (GPGPU) ist ein Verfahren um die massive Parallelität von Grafikkarten zur Berechnung allgemeiner mathematischer Probleme zu nutzen. Um die Parallelität der Grafikkarte effizient Nutzen zu können, muss das Problem als Matrix vorliegen. Da Alle Kerne eine GPU pro Takt dieselbe Operation ausführen, muss auf Verzweigung möglichst verzichtet werden: Je mehr Kerne  in einem Takt keine Operation ausführen, desto mehr nährt sich die Ausführungsgeschwindigkeit einer seriellen Ausführung an.
+General Programming on Graphics Processing Units (GPGPU) ist ein Verfahren um die massive Parallelität von Grafikkarten zur Berechnung allgemeiner mathematischer Probleme zu nutzen. Um die Parallelität der Grafikkarte effizient Nutzen zu können, muss das Problem als Matrix vorliegen. Da Alle Kerne eine GPU pro Takt dieselbe Operation ausführen, muss auf Verzweigung möglichst verzichtet werden: Je mehr Kerne  in einem Takt keine Operation ausführen, desto mehr nährt sich die Ausführungsgeschwindigkeit einer sequentiellen Ausführung an.
 
 \subsection{Nvidia cuda}
 
-Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in der cuda Sprache geschrieben sein. Hierbei handelt es sich um eine Erweiterung von C um primitive und Funktionen für Berechnungen auf der Grafikkarte. Die Hauptfunktion wird als Kernel bezeichnet und wird durch das Schlüsselwort \textit{\textunderscore\textunderscore kernel\textunderscore\textunderscore} identifiziert. Zunächst wird Speicher auf der Grafikkarte entsprechend der Größe der Matritzen allokiert. Nachdem die Daten von Host zur Grafikkarte (Device) kopiert wurden, kann die Berechnung gestartet werden. Nach Durchführung oder zwischen Berechnungen kann dann das Ergebnis zurück zum Host kopiert werden. Diese Operationen weisen, vor allem bei großen Datenmengen, eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten möglichst nur selten erfolgen.
+Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in der cuda Sprache geschrieben sein. Hierbei handelt es sich um eine Erweiterung von C um primitive und Funktionen für Berechnungen auf der Grafikkarte. Die Hauptfunktion wird als Kernel bezeichnet und wird durch das Schlüsselwort \textit{\textunderscore\textunderscore kernel\textunderscore\textunderscore} identifiziert. Zunächst wird notwendige Speicher auf der Grafikkarte allokiert. Nachdem die Daten von Host zur Grafikkarte (Device) kopiert wurden, kann die Berechnung gestartet werden. Nach Durchführung oder zwischen Berechnungen kann dann das Ergebnis zurück zum Host kopiert werden. Diese Operationen weisen, vor allem bei großen Datenmengen, eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten möglichst nur selten erfolgen.
 
 \begin{enumerate}
 	\item Grids, Blocks, Threads
@@ -81,4 +166,6 @@ Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in de
 	\item cuda Beispiel
 \end{enumerate}
 
-\subsection{Frameworks}
+\subsection{Neuronale Netze auf Grafikkarten}
+
+TODO

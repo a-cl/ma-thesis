@@ -1,18 +1,32 @@
 \chapter{Analyse}
 
-Die Analyse beschäftigt sich mit den Anforderungen der Nutzer an das System und Rahmenbedingungen die gegeben sind. Die Speicherung und Eigenschaften der 
+Die Analyse betrachtet zunächst die Interaktion des Benutzers mit dem System und hält diese in Form von Anwendungsfällen fest. Weiterhin werden die bereits vorliegenden Bilddaten der HsH Datenbank betrachtet und untersucht ob die Daten sich in dieser Form eignen oder noch konvertiert bzw. anderweitig vorab bearbeitet werden müssen. 
 
-\section{Anforderungen an das System}
+\section{Anwendungsfälle}
 
-\begin{enumerate}
-	\item Nutzerkreis
-	\item Ausführungszeit
-\end{enumerate}
+Bisher liegt in der HsH noch kein Konzept zur Realisierung einer Bildsuche vor. Zur Erhebung der Anforderungen habe ich daher die wissenschaftlichen Mitarbeitern der Fakultät III befragt, die das Thema treiben und verantworten. Aus diesen Gesprächen wurden die zwei wesentlichen Anwendungsfälle abgeleitet, die im Rahmen dieser Arbeit umgesetzt werden sollen.
+
+\subsection{Bilddaten einlesen}
+
+Die HsH verfügt bereits über eine Multimedia Datenbank in der ca. NUMBER abgespeichert sind. In Zukunft sollen zu diesen Bilddaten auch die gefundenen Features abgespeichert werden, um diese bei einer Suchanfrage für einen Vergleich Nutzen zu können. Da bei einer Anfrage alle Bilder der Datenbank betrachtet werden müssen, ist ein ständiges neu berechnen der Features des Bilddatenbestandes nicht vertretbar. Zur Speicherung der Features muss eine neue Tabelle angelegt werden. Auf diese Weise können in Zukunft in einer weiteren Tabelle die Beziehungen zwischen Bildern und Features beschrieben werden. Möchte ein Benutzer ein neues Bild hinzufügen,  
+so müssen also zuerst die Features des Bildes extrahiert werden und anschließend die Bild- und Featuredaten gespeichert werden.
+
+\subsection{Bild suchen}
+
+
 
 \section{Bilddaten}
 
 \begin{enumerate}
 	\item Beschreibung (Art, Datenbank, Nutzer, Zweck)
-	\item Menge der Bilddaten, 
+	\item Menge der Bilddaten
+	\item Image Patches 16 x 16, grayscale
 	\item Format, notwendiges Preprocessing
+\end{enumerate}
+
+\section{Hardware}
+
+\begin{enumerate}
+	\item Ausführungszeit
+	\item Testgeräte CPU, GPU, ...
 \end{enumerate}

@@ -1,5 +1,7 @@
 \chapter{Konzept}
 
+Das Kapitel Konzeption beschäftigt sich zunächst mit dem Prozess der Feature Extraktion. Als nächstes wird ein Modell eines Autoencoders vorgestellt durch den sich die Dimensionalität der gewonnen Features verringern lässt, sodass dieser weniger Speicherplatz und Vergleiche zwischen Features eine geringere Berechnungszeit benötigen. Abschließend wird skizziert wird eine Suchanfrage durch einen menschlichen Benutzer an das System gestellt wird.
+
 \begin{enumerate}
 	\item Verarbeitung der bestehenden Bilder
 	\item Auswahl der Features
@@ -7,6 +9,29 @@
 	\item Skizzierung des Gesamtsystems \begin{enumerate}
 		\item Datenbank einlesen, Feature Extraction, Autoencoder Training
 		\item Bild eingeben, Feature Extraction, Autoencoder Klassifizierung
+		\item Trainieren des Netzes?
 	\end{enumerate}		
 	
 \end{enumerate}
+
+\section{Feature Extraktion}
+
+Die Extraktion der Features eines Bildes erfolgt zu Beginn beider Anwendungsfälle. Im Anwendungsfall Bild speichern werden die Features zur Speicherung gewonnen. Diese werden mit den Features des Anwendungsfalles Bild suchen verglichen. Die Extraktion erwartet als Eingabe den Pfad zu einer Bilddatei im JPEG oder PNG Format und liefert als Rückgabe eine Liste der gefundenen Features.  Als Verfahren zur Extraktion kann zwischen SIFT und TODO gewählt werden. Je nach gewähltem Verfahren variiert die Struktur der Features.
+
+\section{Aufbau des Autoencoders}
+
+Zur Reduzierung der Dimensionen der Feature-Vektoren wird ein Stacked Denoising Autoencoder verwendet. Die Anzahl der Neuronen in der Eingabeschicht entspricht hierbei den Dimensionen des Feature-Vektors. Im Fall eines SIFT-Features würden so in der Eingabeschicht 3096 Neuronen vorhanden sein, da ein Feature 128 Dimensionen enthält und eine 24 $\times$ 24 Nachbarschaft von Punkten betrachtet wird. Die Anzahl der Neuronen in der Ausgabeschicht entspricht denen der Eingabeschicht, denn eben diese bildet das rekonstruierte Feature ab. Um die Anzahl der Dimensionen der Features schrittweise zu reduzieren, werden Stacked Autoencoder verwendet. Jede Schicht im Encoder enthält weniger Neuronen als die vorige. Der Decoder ist umgekehrt aufgebaut, um aus der komprimierten Darstellung das Feature wieder zu gewinnen. Die einzelnen Autoencoder, die später hintereinander geschaltet werden, müssen einzeln trainiert werden.
+
+\section{Kategorisierung von Bildern}
+
+TODO: praktisch k-means oder?
+
+\begin{enumerate}
+	\item Bilder automatisch Labeln?
+	\item "Nur" ähnliche Biler anzeigen anhand von Distanzmetriken?
+	\item Precision / Recall betrachten?
+\end{enumerate}
+
+\section{Verarbeitung von Suchanfragen}
+
+Zur Verarbeitung von Suchanfragen wird eine Schnittstelle über die Kommandozeile angeboten. Ein Benutzer kann den Pfad eines Bildes beim Aufruf des Programms als Argument übergeben. Als Ergebnis wird der Name und Pfad aller Bilder ausgegeben, bei denen eine Übereinstimmung von mindestens X \% bezüglich eines Features gegeben ist.
