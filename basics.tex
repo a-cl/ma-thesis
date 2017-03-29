@@ -1,38 +1,13 @@
 \chapter{Grundlagen}
 
-IMAGES
-
-Im Grundlagenkapitel wird zunächst erläutert an welchen Eigenschaften der Bilder wir interessiert sind, den sogenannten Features. 
-
-DETECTION / EXTRACTION
-
-Im Bereich der Computer Vision gibt es zahlreiche Detektoren, die sich zur Erkennung verschiedener Features eignen. Anschließend werden verschiedene Verfahren der Feature Extraktion vorgestellt, um die Daten für den Lernalgorithmus zu gewinnen. 
-
-REDUCTION
-
-Als Lernalgorithmus wird hier ein Autoencoder verwendet, eine spezielle Art des neuronalen Netzes. Ein Autoencoder reduziert die Dimensionen eines Features, sodass eine kompaktere Darstellung für den Vergleich resultiert.
-
-GPU
-
-Um die Parallelität neuronaler Netze weiter auszunutzen, soll die Ausführung durch eine GPU erfolgen. Hierfür wird aus dem Bereich des GPGPU Programming die Sprache cuda von Nvidia  
-
+Zunächst wird auf den Aufbau und Features von Bildern eingegangen. Zur Detektion und Extraktion von Features aus Bildern haben sich zahlreiche verschiedene Verfahren etabliert. Von diesen wird der SIFT Feature Detektor und Deskriptor näher betrachtet, da er im Weiteren als Basis für die Feature Gewinnung dient. Es werden anschließend Modelle vorgestellt, die sich mit der Reduzierung der Dimensionen der Features beschäftigt, um eine Repräsentation zu erhalten, dich sich effizient vergleichen lässt. Das Bag of Visual Words Modell wurde aus dem Bereich Information Retrival adaptiert und wir zur Klassifizierung von Bildern auf Basis lokaler Features verwendet. Alternativ zu diesem Ansatz wird der Autoencoder vorgestellt. Ein Autoencoder ist ein spezielles neuronales Netzwerk, dass selbständig eine komprimierte Darstellung der Eingabe, in diesem Fall die Bild Features, lernt. Im letzten Teil wird auf die Berechnung allgemein mathematischer Probleme auf Grafikkarten, das GPGPU Programming eingegangen. Durch den Einsatz von Grafikkarten können Berechnungen gerade bei großen Datenmengen stark beschleunigt werden, da diese massiv parallel auf den Daten arbeiten. Mit Nvidias cuda wird eine Sprache vorgestellt mit der sich Modelle wie Bag of Words und Autoencoder auf Nvidia Hardware realisieren lassen.
 
 \section{Bilder und Features}
 
 In Bild kann auf viele Weisen dargestellt werden. Eine sehr intuitive Darstellung ist das Bild als Matrix. Diese Form eignet sich aber nur sehr eingeschränkt, wenn Bilder anhand von allgemeinen Merkmalen verglichen werden sollen. Ist so zum Beispiel auf zwei Bildern dasselbe Fahrzeug zu erkennen aber aus zwei verschiedenen Perspektiven und in anderen Lichtverhältnissen, so soll dies vom Programm erkannt werden. Zu diesem Zweck werden die Charakteristika, die sogenannten Features, in dem Bild gesucht. Bei einem Feature handelt es sich dabei um einen Vektor. Dieser enthält die Punkte des Bildes, die ihn charakterisieren. Er kann somit einen Punkt, eine Kurve oder eine Region darstellen. Es hat sich dabei aus vielen Gründen bewährt lokale Features globalen vorzuziehen, u. a. da sie um ein vielfaches schneller zu berechnen sind [ref]. Lokale Verfahren haben jedoch den Nachteil, dass sie oft mehr Speicher benötigen: Ein Bild kann eine beliebig große Anzahl Features enthalten. Aus diesem Grund ist es notwendig die einzelnen Feature Vektoren kompakt darzustellen. Eine Reduzierung der Dimensionen der Feature Vektoren kann durch verschiedene Verfahren erreicht werden, siehe Kapitel [REF].
 
-Ein Feature eines Bildes kann unterschiedlichen Typs sein.
-
 Der Bereich Feature Detektoren beschäftigt sich zunächst mit verschiedenen Algorithmen zum Auffinden von \textit{interest points}, den Punkten im Bild die ein Feature bilden können. 
 Durch die Feature Extraktion werden aus den \textit{intereset points} die Deskriptoren des Bildes abgeleitet. Auf Basis dieser Deskriptoren kann ein effizienter Vergleich der Bilder umgesetzt.
-
-\begin{enumerate}	
-	\item Globale vs Lokale Features (robust, effizient, eindeutig, viele)
-	\item Lokal: Besser für Skalierungen, Rotationen, Verdeckungen.
-	\item Repräsentation von Image Features (Binary Object?)	
-\end{enumerate}
-
-\section{Feature Detektion}
 
 Im Bereich Computer Vision zielt die Feature Detektion darauf ab Muster innerhalb von Bildern zu entdecken. Diese Muster werden durch das lokale Vergleichen von Strukturen, Pixeln und deren Nachbarschaft, effizient ermittelt. Diese entdeckten Muster bilden die Features eines Bildes. Ein Feature Detektor sollte einer Reihe von Eigenschaften genügen um praktisch einsetzbar zu sein. Je nach Anwendung fällt den Eigenschaften unterschiedlich viel Gewicht zu:
 
@@ -44,18 +19,6 @@ Im Bereich Computer Vision zielt die Feature Detektion darauf ab Muster innerhal
 	\item \textbf{Wiederholbarkeit} Dieselben Features eines Bildes sollten in wiederholten Läufen erkannt werden.
 \end{enumerate}
 
-\subsection{Harris-Operator}
-
-https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf
-
-\subsection{Scale Invariant Point Detection}
-
-TODO: DoG für SIFT
-
-https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect6.pdf
-
-\section{Feature Extraktion}
-
 Die Feature Extraktion zielt darauf ab die \textit{intereset point} kompakt darzustellen um sie mit anderen \textit{interest points} zu vergleichen (BSP). Mathematisch handelt es sich um eine Form der Reduzierung von Dimensionen. Dies ist gewünscht, da die unverarbeiteten Daten meist zu groß sind als das ein Algorithmus sie in annehmbarer Zeit verarbeiten könnte. Diese Verfahren sind am Erfolgreichsten, wenn in den Daten nicht viele Informationen bzw. viele Redundanzen vorhanden sind. Die resultierende Darstellung ist der Deskriptor. Dieser enthält den Informationen um den Pixel und seine Nachbarschaft unter Berücksichtigung der Orientierung und Skalierung.
 
 CITE "A local descriptor a compact representation of a point’s local neighborhood. In contrast to global descriptors describing a complete object or point cloud, local descriptors try to resemble shape and appearance only in a local neighborhood around a point and thus are very suitable for representing it in terms of matching." (Dirk Holz et al.).
@@ -64,27 +27,13 @@ Im Folgenden werden die Deskriptoren SIFT, LBP und GLOH vorgestellt. Diese Deskr
 
 \cite{ifd2016}
 
-\subsection{Local Binary Patterns}
-
-Der Local Binary Patterns (LBP) Deskriptor vergleicht jeden Pixel eines Bildes wird mit seiner direkten Nachbarschaft um lokale Beschreibungen zu erzeugen. Auf diese Weise wird für jeden Pixel eine $3 \times 3$ Matrix betrachtet. Für jeden Pixel der Nachbarschaft wird überprüft, ob die Intensität über einem vorgegebenen Schwellwert liegt. Falls dies der Fall ist wird in die resultierende Matrix eine 1, andernfalls eine 0 eingetragen. Zeilenweise konkateniert ergeben diese Matrizen einen acht stelligen Binärstring (der betrachtete Pixel selbst wird nicht mitgezählt).
-
-http://bytefish.de/blog/local\_binary\_patterns/
-
-\subsection{GIST}
-
-http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
-
 \subsection{Scale-invariant feature transform}
 
 SIFT ist sowohl ein Feature Detektor als auch Deskriptor der erstmals 199x von Lowe eingeführt wurde. Der scale-invariant feature transform (SIFT) Detektor findet eine Menge \textit{interest points} durch den Difference of Gaussian (DOG) Operator. 
 
-\subsubsection{Detektor}
-
 Zunächst werden aus dem vorliegen Bild $I(x, y)$ zufällige Patches $P$ entnommen. Innerhalb dieser Ausschnitte werden dann lokale keypoints durch den Difference of Gaussian Operator berechnet. Dieser subtrahiert eine verzerrte Version eines Originalbildes von einer weniger verzerrten Version des selben. Für Graustufenbilder wird dies durch eine Konvolution gausscher Kernel mit verschiedenen Standardabweichungen realisiert. Dadurch das nur räumliche Informationen höherer Bereiche unterdrückt werden, fungiert dies als Band Pass Filter und hebt so die Sichtbarkeit von Kanten hervor.
 
 Bei dem Aufbau des Feature Vektoren pro \textit{interest point} wird die lokale Orientierung abgeschätzt. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogramm der Orientierung der Gradienten. Hierfür werden zufällig Punkte aus der Nachbarschaft ausgewählt. Der Extremwert des Histogramms wird hier als dominante Orientierung verwendet.
-
-\subsubsection{Deskriptor}
 
 Für jeden durch den Detektor gefundenen keypoint wird nun ein Featurevektor gebildet. Der Featurevektor enthält Informationen über die Nachbarschaft in Form der Gradienten eines jeden Punktes in der Nachbarschaft. Das Fenster für die Auswahl der Nachbarschaft wird auf dem keypoint zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen quantisiert, sodass der resultierende Deskriptor 128 Dimensionen enthält.
 
@@ -103,41 +52,37 @@ CON
 	\item Hohe Dimensionalität des Feature Vektors, was zu einer langen Berechnungszeit führt.
 \end{enumerate}
 
-\subsection{Distanzmetriken}
+\section{Bag of Visual Words}
 
-TODO Zitat hier \cite{mmd2011}
+Das Bag of Words Modell stammt aus dem Bereich Information Retrival und wird zur Klassifizierung von Dokumenten genutzt. Es wird das Auftreten jedes Wortes in eine Dokument gezählt und durch die Anzahl aller Wörter im Vokabular geteilt, um so einen normalisierten Wert zu erhalten.
 
-\section{Dimensionality Reduction}
+Dieses Modell wurde von der Computer Vision adaptiert um Bilder zu klassifizieren. Die Features können aber nicht direkt statt der Worthäufigkeit verwendent werden: Ein Feature ist ein kleiner, lokaler Ausschnitt aus einem Bild und wird selten in der gleichen Form wieder auftreten. Weiterhin findet ein Detektor wie SIFT oder SUSAN ca. 100 bis 1000 Features pro Bild, daher ist es notwendig die Features zu gruppieren. Da alle Features eines Detektors die gleiche Dimension haben, können Clustering Verfahren angewendet werden um dies zu erreichen. Ein Cluster entspricht dann einem Visual Word und ist Teil des Codebooks. Durch Algorithmen wie k-means kann die Größe des Codebooks kontrolliert werden. Wurde ein Codebook aus einer Menge von Bildern erstellt, lassen sich nun weitere Bilder klassifizieren. Hierfür werden wieder die lokalen Features des Bildes extrahiert und nun alle durch ein nearest-neighbour Verfahren dem nächsten Cluster bzw. Visual Word zugewiesen und anschließend ihre relative Häufigkeit bewertet werden.
+
+\subsection{K-means Clustering}
+
+Der k-means Clustering Algorithmus fasst eine Menge von Vektor gleicher Dimensionalität in eine Menge von k vorgegeben Gruppen zusammen. Auf diese Weise können Zusammenhänge in Daten entdeckt werden und auch Klassifizierungen effizient durchgeführt werden, da die Distanz eines Vektors zu jedem Cluster betrachtet werden kann und ein Maß für die Ähnlichkeit abgeleitet werden kann. Der Algorithmus geht in zwei Stufen vor:
+
+\begin{enumerate}
+	\item \textbf{Cluster bilden}: Zunächst müssen die initialen k Cluster gebildet werden. Häufig verwendete Methoden sind zufällige Auswahl und Auswahl des Vektors mit der größten Distanz zu den bisher gewählten Clustern.
+	\item \textbf{Vektoren zuweisen}: Nach Auswahl der Cluster wird die Distanz eines jeden verbleibenden Vektors zu Zentrum eines jeden Cluster gemessen. Der Vektor des Paares mit der geringsten Distanz wird dem entsprechenden Cluster zugewiesen. Dieser Schritt wird solange wiederholt bis jeder Vektor einem Cluster zugewiesen wurde.
+\end{enumerate}
+
+Im Folgenden Beispiel werden statt Vektoren Punkte im zweidimensionalen Raum betrachtet. Dieser Prozess läuft für höhere Dimensionen unter Berücksichtigung der Distanzmetriken analog ab. Als k wird hier drei gewählt. Der Erste Cluster muss zufällig gewählt werden, da keine Informationen vorliegen, auf Basis derer eine gute Entscheidung getroffen werden kann. Als erstes wird der Punkt 4 gewählt. Im nächsten Schritt bestimmen wir den Punkt der am weitesten von Punkt 4 entfernt ist. Berechnet man die Distanz für alle Punkte, so sind Punkt 5 und 10 beide am weitesten und gleich weit von Punkt 4 entfernt. In diesem Fall wird zufällig Punkt 10 gewählt. Da nach ein Cluster gefunden werden muss wird nun die Distanz von jedem verbleibendem Punkt zu Punkt 4 und 10 bestimmt. Dieser Schritt liefert Punkt 1 als initialen Mittelpunkt für den dritten Cluster.
+
+\section{Autoencoder}
 
 Für die weitere Verarbeitung sollen nur die Features ausgewählt werden. Da schon pro Bild eine große Menge an Feature Vektoren erzeugt wird, gilt es nur die wichtigsten herauszufiltern. 
 
-\subsection{SIFT-PCA}
-
-EXTENSION: PCA-SIFT
-
-\begin{enumerate}
-	\item reduce the high dimensionality of original SIFT descriptor using the
-standard Principal Components Analysis (PCA)
-	\item extracts a 41 * 41 patch at the given
-scale and computes its image gradients in the vertical and horizontal directions and
-creates a feature vector from concatenating the gradients in both directions
-	\item feature vector is of length 2 * 39 * 39 = 3042 dimensions
-	\item gradient image vector is projected into a pre-computed feature space, resulting a feature vector of length 36 elements
-	\item vector is then normalized to unit magnitude to reduce
-the effects of illumination changes
-\end{enumerate}
-
-\subsection{Autoencoder}
 
 Autoencoder sind eine Art neuronales Netzwerk und werden für unbeaufsichtigtes lernen und Kompression verwendet. Zunächst wird hierfür ein Überblick über neuronale Netze gegeben und dann die Funktionsweise eines Autoencoders erläutert. Im Weiteren werden spezielle Varianten des Autoencoders vorgestellt, die zur Optimierung des Ergebnisses dienen.
 
-\subsubsection{Neuronale Netze}
+\subsection{Neuronale Netze}
 
 Künstliche neuronale Netzwerke (ANN, NN) werden seit den 50er Jahren erforscht. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie Deep Learning und Machine Learning finden NN seit Anfang 2000 vermehrt praktische Anwendung und akademische Zuwendung. NN sind dem Aufbau und der Funktionsweise des menschlichen Gehirns nachempfunden. Dadurch das NN von Natur aus hoch parallel arbeiten, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
 
 Ein NN $ TODO $ besteht aus einer Menge Neuronen $ TODO $ die in Schichten im Netzwerk angeordnet sind. Ein Neuron $n_i$ besitzt einen Aktivierungszustand $z_i$.  Neuronen benachbarter Schichten sind durch eine Gewichtsmatrix $d$ "komplett" miteinander verbunden. Solch ein Netzwerk verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ dargestellt wird. Die erste Schicht des Netzwerks, der Input Layer, leitet das Signal nur an die nächste Schicht weiter. Die letzte Schicht, der Hidden Layer, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^n$. Zwischen diesen beiden Schichten können sich beliebig viele Hidden Layer befinden. Sobald ein Neuron in einem HiddenLayer ein Signal erreicht, wird überprüft ob das Neuron aktiviert wird. Die Überprüfung erfolgt durch die Aktivierungsfunktion $s$. Häufig wird hier die sigmoid Funktion $s(x) = \frac{1}{1+e^-x}$ verwendet. Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion $out$ berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. 
 
-\subsubsection{Funktionsweise}
+\subsection{Funktionsweise}
 Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass die Identitätsfunktion lernen soll. AE dienen der Reduzierung der Dimensionen eines Features und können unbeaufsichtigt lernen. Um das Original als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Inputlayers} der Anzahl der Neuronen im \textit{Outputlayer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Layer zu Layer ab um die Anzahl der Dimensionen weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus den komprimierten Feature Ebene für Ebene zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten. Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Dies sind die Parameter, welche durch den AE optimiert werden sollen. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion:$z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$.
 
 \begin{enumerate}
@@ -148,9 +93,9 @@ Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass die Identität
 
 \cite{ssn1997}
 
-\subsubsection{Stacked Autoencoder}
+\subsection{Stacked Denoising Autoencoder}
 
-\subsubsection{Denoising Autoencoder}
+TODO
 
 \section{GPGPU Programmierung}
 
@@ -158,7 +103,7 @@ General Programming on Graphics Processing Units (GPGPU) ist ein Verfahren um di
 
 \subsection{Nvidia cuda}
 
-Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in der cuda Sprache geschrieben sein. Hierbei handelt es sich um eine Erweiterung von C um primitive und Funktionen für Berechnungen auf der Grafikkarte. Die Hauptfunktion wird als Kernel bezeichnet und wird durch das Schlüsselwort \textit{\textunderscore\textunderscore kernel\textunderscore\textunderscore} identifiziert. Zunächst wird notwendige Speicher auf der Grafikkarte allokiert. Nachdem die Daten von Host zur Grafikkarte (Device) kopiert wurden, kann die Berechnung gestartet werden. Nach Durchführung oder zwischen Berechnungen kann dann das Ergebnis zurück zum Host kopiert werden. Diese Operationen weisen, vor allem bei großen Datenmengen, eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten möglichst nur selten erfolgen.
+Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in der cuda Sprache geschrieben sein. Hierbei handelt es sich um eine Erweiterung von C um primitive und Funktionen für Berechnungen auf der Grafikkarte. Die Hauptfunktion wird als Kernel bezeichnet und wird durch das Schlüsselwort \textit{\textunderscore\textunderscore kernel\textunderscore\textunderscore} identifiziert. Zunächst wird notwendige Speicher auf der Grafikkarte allokiert. Nachdem die Daten von Host zur Grafikkarte (Device) kopiert wurden, kann die Berechnung gestartet werden. Nach Durchführung oder zwischen Berechnungen kann dann das Ergebnis zurück zum Host kopiert werden. Diese Operationen weisen, vor allem bei großen Datenmengen, eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten nur selten erfolgen.
 
 \begin{enumerate}
 	\item Grids, Blocks, Threads
@@ -166,6 +111,6 @@ Ein Programm das auf einer Nvidia Grafikkarte ausgeführt werden soll muss in de
 	\item cuda Beispiel
 \end{enumerate}
 
-\subsection{Neuronale Netze auf Grafikkarten}
+\subsection{Histogramme parallel berechnen}
 
 TODO

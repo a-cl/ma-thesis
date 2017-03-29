@@ -1,8 +1,10 @@
 \chapter{Implementierung}
 
-TODO
+In diesem Kapitel wird die Schnittstelle für den Anwender und die verwendeten bzw. implementierten Programme beschrieben. Für die Extraktion der Features und der Definition des Autoencoders wurden bereits existierende Programme verwendet, des Bag of Visual Words Modell wurde eigens umgesetzt.
 
-\section{Vergleich von Bildern}
+\section{Feature Extraktion}
+
+Zur Extraktion der Features wird die SIFT Implementierung TODO verwendet. In dieser Arbeit liegt der Fokus nicht auf parallelen Berechnung SIFT Features. Dieser Vorgang benötigt weit geringere Ausführungszeit als die Klassifizierung und ist im Vergleich vernachlässigbar. Es gibt aber bereits Implementierungen die eine Berechnung auf einer Reihe von Grafikkarten ermöglichen [REF].
 
 TODO
 
@@ -10,14 +12,21 @@ TODO
 	\item Preprocessing (whitening), Bilder
 \end{enumerate}
 
-\section{Autoencoder in cuda}
+\section{Bag of Visual Word}
 
-TODO
+Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Zur Erstellung und Interaktion eines Modells dient die Klasse BoVW und bietet hierfür vier Funktionen an. Die Funktion createCodebook(float *features) baut ein Codebook aus einer gegebenen  Menge von Features auf und speichert dieses intern. Durch die Funktion saveCodebook(String path) und loadCodebook(String path) kann ein intern gespeichertes Codebook in eine Datei geschrieben werden bzw. von einer Datei eingelesen werden. Die letzte Funktion classify(int *image, int count) extrahiert lokale Features eines Bildes, bildet die Visual Words und gleicht diese gegen die Visual Words des Codebooks ab. Es werden die ähnlichsten Bilder zurückgegeben. Die Anzahl der Ergebnisse kann durch den Parameter \textit{count} gesteuert werden. Da die Zählung der Häufigkeit eines Visual Words in einem Dokument einem Histogramm entspricht, kann diese Aufgabe durch Grafikkarten und das \textit{Parallel Histogram} Muster stark parallelisiert werden. 
 
-\subsection{Framework cNN}
+\section{Autoencoder}
 
-TODO
+Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch Nvidias cuda unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
 
-\subsection{Kernel}
+\lstset{language=Python}
+\begin{lstlisting}
+from deepautoencoder import StackedAutoEncoder
 
-TODO
+model = StackedAutoEncoder(dims=[3], activations=['relu'], epoch=[1000], loss='rmse', lr=0.007, batch_size=50, print_step=100)
+                       
+result = model.fit_transform(x)
+\end{lstlisting}
+
+TODO: erklären

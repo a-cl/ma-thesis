@@ -1,32 +1,22 @@
 \chapter{Analyse}
 
-Die Analyse betrachtet zunächst die Interaktion des Benutzers mit dem System und hält diese in Form von Anwendungsfällen fest. Weiterhin werden die bereits vorliegenden Bilddaten der HsH Datenbank betrachtet und untersucht ob die Daten sich in dieser Form eignen oder noch konvertiert bzw. anderweitig vorab bearbeitet werden müssen. 
+Ziel der Arbeit ist es die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von k verschiedenen Gruppen einzuteilen, um so semantische Informationen über die Bilder zu gewinnen. Das k kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. Bei einer Teilmenge der vorhandenen Bilddaten handelt es sich beispielsweise um medizinische Abbildungen wie Röntgenaufnahmen. Wenn Unregelmäßigkeiten eines Organs bei der Aufnahme eines Patienten mit existierenden Aufnahmen verglichen werden sollen, ist eine textuelle Suche denkbar. Hierfür ist eine Speicherung von Suchbegriffen zu einem Bild notwendig. Da aber bereits ein großer Bestand an nicht kategorisierten Bilddaten vorhanden ist, wäre dies aufwendig manuell zu bestätigen. Weiterhin ist es mit einer textbasierten Suche nicht möglich Details eines Bildes an sich zu vergleichen. Auf diese Weise würde nicht nur nach einer Menge von Organen gesucht werden, sondern nach Übereinstimmungen von Mustern auf dem Bild.
 
-\section{Anwendungsfälle}
+1. Anforderungen 
+	- Features sollen scale invariant sein
+	- Ausführung auf GPU
 
-Bisher liegt in der HsH noch kein Konzept zur Realisierung einer Bildsuche vor. Zur Erhebung der Anforderungen habe ich daher die wissenschaftlichen Mitarbeitern der Fakultät III befragt, die das Thema treiben und verantworten. Aus diesen Gesprächen wurden die zwei wesentlichen Anwendungsfälle abgeleitet, die im Rahmen dieser Arbeit umgesetzt werden sollen.
+2. Features extrahieren 
+	- verschiedene Ansätze aus der Literatur benennen (SIFT, LBP, IBM)
+	
+3. Ansätze
+	- bag of visual words
+	- ML SIFT AE
 
-\subsection{Bilddaten einlesen}
-
-Die HsH verfügt bereits über eine Multimedia Datenbank in der ca. NUMBER abgespeichert sind. In Zukunft sollen zu diesen Bilddaten auch die gefundenen Features abgespeichert werden, um diese bei einer Suchanfrage für einen Vergleich Nutzen zu können. Da bei einer Anfrage alle Bilder der Datenbank betrachtet werden müssen, ist ein ständiges neu berechnen der Features des Bilddatenbestandes nicht vertretbar. Zur Speicherung der Features muss eine neue Tabelle angelegt werden. Auf diese Weise können in Zukunft in einer weiteren Tabelle die Beziehungen zwischen Bildern und Features beschrieben werden. Möchte ein Benutzer ein neues Bild hinzufügen,  
-so müssen also zuerst die Features des Bildes extrahiert werden und anschließend die Bild- und Featuredaten gespeichert werden.
-
-\subsection{Bild suchen}
-
-
-
-\section{Bilddaten}
-
-\begin{enumerate}
-	\item Beschreibung (Art, Datenbank, Nutzer, Zweck)
-	\item Menge der Bilddaten
-	\item Image Patches 16 x 16, grayscale
-	\item Format, notwendiges Preprocessing
-\end{enumerate}
-
-\section{Hardware}
-
-\begin{enumerate}
-	\item Ausführungszeit
-	\item Testgeräte CPU, GPU, ...
-\end{enumerate}
+4. Clustering der Features
+	- k-means -> möglichst gpu
+	
+	
+MOVE ANALYSIS
+LBP http://bytefish.de/blog/local\_binary\_patterns/
+GIST http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
