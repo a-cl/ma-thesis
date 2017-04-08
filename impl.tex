@@ -4,21 +4,32 @@ In diesem Kapitel wird die Schnittstelle für den Anwender und die verwendeten b
 
 \section{Feature Extraktion}
 
-Zur Extraktion der Features wird die SIFT Implementierung TODO verwendet. In dieser Arbeit liegt der Fokus nicht auf parallelen Berechnung SIFT Features. Dieser Vorgang benötigt weit geringere Ausführungszeit als die Klassifizierung und ist im Vergleich vernachlässigbar. Es gibt aber bereits Implementierungen die eine Berechnung auf einer Reihe von Grafikkarten ermöglichen [REF].
+Zur Extraktion der Features wird die OpenCV SIFT Implementierung verwendet. Zur Verwendung von SIFT, ist es erforderlich das opencv Projekt zusammen mit dem opencv-contrib Projekt selbst zu bauen. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im opencv Projekt enthalten [REF]. Zu Gewinnung der keypoints eines Bildes, muss ein neuen SIFT Detektor erstellt und die detect Methode mit einem Bild aufgerufen werden.
 
-TODO
+\lstset{language=C}
+\begin{lstlisting}
+#import <opencv2/core/core.hpp>
+#import <opencv2/highgui/highgui.hpp>
+#import <opencv2/nonfree/features2d.hpp>
 
-\begin{enumerate}
-	\item Preprocessing (whitening), Bilder
-\end{enumerate}
+using namespace cv;
 
-\section{Bag of Visual Word}
+int main () {
+	const Mat image = imread(IMAGE_PATH, 0);
+	SiftFeatureDetector detector;
+	vector<KeyPoint> keypoints;
+	
+	detector.detect(input, keypoints);
+}
+\end{lstlisting}
+
+\section{Bag of Visual Words}
 
 Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Zur Erstellung und Interaktion eines Modells dient die Klasse BoVW und bietet hierfür vier Funktionen an. Die Funktion createCodebook(float *features) baut ein Codebook aus einer gegebenen  Menge von Features auf und speichert dieses intern. Durch die Funktion saveCodebook(String path) und loadCodebook(String path) kann ein intern gespeichertes Codebook in eine Datei geschrieben werden bzw. von einer Datei eingelesen werden. Die letzte Funktion classify(int *image, int count) extrahiert lokale Features eines Bildes, bildet die Visual Words und gleicht diese gegen die Visual Words des Codebooks ab. Es werden die ähnlichsten Bilder zurückgegeben. Die Anzahl der Ergebnisse kann durch den Parameter \textit{count} gesteuert werden. Da die Zählung der Häufigkeit eines Visual Words in einem Dokument einem Histogramm entspricht, kann diese Aufgabe durch Grafikkarten und das \textit{Parallel Histogram} Muster stark parallelisiert werden. 
 
 \section{Autoencoder}
 
-Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch Nvidias cuda unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
+Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch Nvidias cuda unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -29,4 +40,10 @@ model = StackedAutoEncoder(dims=[3], activations=['relu'], epoch=[1000], loss='r
 result = model.fit_transform(x)
 \end{lstlisting}
 
-TODO: erklären
+\begin{enumerate}
+	\item TODO: erklären
+	\item Referenzlayout, mehrere probieren?
+	\item Einlesen der Feature Vektoren etc.
+	\item Speichern / Laden eines Netzes?
+	\item training mit datasets, MNIST, imagenet
+\end{enumerate}

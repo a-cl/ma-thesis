@@ -1,23 +1,29 @@
-\documentclass[12pt,a4paper,twoside,parskip=half-,headsepline,headinclude]{scrreprt}
 % Grundgröße 12pt, zweiseitig
-\usepackage[headsepline,automark]{scrpage2}
+\documentclass[12pt,a4paper,twoside,parskip=half-,headsepline,headinclude]{scrreprt}
 % Seitenköpfe automatisch
+\usepackage[headsepline,automark]{scrpage2}
+% Sprachpaket für Deutsch (Umlaute, Trennung, deutsche Überschriften)
 \usepackage[ngerman]{babel}
-% Sprachpaket für Deutsch (Umlaute, Trennung,deutsche Überschriften)
 \usepackage{blindtext}
-\usepackage{graphicx,hyperref,amssymb}
 %Graphikeinbindung, Hyperref (alles klickbar, Bookmarks),
-%Math. Symbole aus AmsTeX
+\usepackage{graphicx, hyperref, amssymb}
+% Umlaute - nochmal, die oben gehen nicht...
 \usepackage[utf8]{inputenc}
+% Math (Symbole aus AmsTeX)
 \usepackage{amsmath}
-% Umlaute und über Tastatur einzugeben
+% Einbindung von Code
 \usepackage{listings}
+% Farben
 \usepackage{color}
+% Fun with neural nets
+\usepackage{tikz}
 
+% Farben (für Codelistings)
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.3,0.3,0.3}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 
+% Genereller Style für Codelistings
 \lstset{ %
   backgroundcolor=\color{white},
   basicstyle=\footnotesize,
@@ -30,7 +36,7 @@
   keepspaces=true,
   keywordstyle=\color{blue},
   language=Octave,
-  morekeywords={*,...},
+  morekeywords={*, \_\_shared\_\_},
   numbers=left,
   numbersep=5pt,
   numberstyle=\tiny\color{mygray},
@@ -43,17 +49,20 @@
   tabsize=2
 }
 
+% Optionen für neurale Netze
+\def\layersep{2.5cm}
+
 % Festlegung Kopf- und Fußzeile     
 \defpagestyle{meinstil}{%
-{\headmark \hfill}
-{\hfill \headmark}
-{\hfill \headmark\hfill }
-(\textwidth,.4pt)
+	{\headmark \hfill}
+	{\hfill \headmark}
+	{\hfill \headmark\hfill }
+	(\textwidth,.4pt)
 }{%
-(\textwidth,.4pt)
-{\pagemark\hfill Alexander-Sebastian Clauß}
-{Version 1.0 vom \today \hfill \pagemark}
-{Version 1.0 vom \today\hfill\pagemark} 
+	(\textwidth,.4pt)
+	{\pagemark\hfill Alexander-Sebastian Clauß}
+	{Version 1.0 vom \today \hfill \pagemark}
+	{Version 1.0 vom \today\hfill\pagemark} 
 }
 \pagestyle{meinstil} 
 
@@ -62,8 +71,11 @@
 \renewcommand{\bottomfraction}{1}
 
  
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{document}    % hier gehts los
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%							hier gehts los								%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}    
   \thispagestyle{empty} % Titelseite
 \includegraphics[width=0.2\textwidth]{images/hsh_wortmarke.pdf}
 { \sffamily
@@ -91,22 +103,22 @@
 \newpage \thispagestyle{empty}
 \begin{tabular}{ll}
 {\bfseries\sffamily Autor} & Alexander-Sebastian Clauß \\ 
-            			   & 1381164 \\
-            			   & alexander.clauss@yandex.com \\[5ex]
+            			   & Matrikelnummer: 1381164 \\
+            			   & alexander-sebastian.clauss@hs-hannover.de \\[5ex]
 {\bfseries\sffamily Erstprüferin:} & Prof. Dr. Frauke Sprengel \\
           						   & Abteilung Informatik, Fakultät IV \\
          						   & Hochschule Hannover \\
         						   & frauke.sprengel@hs-hannover.de \\[5ex]
-{\bfseries\sffamily Zweitprüfer:}  & Prof. Dr. Vorname Name \\
-          						   & Abteilung Informatik, Fakultät IV \\
+{\bfseries\sffamily Zweitprüfer:}  & Maximilian Zubke \\
+          						   & Abteilung Information und Kommunikation (IK), Fakultät III \\
          						   & Hochschule Hannover \\
-        						   & email-Adresse
+        						   & maximilian.zubke@hs-hannover.de
 \end{tabular}
 
 \vfill
 
-\begin{center} \sffamily\bfseries Selbständigkeitserklärung \end{center}
 % fett und zentriert in der minipage
+\begin{center} \sffamily\bfseries Selbständigkeitserklärung \end{center}
 
 Hiermit erkläre ich, dass ich die eingereichte Master-Arbeit
 selbständig und ohne fremde Hilfe verfasst, andere als die von mir angegebenen Quellen und Hilfsmittel nicht benutzt und die den benutzten Werken wörtlich oder

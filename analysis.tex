@@ -1,22 +1,44 @@
 \chapter{Analyse}
 
-Ziel der Arbeit ist es die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von k verschiedenen Gruppen einzuteilen, um so semantische Informationen über die Bilder zu gewinnen. Das k kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. Bei einer Teilmenge der vorhandenen Bilddaten handelt es sich beispielsweise um medizinische Abbildungen wie Röntgenaufnahmen. Wenn Unregelmäßigkeiten eines Organs bei der Aufnahme eines Patienten mit existierenden Aufnahmen verglichen werden sollen, ist eine textuelle Suche denkbar. Hierfür ist eine Speicherung von Suchbegriffen zu einem Bild notwendig. Da aber bereits ein großer Bestand an nicht kategorisierten Bilddaten vorhanden ist, wäre dies aufwendig manuell zu bestätigen. Weiterhin ist es mit einer textbasierten Suche nicht möglich Details eines Bildes an sich zu vergleichen. Auf diese Weise würde nicht nur nach einer Menge von Organen gesucht werden, sondern nach Übereinstimmungen von Mustern auf dem Bild.
+Ziel der Arbeit ist es, dass ein Anwender die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von k verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Das k kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. Bei einer Teilmenge der vorhandenen Bilddaten handelt es sich beispielsweise um medizinische Abbildungen wie Röntgenaufnahmen. Wenn Unregelmäßigkeiten eines Organs bei der Aufnahme eines Patienten mit existierenden Aufnahmen verglichen werden sollen, ist eine textuelle Suche denkbar. Hierfür ist eine Speicherung von Suchbegriffen zu einem Bild notwendig. Da aber bereits ein großer Bestand an nicht kategorisierten Bilddaten vorhanden ist, wäre dies aufwendig manuell zu bestätigen. Weiterhin ist es mit einer textbasierten Suche nicht möglich Details eines Bildes an sich zu vergleichen. Auf diese Weise würde nicht nur nach einer Menge von Organen gesucht werden, sondern nach Übereinstimmungen von Mustern auf dem Bild.
 
-1. Anforderungen 
-	- Features sollen scale invariant sein
-	- Ausführung auf GPU
+\begin{enumerate}
+	\item Ziel ist die Kategorisierung von Bilddaten
+	\item Große Datenbank der Fakultät, "Bildersammlung"
+	\item Größe der Gruppen variieren, um verschiedene Labels zu gewinnen
+	\item Verfahren aus der Literatur um Informationen aus Bildern zu gewinnen, die diese beschreiben (Deskriptoren) \begin{enumerate}
+		\item LBP http://bytefish.de/blog/local\_binary\_patterns/
+		\item GIST http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
+		\item SIFT 
+	\end{enumerate}
+	\item Ansätze zur Klassifizierung von Bildern anhand Deskriptoren
+		\item Bag of Visual Words (Literatur, ...)
+		\item Autoencoder
+	\item Ausführung auf GPU
+		\item Bestandteile Bag of Visual Words \begin{enumerate}
+			\item K-Means
+			\item Histogramm
+		\end{enumerate}
+		\item Neuronale Netze, Bibliotheken 
+\end{enumerate}
 
-2. Features extrahieren 
-	- verschiedene Ansätze aus der Literatur benennen (SIFT, LBP, IBM)
-	
-3. Ansätze
-	- bag of visual words
-	- ML SIFT AE
+\section{Anforderungen} 
 
-4. Clustering der Features
-	- k-means -> möglichst gpu
-	
-	
-MOVE ANALYSIS
-LBP http://bytefish.de/blog/local\_binary\_patterns/
-GIST http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
+\begin{enumerate}
+	\item Features sollen scale invariant sein
+	\item Ausführung auf GPU
+\end{enumerate}
+
+\section{Feature Deskriptoren}
+
+\begin{enumerate}
+	\item verschiedene Ansätze aus der Literatur benennen, diskutieren
+
+\end{enumerate}
+
+\section{Verfahren zur Klassifizierung}
+
+\begin{enumerate}
+	\item BoVW
+	\item ML: SIFT AE
+\end{enumerate}

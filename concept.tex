@@ -1,6 +1,6 @@
 \chapter{Konzept}
 
-Das Kapitel Konzeption beschäftigt sich zunächst mit dem Prozess der Feature Extraktion. Als nächstes wird ein Modell eines Autoencoders vorgestellt durch den sich die Dimensionalität der gewonnen Features verringern lässt, sodass dieser weniger Speicherplatz und Vergleiche zwischen Features eine geringere Berechnungszeit benötigen. Abschließend wird skizziert wie eine Suchanfrage durch einen menschlichen Benutzer an das System gestellt wird.
+Das Kapitel Konzeption beschäftigt sich zunächst mit dem Prozess der Feature Extraktion. Hierfür wird der SIFT Algorithmus nach Lowe genutzt. Darauf aufbauend werden zwei Verfahren vorgestellt, das Bag of Visual Words Modell und der Autoencoder, die anhand von SIFT Deskriptoren eine Klassifizierung von Bildern ermöglichen.
 
 \begin{enumerate}
 	\item Verarbeitung der bestehenden Bilder
@@ -20,7 +20,13 @@ Als Basis der Klassifizierung werden SIFT Feature Deskriptoren verwendet. Es ist
 
 Die Extraktion der Features eines Bildes erfolgt zu Beginn beider Anwendungsfälle. Im Anwendungsfall Bild speichern werden die Features zur Speicherung gewonnen. Diese werden mit den Features des Anwendungsfalles Bild suchen verglichen. Die Extraktion erwartet als Eingabe den Pfad zu einer Bilddatei im JPEG oder PNG Format und liefert als Rückgabe eine Liste der gefundenen Features.  Als Verfahren zur Extraktion kann zwischen SIFT und TODO gewählt werden. Je nach gewähltem Verfahren variiert die Struktur der Features.
 
-\section{Bag of Visual Words in cuda}
+\section{Bag of Visual Words}
+
+Das Bag of Visual Words Modell ist im Grunde ein Histogramm, dass die Häufigkeitsverteilung von gefundenen Codewords abbildet. Sobald also das Codebook und die Codewords generiert wurden, kann durch einen Histogramm Algorithmus die Berechnung erfolgen. Im Grundlagen Kapitel wurde vorgestellt, wie sich ein Histogramm parallel auf Nvidia Grafikkarten berechnen lässt. Zum generieren des Codebooks ist eine Trainingsphase notwendig. Es muss eine Menge an Featurevektoren geclustert werden 
+
+TODO: zusätzliche Dimensionen nutzen?
+TODO: Block / Gridsize -> Größe Featurevektor (128 dim)
+TODO: Training
 
 \section{Aufbau des Autoencoders}
 
