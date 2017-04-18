@@ -1,44 +1,56 @@
 \chapter{Analyse}
 
-Ziel der Arbeit ist es, dass ein Anwender die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von k verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Das k kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. Bei einer Teilmenge der vorhandenen Bilddaten handelt es sich beispielsweise um medizinische Abbildungen wie Röntgenaufnahmen. Wenn Unregelmäßigkeiten eines Organs bei der Aufnahme eines Patienten mit existierenden Aufnahmen verglichen werden sollen, ist eine textuelle Suche denkbar. Hierfür ist eine Speicherung von Suchbegriffen zu einem Bild notwendig. Da aber bereits ein großer Bestand an nicht kategorisierten Bilddaten vorhanden ist, wäre dies aufwendig manuell zu bestätigen. Weiterhin ist es mit einer textbasierten Suche nicht möglich Details eines Bildes an sich zu vergleichen. Auf diese Weise würde nicht nur nach einer Menge von Organen gesucht werden, sondern nach Übereinstimmungen von Mustern auf dem Bild.
+Ziel der Arbeit ist es, dass ein Anwender die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von $k$ verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Darüber hinaus sollen neu hinzukommende Bilder auf der Basis eines gewonnen Modells klassifiziert werden können. Das $k$ kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. 
+In diesem Rahmen sollen zwei Methoden miteinander verglichen werden, die eine Klassifikation von Bildern auf Basis von Feature Deskriptoren ermöglichen. Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände berücksichtigt. Eine Reihe von geeigneten und verbreiteten Deskriptoren wird im Kapitel \nameref{extraction} vorgestellt und diskutiert.
+Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen sehr hohe Dimensionen auf, was eine effiziente Berechnung nicht möglich macht. Die Folgenden beiden Abschnitte behandeln zum Einen das Bag of Visual Words Modell und zum anderen den Autoencoder. Beide Ansätze reduzieren auf unterschiedliche Weise die Dimensionen von Features um so eine Berechnung der Ähnlichkeit zu beschleunigen. 
 
-\begin{enumerate}
-	\item Ziel ist die Kategorisierung von Bilddaten
-	\item Große Datenbank der Fakultät, "Bildersammlung"
-	\item Größe der Gruppen variieren, um verschiedene Labels zu gewinnen
-	\item Verfahren aus der Literatur um Informationen aus Bildern zu gewinnen, die diese beschreiben (Deskriptoren) \begin{enumerate}
-		\item LBP http://bytefish.de/blog/local\_binary\_patterns/
-		\item GIST http://cvcl.mit.edu/Papers/IJCV01-Oliva-Torralba.pdf
-		\item SIFT 
-	\end{enumerate}
-	\item Ansätze zur Klassifizierung von Bildern anhand Deskriptoren
-		\item Bag of Visual Words (Literatur, ...)
-		\item Autoencoder
-	\item Ausführung auf GPU
-		\item Bestandteile Bag of Visual Words \begin{enumerate}
-			\item K-Means
-			\item Histogramm
-		\end{enumerate}
-		\item Neuronale Netze, Bibliotheken 
-\end{enumerate}
-
-\section{Anforderungen} 
-
-\begin{enumerate}
-	\item Features sollen scale invariant sein
-	\item Ausführung auf GPU
-\end{enumerate}
+\begin{itemize}
+	\item Ausführung auf GPU berücksichtigen
+\end{itemize}
 
 \section{Feature Deskriptoren}
+\label{extraction}
+
+Zum Vergleich von Bilddaten müssen Features aus den Bildern extrahiert werden, die diese charakterisieren. In der Literatur finden sich verschiedene Ansätze, die je nach Einsatzgebiet unterschiedliche Stärken besitzen. 
+Der Local Binary Pattern (LBP) Deskriptor kodiert die Informationen eines Pixels und seiner Nachbarschaft der Größe $3 \times 3$ Pixel eines Graustufenbildes in einem Histogramm. Der resultierende Feature-Vektor enthält somit 256 Dimensionen. LBP sind gegenüber Rotationen invariant und wurden auch um die Verarbeitung um Bilder in Farbe erweitert. Besonders gute Ergebnisse konnten mit LBP im Bereich der Gesichts- und Texterkennung erzielt werden.
+Einen ganz anderen Ansatz haben Torralba und Olivia verfolgt: Statt Objekte durch lokale Features zu beschreiben, werden globale Eigenschaften betrachtet. Das Bild wird in einem Raum mit wenig Dimensionen abgebildet, dem sogenannten \textit{Spatial Envelope}. Die Autoren nutzen hier wahrnehmbare Dimensionen wie Natürlichkeit und Offenheit um den Raum zu definieren. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.  Bilder die in einer semantischen Kategorie Ähnlichkeiten aufweisen, liegen dann nah beieinander. Dieses Modell hat sich vor allem bewährt um eine Umgebung zu klassifizieren. \cite{mts2001}
+Noch SIFT hier anfangen. Noch ein Deskriptor 
+
+\begin{itemize}
+	\item Detaillierter ausführen.
+	\item Histogram of Oriented Gradients aufnehmen -> Autoencoder Basis
+	\item Weitere Deskriptoren (SURF, SUSAN) ?
+\end{itemize}
+
+\section{Ansatz 1: Bag of Visual Words}
+
+Im ersten Ansatz soll das Bag of Visual Words Modell verfolgt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich die Visual Words zu generieren. Als Clustering Algorithmus soll hier Llyods heuristische Variante des k-means Algorithmus verwendet werden. Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus sind interessanter. In Schritt zwei muss die Varianz jedes Clusters mit jedem verbleibenden Vektor berechnet werden. Da die Berechnung der Varianz eines Clusters unabhängig von der eines anderen ist, kann diese Berechnung aller Varianzen parallel erfolgen.
+
+%Die Menge aller Vektoren $v$ wird gleichmäßig auf $p$ Prozessoren aufgeteilt. Der Thread in einem Block mit der ID 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $v$ wird ebenfalls von diesem übernommen. 
+
+\begin{itemize}
+	%\item jeder Thread führt nun labeling Prozess aus 
+	%\item Label in n dimensionalernVektor li gespeichert, dadurch keine concurrent writes
+	%\item Anschließend reduction durch master um Cluster zuordnung zu aktualisieren.
+	%\item Zentren der Cluster werden aktualisiert, solange bis Konvergenz
+	\item zuerst sequentiell k-means behandeln, Pseudocode, dann Stellen identifizieren?
+	\item Kann ich solch einen Ansatz hier betrachten? \begin{itemize}
+		\item http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
+\end{itemize}
+	\item Praktisch habe ich mich bisher hier orientiert \begin{itemize}
+		\item https://github.com/serban/kmeans (siehe Mail)
+\end{itemize}	
+	\item Klassifizierung
+\end{itemize}
+
+\section{Ansatz 2: Autoencoder}
+
+Im zweiten Ansatz soll ein Autoencoder genutzt werden um die Dimensionalität des Feature-Vektors zu reduzieren. In der Arbeit von [REF] wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Es werden durch den SIFT Detektor die \textit{interest points} eines Bildes ermittelt. Für jeden \textit{intereset Point} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
 
 \begin{enumerate}
-	\item verschiedene Ansätze aus der Literatur benennen, diskutieren
-
-\end{enumerate}
-
-\section{Verfahren zur Klassifizierung}
-
-\begin{enumerate}
-	\item BoVW
-	\item ML: SIFT AE
+	\item Intro Machine Learning, Aufschwung und Verbreitung 
+	\item Netzwerke zur Nutzung für beaufsichtigtes Lernen
+	\item Autoencoder für unbeaufsichtigtes Lernen
+	\item auch hier gibt es ein Paper, das mir viel zum Autoencoder liefert, auch bereits hier erwähnen?
+	\item GPU!
 \end{enumerate}

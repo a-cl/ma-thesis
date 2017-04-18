@@ -5,29 +5,44 @@ Das Kapitel Konzeption beschäftigt sich zunächst mit dem Prozess der Feature E
 \begin{enumerate}
 	\item Verarbeitung der bestehenden Bilder
 	\item Auswahl der Features
-	\item Layer des Netzes, Stacking, Denoising ?
-	\item Skizzierung des Gesamtsystems \begin{enumerate}
-		\item Datenbank einlesen, Feature Extraction, Autoencoder Training
-		\item Bild eingeben, Feature Extraction, Autoencoder Klassifizierung
-		\item Trainieren des Netzes?
-	\end{enumerate}		
-	
+	\item Layer des Netzes, Stacking, Denoising ?	
 \end{enumerate}
-
-Als Basis der Klassifizierung werden SIFT Feature Deskriptoren verwendet. Es ist beim Einsatz von SIFT zu beachten, dass es sich um einen patentierten Algorithmus handelt. Der SIFT Deskriptor enthält 128 Dimensionen und ist so für einen Vergleich nur schwer geeignet, da pro Bild ca. 100 bis 1000 Feature Vektoren generiert werden. Es werden daher im folgenden zwei Ansätze vorgestellt, die die Dimensionalität der Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
 
 \section{Feature Extraktion}
 
-Die Extraktion der Features eines Bildes erfolgt zu Beginn beider Anwendungsfälle. Im Anwendungsfall Bild speichern werden die Features zur Speicherung gewonnen. Diese werden mit den Features des Anwendungsfalles Bild suchen verglichen. Die Extraktion erwartet als Eingabe den Pfad zu einer Bilddatei im JPEG oder PNG Format und liefert als Rückgabe eine Liste der gefundenen Features.  Als Verfahren zur Extraktion kann zwischen SIFT und TODO gewählt werden. Je nach gewähltem Verfahren variiert die Struktur der Features.
+Die Extraktion der Features ist die Basis für beide Varianten der Klassifizierung. Das Bag of Visual Words Modell nutzt die von SIFT erzeugten Feature Deskriptor für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit Gradienten der \textit{keypoints} die vom SIFT Detektor ermittelt wurden. Aus diesem Grund werden die Feature-Vektoren und \textit{keypoints} beide berechnet und getrennt gespeichert.
+Der SIFT Deskriptor enthält 128 Dimensionen und ist so für einen Vergleich nur schwer geeignet, da pro Bild ca. 100 bis 1000 Feature Vektoren generiert werden. Es werden daher im folgenden zwei Ansätze vorgestellt, die die Dimensionalität der Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
 
-\section{Bag of Visual Words}
+\begin{enumerate}
+	\item Hier nochmal etwas auf SIFT eingehen (Funktionsweise)?
+	\item Mehr zum Prozess sagen? Woher die Bilder kommen
+	\item TODO: Wie werden Bilder gespeichert? Format, Platte / DB?
+\end{enumerate}
 
-Das Bag of Visual Words Modell ist im Grunde ein Histogramm, dass die Häufigkeitsverteilung von gefundenen Codewords abbildet. Sobald also das Codebook und die Codewords generiert wurden, kann durch einen Histogramm Algorithmus die Berechnung erfolgen. Im Grundlagen Kapitel wurde vorgestellt, wie sich ein Histogramm parallel auf Nvidia Grafikkarten berechnen lässt. Zum generieren des Codebooks ist eine Trainingsphase notwendig. Es muss eine Menge an Featurevektoren geclustert werden 
+\section{Ansatz 1: Bag of Visual Words}
 
-TODO: zusätzliche Dimensionen nutzen?
-TODO: Block / Gridsize -> Größe Featurevektor (128 dim)
-TODO: Training
+Der erste Ansatz verfolgt das Visual Words Modell. Im ersten Schritt muss ein Codebook generiert werden, dass als Modell dient um die Bilder zu klassifizieren. Hierfür werden die Feature-Vektoren der Trainingsbilder zunächst durch einen k-means Algorithmus quantisiert.
+
+Sobald das Codebook erzeugt wurde, kann durch einen Histogramm Algorithmus die Berechnung erfolgen. In der Analyse wurde betrachtet, welcher Teile des Bag of Visual Word Modells sich parallelisieren lassen. wie sich ein Histogramm parallel auf Nvidia Grafikkarten berechnen lässt. 
+
+\begin{enumerate}
+	\item hier könnte ich gut auf den Aufbau eingehen (CPU ist master, bereitet Daten vor, cuda führt Distanzberechnung / Reduktion aus.), oder ist cuda eher Implementierungssache?
+	\item hier vorhandene Implementierungen von k-means erwähnen?
+	\item Wie wird klassifiziert?
+\end{enumerate}
 
 \section{Aufbau des Autoencoders}
 
-In diesem Ansatz werden zur Reduzierung der Dimensionen der Feature-Vektoren ein Stacked Denoising Autoencoder verwendet. Die Anzahl der Neuronen in der Eingabeschicht entspricht hierbei den Dimensionen des Feature-Vektors. Im Fall eines SIFT-Features würden so in der Eingabeschicht 3096 Neuronen vorhanden sein, da ein Feature 128 Dimensionen enthält und eine 24 $\times$ 24 Nachbarschaft von Punkten betrachtet wird. Die Anzahl der Neuronen in der Ausgabeschicht entspricht denen der Eingabeschicht, denn eben diese bildet das rekonstruierte Feature ab. Um die Anzahl der Dimensionen der Features schrittweise zu reduzieren, werden Stacked Autoencoder verwendet. Jede Schicht im Encoder enthält weniger Neuronen als die vorige. Der Decoder ist umgekehrt aufgebaut, um aus der komprimierten Darstellung das Feature wieder zu gewinnen. Die einzelnen Autoencoder, die später hintereinander geschaltet werden, müssen einzeln trainiert werden.
+In diesem Ansatz werden zur Reduzierung der Dimensionen der Feature-Vektoren wird ein Stacked Denoising Autoencoder verwendet wie er in der Arbeit von TODO \cite{aed2016} vorgeschlagen wurde. Der Autoencoder soll eine komprimierte Darstellung der Gradientenvektoren erzielen, die aus den \textit{intereset points} berechnet werden. Da dieser Vektor 3042 Werte enthält, besitzt der Autoencoder in der Eingabeschicht 3042 Neuronen. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich eine Darstellung in 36 Dimensionen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Autoencoders.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.6]{images/ae_model.png}
+	\caption{Schichten des verwendeten Autoencoders, Abbildung aus \cite{aed2016}}
+	\label{img:ae_model}
+\end{figure}
+
+\begin{itemize}
+	\item Mit Referenz auf die Arbeit ist es plausibel dieses Modell zu verwenden?
+	\item In der Konzeption bereits TensorFlow erwähnen und somit Beschleunigung durch cuda Bindings?
+\end{itemize}

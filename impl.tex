@@ -1,10 +1,10 @@
 \chapter{Implementierung}
 
-In diesem Kapitel wird die Schnittstelle für den Anwender und die verwendeten bzw. implementierten Programme beschrieben. Für die Extraktion der Features und der Definition des Autoencoders wurden bereits existierende Programme verwendet, des Bag of Visual Words Modell wurde eigens umgesetzt.
+Die Implementierung beschäftigt sich mit den Details zur Umsetzung der Feature Extraktion, sowie des Bag of Visual Words und Autoencoders.
 
 \section{Feature Extraktion}
 
-Zur Extraktion der Features wird die OpenCV SIFT Implementierung verwendet. Zur Verwendung von SIFT, ist es erforderlich das opencv Projekt zusammen mit dem opencv-contrib Projekt selbst zu bauen. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im opencv Projekt enthalten [REF]. Zu Gewinnung der keypoints eines Bildes, muss ein neuen SIFT Detektor erstellt und die detect Methode mit einem Bild aufgerufen werden.
+Zur Extraktion der Features wird die OpenCV SIFT Implementierung verwendet. Zur Verwendung von SIFT, ist es erforderlich das opencv Projekt zusammen mit dem opencv-contrib Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im opencv Projekt enthalten [REF]. Zu Gewinnung der keypoints eines Bildes, muss ein neuen SIFT Detektor erstellt und die detect Methode mit einem Bild aufgerufen werden.
 
 \lstset{language=C}
 \begin{lstlisting}
@@ -23,9 +23,24 @@ int main () {
 }
 \end{lstlisting}
 
+TODO: Platzhalter Code-Listing, aber im Grunde funktioniert's so.
+
 \section{Bag of Visual Words}
 
-Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Zur Erstellung und Interaktion eines Modells dient die Klasse BoVW und bietet hierfür vier Funktionen an. Die Funktion createCodebook(float *features) baut ein Codebook aus einer gegebenen  Menge von Features auf und speichert dieses intern. Durch die Funktion saveCodebook(String path) und loadCodebook(String path) kann ein intern gespeichertes Codebook in eine Datei geschrieben werden bzw. von einer Datei eingelesen werden. Die letzte Funktion classify(int *image, int count) extrahiert lokale Features eines Bildes, bildet die Visual Words und gleicht diese gegen die Visual Words des Codebooks ab. Es werden die ähnlichsten Bilder zurückgegeben. Die Anzahl der Ergebnisse kann durch den Parameter \textit{count} gesteuert werden. Da die Zählung der Häufigkeit eines Visual Words in einem Dokument einem Histogramm entspricht, kann diese Aufgabe durch Grafikkarten und das \textit{Parallel Histogram} Muster stark parallelisiert werden. 
+Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Zur Erstellung und Interaktion eines Modells dient die Klasse BoVW und bietet hierfür vier Funktionen an. Die Funktion createCodebook(float **features) baut ein Codebook aus einer gegebenen Menge von Features auf und speichert dieses intern. Durch die Funktion saveCodebook(String path) und loadCodebook(String path) kann ein intern gespeichertes Codebook in eine Datei geschrieben werden bzw. von einer Datei eingelesen werden. Die letzte Funktion classify(String imagePath, int count) extrahiert lokale Features eines Bildes und berechnet die Ähnlichkeit der Visual Words. Es werden die ähnlichsten Bilder zurückgegeben. Die Anzahl der Ergebnisse kann durch den Parameter \textit{count} gesteuert werden. 
+Da es sich bei der Berechnung der Cluster sowie der relativen Häufigkeiten um die rechenintensivsten Funktionen handelt, wurde diese parallelisiert.
+
+\subsection{Paralleler k-means Algorithmus}
+
+TODO
+
+\subsection{Paralleles Histogramm}
+
+Da die Zählung der Häufigkeit eines Visual Words in einem Dokument einem Histogramm entspricht, kann diese Aufgabe durch Grafikkarten und das \textit{Parallel Histogram} Muster stark parallelisiert werden. 
+
+\begin{itemize}
+	\item Histogramm (mit cuda Code) bereits in Grundlagen vorgestellt, hier auf Abweichungen / tatsächliche Implementierung eingehen? Oder stattdessen das Histogramm weniger detailliert in den Grundlagen behandeln? 
+\end{itemize}
 
 \section{Autoencoder}
 
@@ -41,9 +56,9 @@ result = model.fit_transform(x)
 \end{lstlisting}
 
 \begin{enumerate}
-	\item TODO: erklären
-	\item Referenzlayout, mehrere probieren?
+	\item TODO: erklären, tatsächliches Netz
+	\item Referenzlayout
 	\item Einlesen der Feature Vektoren etc.
 	\item Speichern / Laden eines Netzes?
-	\item training mit datasets, MNIST, imagenet
+	\item Training
 \end{enumerate}
