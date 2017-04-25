@@ -32,14 +32,41 @@ Da es sich bei der Berechnung der Cluster sowie der relativen Häufigkeiten um d
 
 \subsection{Paralleler k-means Algorithmus}
 
-TODO
+Die Umsetzung der k-means Algorithmus ist direkt in cuda erfolgt. Als Referenzimplementierung diente hier das Projekt von [REF]. Der Algorithmus erwartet die einen Feature-Vektor, die Feature Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Kernelaufruf wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{float} Werte dargestellt, sodass das ein SIFT Feature-Vektor beispielsweise 128 $*$ 4 Byte = 512 Byte belegt. 
 
-\subsection{Paralleles Histogramm}
+\subsection{Histogramm als parallele Reduktion}
 
-Da die Zählung der Häufigkeit eines Visual Words in einem Dokument einem Histogramm entspricht, kann diese Aufgabe durch Grafikkarten und das \textit{Parallel Histogram} Muster stark parallelisiert werden. 
+In der Konzeption wurde aufgezeigt, wie sich die Berechnung eines Histogramms parallelisieren lässt, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im global Speicher vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in cuda durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
+
+\lstset{language=C}
+\begin{lstlisting}
+__global__
+void histogram_kernel (float *buffer, long size, int *histo, int bins) {
+	extern __shared__ int *copy[];
+	
+	if (threadIdx.x < bins) {
+		copy[threadIdx.x] = 0;		
+	}
+	__syncthreads();
+
+	int id = threadIdx.x + blockDim.x * gridDim.x;
+	int stride = blockDim.x * gridDim.x;
+	
+	while (i < stride) {
+		int bin = buffer[i] / bins; 
+		atomicAdd(&(copy[bin]), 1);
+		i += stride;	
+	}
+	__syncthreads();
+	
+	if (threadIdx.x < bins) {
+		atomicAdd(&(histo[threadIdx.x]), copy[threadIdx.x]);		
+	}
+}
+\end{lstlisting} 
 
 \begin{itemize}
-	\item Histogramm (mit cuda Code) bereits in Grundlagen vorgestellt, hier auf Abweichungen / tatsächliche Implementierung eingehen? Oder stattdessen das Histogramm weniger detailliert in den Grundlagen behandeln? 
+	\item TODO: Das ist so ziemlich die Variante aus der Vorlesung, muss durch Variante mit features /clustern ersetzt werden.
 \end{itemize}
 
 \section{Autoencoder}

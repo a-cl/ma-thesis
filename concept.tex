@@ -21,15 +21,42 @@ Der SIFT Deskriptor enthält 128 Dimensionen und ist so für einen Vergleich nur
 
 \section{Ansatz 1: Bag of Visual Words}
 
-Der erste Ansatz verfolgt das Visual Words Modell. Im ersten Schritt muss ein Codebook generiert werden, dass als Modell dient um die Bilder zu klassifizieren. Hierfür werden die Feature-Vektoren der Trainingsbilder zunächst durch einen k-means Algorithmus quantisiert.
+In der Analyse wurde bereits sequentielle Varianten des Lloyd und Histogramm Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version für SIMD Prozessoren abgeleitet.
 
-Sobald das Codebook erzeugt wurde, kann durch einen Histogramm Algorithmus die Berechnung erfolgen. In der Analyse wurde betrachtet, welcher Teile des Bag of Visual Word Modells sich parallelisieren lassen. wie sich ein Histogramm parallel auf Nvidia Grafikkarten berechnen lässt. 
+\subsection{Parellisierung von Llyods Algorithmus}
 
-\begin{enumerate}
-	\item hier könnte ich gut auf den Aufbau eingehen (CPU ist master, bereitet Daten vor, cuda führt Distanzberechnung / Reduktion aus.), oder ist cuda eher Implementierungssache?
-	\item hier vorhandene Implementierungen von k-means erwähnen?
-	\item Wie wird klassifiziert?
-\end{enumerate}
+Der Thread in einem Block mit der ID 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $v$ wird ebenfalls von diesem übernommen. In Lloyds k-means Variante kann die \textit{Labeling} Phase massiv parallelisiert werden, in dem jeder Thread die Distanz eines Features zu allen Clustern misst. Auf diese Weise werden die $n$ Features auf $p$ Prozessoren aufgeteilt.
+
+\lstset{language=C}
+\begin{lstlisting}[mathescape=true]
+kmeans_gpu
+	if threadId == 0
+		$c_{j} = rand p_{i} \in P, j = 1,...,k, c_{j} != c_{i} ALL i != j$
+	synchronize threads
+	until convergence
+		for each $x_{i} \in P_{threadId}$
+			$l_{i} = argminD(c_{j}, p_{i})$
+		synchronize threads
+		if threadId == 0
+			for each $p_{i} \in P$
+				$c_{l_{i}} = c_{l_{i}} + p_{i}$
+				$m_{l_{i}} = m_{l_{i}} + 1$
+			for each $c_{j} \in C$
+				$c_{j} = \frac{1}{m_{j}} c_{i}$
+\end{lstlisting}
+
+
+
+\begin{itemize}
+	\item jeder Thread führt nun labeling Prozess aus 
+	\item Label in n dimensionalernVektor li gespeichert, dadurch keine concurrent writes
+	\item Anschließend reduction durch master um Cluster zuordnung zu aktualisieren.
+	\item Zentren der Cluster werden aktualisiert, solange bis Konvergenz
+\end{itemize}
+
+\subsection{Parallele Reduzierung von Histogrammen}
+
+TODO: Allgemeines parallel reduction Prinzip in SIMD (Pseudocode?)
 
 \section{Aufbau des Autoencoders}
 

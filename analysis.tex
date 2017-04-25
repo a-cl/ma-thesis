@@ -5,6 +5,7 @@ In diesem Rahmen sollen zwei Methoden miteinander verglichen werden, die eine Kl
 Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen sehr hohe Dimensionen auf, was eine effiziente Berechnung nicht möglich macht. Die Folgenden beiden Abschnitte behandeln zum Einen das Bag of Visual Words Modell und zum anderen den Autoencoder. Beide Ansätze reduzieren auf unterschiedliche Weise die Dimensionen von Features um so eine Berechnung der Ähnlichkeit zu beschleunigen. 
 
 \begin{itemize}
+	\item Ein bischen mehr hier zu BoVW / AE: state of the art, andere Paper...
 	\item Ausführung auf GPU berücksichtigen
 \end{itemize}
 
@@ -17,31 +18,41 @@ Einen ganz anderen Ansatz haben Torralba und Olivia verfolgt: Statt Objekte durc
 Noch SIFT hier anfangen. Noch ein Deskriptor 
 
 \begin{itemize}
-	\item Detaillierter ausführen.
+	\item Detaillierter ausführen / Weitere Deskriptoren (SURF, SUSAN) ?
 	\item Histogram of Oriented Gradients aufnehmen -> Autoencoder Basis
-	\item Weitere Deskriptoren (SURF, SUSAN) ?
 \end{itemize}
 
 \section{Ansatz 1: Bag of Visual Words}
 
-Im ersten Ansatz soll das Bag of Visual Words Modell verfolgt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich die Visual Words zu generieren. Als Clustering Algorithmus soll hier Llyods heuristische Variante des k-means Algorithmus verwendet werden. Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus sind interessanter. In Schritt zwei muss die Varianz jedes Clusters mit jedem verbleibenden Vektor berechnet werden. Da die Berechnung der Varianz eines Clusters unabhängig von der eines anderen ist, kann diese Berechnung aller Varianzen parallel erfolgen.
+Im ersten Ansatz soll das Bag of Visual Words Modell verfolgt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich die Visual Words zu generieren. Als Clustering Algorithmus soll hier Llyods heuristische Variante des k-means Algorithmus verwendet werden. Zunächst wird eine gängige sequentielle Implementierung angeführt, auf deren Basis die Parallelisierbarkeit durch Grafikkarten untersucht wird. Bei der Einordnung eines Features wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
 
-%Die Menge aller Vektoren $v$ wird gleichmäßig auf $p$ Prozessoren aufgeteilt. Der Thread in einem Block mit der ID 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $v$ wird ebenfalls von diesem übernommen. 
+\subsection{Lloyds Algorithmus}
+
+Im Grundlagenkapitel wurde bereits der allgemeine Ablauf von Lloyds Algorithmus beschrieben, der sich grundlegend in drei Stufen einteilen lässt. Im Nachfolgendem Codelisting ist der Ablauf des Algorithmus in Pseudocode beschrieben. Als Parameter werden die Punkte $P$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster statt. Die Zuordnung von Punkten zu Clustern erfolgt in Zeile 7: $argminD$ wählt den Cluster aus, dessen Varianz am wenigsten bei Aufnahme des Punktes $p_{i}$ steigt. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in Zeile 9 durchgeführt.
+
+\lstset{language=C}
+\begin{lstlisting}[mathescape=true]
+kmeans_lloyd ($P, C, k$)
+	initialisierung
+	until convergence
+		$C_{j} = 0, j = 1, ..., k$
+		for each $p_{i} \in P$
+			for each $c_{j} \in C$
+				$c_{j} = argminD(c_{j}, p_{i})$		
+		for each $c_{j} \in  C$
+			$c_{j} = \frac{1}{|c_{j}|} \sum_{n_{i} \in c_{j}} n_{i}$
+\end{lstlisting}
+
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paars berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. 
 
 \begin{itemize}
-	%\item jeder Thread führt nun labeling Prozess aus 
-	%\item Label in n dimensionalernVektor li gespeichert, dadurch keine concurrent writes
-	%\item Anschließend reduction durch master um Cluster zuordnung zu aktualisieren.
-	%\item Zentren der Cluster werden aktualisiert, solange bis Konvergenz
-	\item zuerst sequentiell k-means behandeln, Pseudocode, dann Stellen identifizieren?
-	\item Kann ich solch einen Ansatz hier betrachten? \begin{itemize}
-		\item http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
+	\item theoretisch: http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
+	\item praktisch: https://github.com/serban/kmeans (siehe Mail)
 \end{itemize}
-	\item Praktisch habe ich mich bisher hier orientiert \begin{itemize}
-		\item https://github.com/serban/kmeans (siehe Mail)
-\end{itemize}	
-	\item Klassifizierung
-\end{itemize}
+
+\subsection{Histogramme}
+
+TODO
 
 \section{Ansatz 2: Autoencoder}
 

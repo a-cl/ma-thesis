@@ -112,22 +112,19 @@ Wurde das \textit{Codebook} erzeugt, können anschließend Bilder klassifiziert 
 
 \subsection{k-means Clustering}
 
-Der k-means Clustering quantisiert eine Menge von Vektoren in eine Menge von $k$ vorgegeben Gruppen, die Cluster. Allgemein werden $k$ Vektoren gesucht, welche die quadrierte Distanz zwischen den gegebenen Vektoren minimieren sollen. Verschiedene Varianten des k-means Algorithmus optimieren teilweise unterschiedliche Metriken, wie der Varianz eines Clusters statt der Distanz. Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Zentren der Cluster wie der Algorithmus von Llyod. Zunächst beginnt Llyod's Algorithmus mit einer Initialisierung. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert oder eine maximale Anzahl an Iterationen erreicht wurde: 
+Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegeben Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Zentren der Cluster dienen. Ein k-means Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, dessen Varianz sich bei Aufnahme des Vektors am wenigsten erhöht. Aus diesem Grund setzt das k-means Clustering einen euklidischen Raum voraus.
+Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Zentren der Cluster wie der Algorithmus von Llyod. Zunächst beginnt Llyod's Algorithmus mit einer Initialisierung. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert, also die Vektor-Cluster-Zuordnung sich nicht mehr ändert, oder eine maximale Anzahl an Iterationen erreicht wurde: 
 
 \begin{enumerate}
 	\item \textbf{Initialisierung} Es werden zunächst $k$ zufällige Vektoren als Cluster ausgewählt
-	\item \textbf{Zuordnung}: Von den verbleibende Vektor wird nun mit jedem Cluster die neue Varianz bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am geringsten bei Aufnahme des Vektors ändert.
+	\item \textbf{Zuordnung}: Von den verbleibende Vektor wird nun mit jedem Cluster die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am geringsten bei Aufnahme des Vektors erhöht.
 	\item \textbf{Vektoren zuweisen}: Die Zentren den Cluster werden neu berechnet, um den neu zugeordneten Vektor in Folgeberechnungen miteinzubeziehen.
 \end{enumerate}
 
 Im Folgenden Beispiel werden zur Veranschaulichung zweidimensionale Vektoren, Punkte im Raum, betrachtet. Dieser Prozess läuft für höhere Dimensionen unter Berücksichtigung der Distanzmetriken analog ab, wenn sich die Vektoren im euklidischen Raum befinden. Als $k$ wird hier drei gewählt. Der Erste Cluster muss zufällig gewählt werden, da keine Informationen vorliegen, auf Basis derer eine gute Entscheidung getroffen werden kann. Als erstes wird der Punkt 4 gewählt. Im nächsten Schritt bestimmen wir den Punkt der am weitesten von Punkt 4 entfernt ist. Berechnet man die Distanz für alle Punkte, so sind Punkt 5 und 10 beide am weitesten und gleich weit von Punkt 4 entfernt. In diesem Fall wird zufällig Punkt 10 gewählt. Da nach ein Cluster gefunden werden muss wird nun die Distanz von jedem verbleibendem Punkt zu Punkt 4 und 10 bestimmt. Dieser Schritt liefert Punkt 1 als initialen Mittelpunkt für den dritten Cluster. \cite{mmd2011}
 
-TODO: Abbildung mit Clustern, kürzere Erklärung fürs Beispiel
-
-\subsection{Support Vector Machines / Confusion Matrix}
-
 \begin{itemize}
-	\item SVMs nur für 2 Klassen geeignet, daher nicht oder? Oder mehrere SVMs nutzen?
+	\item TODO: Abbildung mit Clustern, kürzere Erklärung fürs Beispiel
 	\item Confusion Matrix um Matching zu bestimmen? 
 \end{itemize}
 
@@ -295,7 +292,7 @@ Ein Programm, dass auf einer Nvidia Grafikkarte ausgeführt werden soll, muss in
 Nvidia hat das SPMD Modell durch \textit{kernels} umgesetzt. Ein \textit{kernel} ist ein Programm, dass parallel auf verschiedene Daten der GPU angewendet wird. Um kenntlich zu machen, dass es sich um Code handelt der vom \textit{host} aufgerufen und auf der Grafikkarte ausgeführt wird, muss eine Funktion mit \textit{\_\_global\_\_} spezifiziert werden.
 Bevor ein \textit{kernel} aufgerufen werden kann, muss der notwendige Speicher auf der Grafikkarte für die Daten und das Ergebnis allokiert werden. Anschließend werden die Daten von \textit{host} zu \textit{Device} kopiert. Nach Durchführung der Berechnung kann dann das Ergebnis zurück zum \textit{host} kopiert werden. Die Datentransfers weisen eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten nur selten erfolgen.
 Die Daten liegen in der Regel als Vektor oder Matrix vor. Der Zugriff auf verschiedene Elemente durch unterschiedliche \textit{kernel} erfolgt dann durch eine Indexberechnung.
-Um die Indexberechnung nachvollziehen zu können, muss zunächst die Organisierung von Threads in einem \textit{kernel} näher betrachtet werden. TODO
+Um die Indexberechnung nachvollziehen zu können, muss zunächst die Organisierung von Threads in einem \textit{kernel} näher betrachtet werden. Beim Aufruf des Kernels muss eine Dimension für das Grid und eine die Anzahl von Threads pro Block angegeben werden. Das Grid enthält die Blöcke und kann ein, zwei oder dreidimensional sein. In Abbildung \ref{img:cuda1} ist ein Grid mit sechs Blöcken schematisch dargestellt. Ein Block enthält eine frei wählbare Anzahl von $2^n$ Threads aber maximal 1024 auf aktuellen Grafikkarten.
 
 \begin{figure}
 	\centering
@@ -305,43 +302,9 @@ Um die Indexberechnung nachvollziehen zu können, muss zunächst die Organisieru
 \end{figure}
 
 \begin{itemize}
-	\item TODO: Machine Learning im Intro unterbringen
-	\item TODO: Organisierung Grids, Blocks, Threads
-	\item TODO: Beispiel anhand von Vektor / Matrix
-	\item shared memory ?
+	\item TODO: Beispiel anhand von Vektor / Matrix, warps?
 \end{itemize}
 
-\subsection{Histogramme parallel berechnen}
+Zur Speicherverwaltung nutzt cuda sowohl \textit{global memory} als auch \textit{shared memory}. Sofern nicht expliziert \textit{shared memory} verwendet wird, werden alle Daten im \textit{global memory} gehalten. Gerade bei vielen parallelen Lese- / Schreibzugriffen kann hier eine hohe Latenz auftreten, wenn viele Threads auf die gleichen Adressen zugreifen. Aus diesem Grund empfiehlt es sich, die benötigten Daten von dem \textit{global} in den \textit{shared memory} zu kopieren. Der \textit{shared memory} wird von allen Threads in einem Block geteilt. Beim Kopieren der Daten muss also wieder ein Index berechnet werden, um die korrekten Daten dem jeweiligen Block zuzuordnen. Weiterhin ist zu beachten, dass nicht beliebig viel \textit{shared memory} allokiert werden kann: Je nach Grafikkarten stehen pro Block zwischen 16 und 48 KiB Speicher zur Verfügung.
 
-Ein häufig eingesetztes Muster, da es sich hervorragend für parallele Berechnungen eignet, ist das Histogramm. Hierbei wird die Häufigkeit einer Wertmenge in Klassen eingeteilt. Histogramme finden Anwendung bei der Extraktion von Features und TODO. Eine große Menge Features kann so in k Klassen eingeteilt werden, der Anzahl oder Größe vorgegeben werden kann. Pro Feature wird die entsprechende Klasse um eins inkrementiert. Dies kann parallel durchgeführt werden da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Features abgearbeitet werden. Wenn das zu beschreibende Histogramm im global Speicher vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit keine Dies wird in cuda durch die Operation \textit{atomicAdd} Um dies zu umgehen, wird pro Block in einem Grid eine lokales, privates Histogramm im shared Memory angelegt. Dadurch müssen aber noch die Werte der privaten Histogramme in das globale kumuliert werden, sobald alle Threads eines Blocks fertig sind.
-
-\lstset{language=C}
-\begin{lstlisting}
-__global__
-void histogram_kernel (float *buffer, long size, int *histo) {
-	__shared__ int *copy[10];
-	
-	if (threadIdx.x < 10) {
-		copy[threadIdx.x] = 0;		
-	}
-	__syncthreads();
-
-	int id = threadIdx.x + blockDim.x * gridDim.x;
-	int stride = blockDim.x * gridDim.x;
-	
-	while (i < stride) {
-		int bin = buffer[i] / 10; 
-		atomicAdd(&(copy[bin]), 1);
-		i += stride;	
-	}
-	__syncthreads();
-	
-	if (threadIdx.x < 10) {
-		atomicAdd(&(histo[threadIdx.x]), copy[threadIdx.x]);		
-	}
-}
-\end{lstlisting} 
-
-\begin{itemize}
-	\item Histogramm verschieben nach Analyse / Konzept?
-\end{itemize}
+\subsection{Beispiel?}
