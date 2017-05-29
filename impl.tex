@@ -1,75 +1,77 @@
 \chapter{Implementierung}
 
-Die Implementierung beschäftigt sich mit den Details zur Umsetzung der Feature Extraktion, sowie des Bag of Visual Words und Autoencoders.
+Die Implementierung ist in drei Teile gegliedert. Zunächst wird die Extraktion und Speicherung der Features näher beschrieben. Im Anschluss wird der Aufbau der Modelle behandelt. Im zweiten Teil wird die Umsetzung des Bag of Visual Word Modells in cuda betrachtet. Im Wesentlichen werden hier die CUDA\textit{kernels} für den k-means Algorithmus angeführt sowie Unterschiede in der Implementierung zwischen \textit{global} und \textit{shared memory} behandelt. Der dritte Abschnitt illustriert eine Autoencoder Implementierung in TensorFlow. 
 
 \section{Feature Extraktion}
 
-Zur Extraktion der Features wird die OpenCV SIFT Implementierung verwendet. Zur Verwendung von SIFT, ist es erforderlich das opencv Projekt zusammen mit dem opencv-contrib Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im opencv Projekt enthalten [REF]. Zu Gewinnung der keypoints eines Bildes, muss ein neuen SIFT Detektor erstellt und die detect Methode mit einem Bild aufgerufen werden.
+Da es sich bei der Feature Extraktion für beide Modelle um einen Schritt zur Vorverarbeitung handelt, würde eine Umsetzung genügen. Die beiden Umgebungen der Umsetzung unterschieden sich jedoch sehr voneinander: C und cuda sind sehr hardwarenahe Sprachen, Python ist eine interpretierte Hochsprache und TensorFlow generiert den entsprechenden Code für die Grafikkarte automatisch aus einem Modell. Aus diesem Grund wird eine Funktion zur Extraktion in beiden Sprachen bereitgestellt. Intern wird aber bei beiden auf die \textit{opencv}\footnote{https://github.com/TODO/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/TODO/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten. 
+
+In C wird zur Gewinnung der Feature-Vektoren eines Bildes \textit{extractFeatures} mit dem Pfad des Bildes aufgerufen. Die vollständige Funktion kann nachfolgendem Codelisting entnommen werden. Um die Übersicht zu wahren, wurde hier auf die Importe verzichtet. Neben den \textit{opencv} Standardimporten ist es jedoch zusätzlich notwendig \textit{opencv/nonfree/features2d} einzubinden. Zunächst wird das Bild durch \textit{opencvs} \textit{imread} Methode eingelesen und liegt im Speicher als Matrix vor. Da SIFT mit monochromatischen Bildern arbeitet, wird vor der Detektion das eingelesen Bild konvertiert. Um hieraus die Deskriptoren zu berechnen, bietet \textit{opencv} eine \textit{SiftFeatureDetector} Klasse an. Via \textit{detect} werden im ersten Schritt die \textit{keypoints} ermittelt (Zeile 8) und in Zeile 9 aus dem Bild und den \textit{keypoints} die Deskriptoren berechnet. Die Deskriptoren werden dann als \textit{opencv} Matrix zurückgegeben.
 
 \lstset{language=C}
 \begin{lstlisting}
-#import <opencv2/core/core.hpp>
-#import <opencv2/highgui/highgui.hpp>
-#import <opencv2/nonfree/features2d.hpp>
-
 using namespace cv;
 
-int main () {
-	const Mat image = imread(IMAGE_PATH, 0);
+Mat extractFeatures (String imagePath) {
+	const Mat image;
+	const Mat source = imread(imagePath, 0);
+	cvtColor(source, image, CV_RGB2GRAY);
 	SiftFeatureDetector detector;
 	vector<KeyPoint> keypoints;
+	Mat descriptors;
 	
 	detector.detect(input, keypoints);
+	detector.compute(input, keypoints, descriptors);
+	return descriptors;
 }
 \end{lstlisting}
 
-TODO: Platzhalter Code-Listing, aber im Grunde funktioniert's so.
+In Python funktioniert die Verwendung analog, da auch hier die \textit{opencv} Bibliothek genutzt wurde.
 
-\section{Bag of Visual Words}
+\section{Ansatz 1: Bag of Visual Words}
 
-Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Zur Erstellung und Interaktion eines Modells dient die Klasse BoVW und bietet hierfür vier Funktionen an. Die Funktion createCodebook(float **features) baut ein Codebook aus einer gegebenen Menge von Features auf und speichert dieses intern. Durch die Funktion saveCodebook(String path) und loadCodebook(String path) kann ein intern gespeichertes Codebook in eine Datei geschrieben werden bzw. von einer Datei eingelesen werden. Die letzte Funktion classify(String imagePath, int count) extrahiert lokale Features eines Bildes und berechnet die Ähnlichkeit der Visual Words. Es werden die ähnlichsten Bilder zurückgegeben. Die Anzahl der Ergebnisse kann durch den Parameter \textit{count} gesteuert werden. 
-Da es sich bei der Berechnung der Cluster sowie der relativen Häufigkeiten um die rechenintensivsten Funktionen handelt, wurde diese parallelisiert.
+Das Bag of Visual Words Modell wurde direkt in C und cuda umgesetzt. Sofern die Deskriptoren aus den Trainingsbildern extrahiert wurden, kann durch \textit{generateModel} die Generierung eines Modells gestartet werden. Hier werden die Features, die Anzahl der Cluster und eine Referenz auf eine Liste von Mitgliedschaften erwartet. Neben den Schwerpunkten der Cluster werden die Mitgliedschaften berechnet: Pro Cluster liegt eine Liste vor, die alle \textit{keypoints}, die zu dem Cluster gehören, enthält. Sowohl die Schwerpunkte der Cluster als auch die Mitgliedschaften werden nach der Verarbeitung auf die Festplatte in verschiedene Dateien geschrieben. Die Schwerpunkte der Cluster werden zeilenweise in die Datei \textit{model\textunderscore clusters} geschrieben, sodass sich $k$ Zeilen mit 128 Elementen bei der Verwendung von SIFT ergeben. Die Mitgliedschaften der Features zu Cluster wird in der Datei \textit{$<model>\textunderscore membership$} gespeichert und enthält so viele Zeilen wie Features vorliegen. Jede Zeile enthält die $x$ und $y$ Koordinaten des \textit{keypoints} und den Index des zugehörigen Clusters. Der Index bezieht sich hierbei auf die Position des Clusters in der Datei \textit{$<model>\textunderscore clusters$}.
 
 \subsection{Paralleler k-means Algorithmus}
 
-Die Umsetzung der k-means Algorithmus ist direkt in cuda erfolgt. Als Referenzimplementierung diente hier das Projekt von [REF]. Der Algorithmus erwartet die einen Feature-Vektor, die Feature Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Kernelaufruf wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{float} Werte dargestellt, sodass das ein SIFT Feature-Vektor beispielsweise 128 $*$ 4 Byte = 512 Byte belegt. 
+Die Umsetzung des k-means Algorithmus ist direkt in cuda erfolgt. Als Referenzimplementierung diente hier das Projekt von [REF]. Der Algorithmus erwartet einen Feature-Vektor, die Feature-Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{float} Werte dargestellt, sodass ein SIFT Feature-Vektor bzw. der Schwerpunkt eines Clusters $128 \times 4 Byte = 512 Byte$ belegt. 
 
-\subsection{Histogramm als parallele Reduktion}
+\begin{itemize}
+	\item zweidimensionale Daten kopieren, Alternativen
+	\item Übersicht der Kernels (euclidDistance, findNearestCluster, computeDelta)
+\end{itemize}
 
-In der Konzeption wurde aufgezeigt, wie sich die Berechnung eines Histogramms parallelisieren lässt, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im global Speicher vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in cuda durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
+\subsubsection{Global memory}
+
+\todo{Wesentliche Teile der global memory Implementierung hier.}
+
+\subsubsection{Shared memory}
+
+Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll cudas \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Die Größe des zu extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Feature Dimension:
 
 \lstset{language=C}
 \begin{lstlisting}
-__global__
-void histogram_kernel (float *buffer, long size, int *histo, int bins) {
-	extern __shared__ int *copy[];
-	
-	if (threadIdx.x < bins) {
-		copy[threadIdx.x] = 0;		
-	}
-	__syncthreads();
+const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
+const unsigned int clusterDataSize = k * size * sizeof(float);
+const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
+\end{lstlisting}
 
-	int id = threadIdx.x + blockDim.x * gridDim.x;
-	int stride = blockDim.x * gridDim.x;
-	
-	while (i < stride) {
-		int bin = buffer[i] / bins; 
-		atomicAdd(&(copy[bin]), 1);
-		i += stride;	
-	}
-	__syncthreads();
-	
-	if (threadIdx.x < bins) {
-		atomicAdd(&(histo[threadIdx.x]), copy[threadIdx.x]);		
-	}
+In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Vor der Berechnung der Mitgliedschaft wird nun ein lokaler Pointer \textit{clusters} angelegt und alle notwendigen Cluster kopiert.
+
+\lstset{language=C}
+\begin{lstlisting}
+float *clusters = (float *)(sharedMemory + blockDim.x);
+for (int i = threadIdx.x; i < k; i += blockDim.x) {
+  for (int j = 0; j < size; j++) {
+    clusters[k * j + i] = deviceClusters[k * j + i];
+  }
 }
-\end{lstlisting} 
+__syncthreads();
+\end{lstlisting}
 
-\begin{itemize}
-	\item TODO: Das ist so ziemlich die Variante aus der Vorlesung, muss durch Variante mit features /clustern ersetzt werden.
-\end{itemize}
+Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Featuredimension, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Durch die Verwendung von SIFT ist die Featuredimension auf 128 festgelegt, sodass letztendlich eine Obergrenze für $k$ berechnet werden kann. Gängige Modelle cuda kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Thread pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Dies sind bei 48 Kilobyte maximal 91, für 16 Kilobyte sogar nur 29 Cluster. \todo{was tun}
 
-\section{Autoencoder}
+\section{Ansatz 2: Autoencoder}
 
 Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch Nvidias cuda unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
 

@@ -1,34 +1,49 @@
 \chapter{Analyse}
 
-Ziel der Arbeit ist es, dass ein Anwender die in der HsH Datenbank vorhandenen Bilddaten in eine Menge von $k$ verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Darüber hinaus sollen neu hinzukommende Bilder auf der Basis eines gewonnen Modells klassifiziert werden können. Das $k$ kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Zusammenhänge zwischen den Bildern zu entdecken. 
-In diesem Rahmen sollen zwei Methoden miteinander verglichen werden, die eine Klassifikation von Bildern auf Basis von Feature Deskriptoren ermöglichen. Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände berücksichtigt. Eine Reihe von geeigneten und verbreiteten Deskriptoren wird im Kapitel \nameref{extraction} vorgestellt und diskutiert.
-Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen sehr hohe Dimensionen auf, was eine effiziente Berechnung nicht möglich macht. Die Folgenden beiden Abschnitte behandeln zum Einen das Bag of Visual Words Modell und zum anderen den Autoencoder. Beide Ansätze reduzieren auf unterschiedliche Weise die Dimensionen von Features um so eine Berechnung der Ähnlichkeit zu beschleunigen. 
+Ziel der Arbeit ist es, dass ein Anwender die in der HsH-Datenbank vorhandenen Bilddaten in eine Menge von $k$ verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Das $k$ kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Informationen in Bildern zu entdecken. 
+In diesem Rahmen sollen zwei Methoden miteinander verglichen werden, die eine Gruppierung von Bildern auf Basis von sogenannten Feature Deskriptoren ermöglichen.  Die so entstandenen Modelle erlauben es weitere Bilder zu labeln, d.h. die Gruppe zu bestimmen, der sie angehören. Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Verschiedene Objekte oder Merkmale die auf mehreren Bildern vorhanden sind, weise selten die gleiche Position auf, daher sollten Rotation, Skalierung und Translationen berücksichtigt werden. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände einbeziehen kann. Eine Reihe von geeigneten und verbreiteten Deskriptoren wird im Kapitel \nameref{extraction} vorgestellt und diskutiert.
+Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen viele Komponenten auf, was eine effiziente Berechnung nicht möglich macht. Die folgenden beiden Abschnitte behandeln zum Einen das Bag of Visual Words Modell und zum Anderen den Autoencoder. Beide Ansätze reduzieren auf unterschiedliche Weise die Dimensionen der Daten, um so eine schnellere Berechnung in einem \todo{kleineren} Raum zu ermöglichen.
+Da zum Aufbauen der Modelle Millionen von Features verarbeitet werden müssen, wird bei der Betrachtung der beiden Ansätze geprüft, wie eine Beschleunigung der Berechnung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden, als durch CPUs.
 
-\begin{itemize}
-	\item Ein bischen mehr hier zu BoVW / AE: state of the art, andere Paper...
-	\item Ausführung auf GPU berücksichtigen
-\end{itemize}
+\todo{cuda besser einführen, kurze cuda Sektion?}
 
 \section{Feature Deskriptoren}
 \label{extraction}
 
-Zum Vergleich von Bilddaten müssen Features aus den Bildern extrahiert werden, die diese charakterisieren. In der Literatur finden sich verschiedene Ansätze, die je nach Einsatzgebiet unterschiedliche Stärken besitzen. 
-Der Local Binary Pattern (LBP) Deskriptor kodiert die Informationen eines Pixels und seiner Nachbarschaft der Größe $3 \times 3$ Pixel eines Graustufenbildes in einem Histogramm. Der resultierende Feature-Vektor enthält somit 256 Dimensionen. LBP sind gegenüber Rotationen invariant und wurden auch um die Verarbeitung um Bilder in Farbe erweitert. Besonders gute Ergebnisse konnten mit LBP im Bereich der Gesichts- und Texterkennung erzielt werden.
-Einen ganz anderen Ansatz haben Torralba und Olivia verfolgt: Statt Objekte durch lokale Features zu beschreiben, werden globale Eigenschaften betrachtet. Das Bild wird in einem Raum mit wenig Dimensionen abgebildet, dem sogenannten \textit{Spatial Envelope}. Die Autoren nutzen hier wahrnehmbare Dimensionen wie Natürlichkeit und Offenheit um den Raum zu definieren. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.  Bilder die in einer semantischen Kategorie Ähnlichkeiten aufweisen, liegen dann nah beieinander. Dieses Modell hat sich vor allem bewährt um eine Umgebung zu klassifizieren. \cite{mts2001}
-Noch SIFT hier anfangen. Noch ein Deskriptor 
+Feature Deskriptoren enthalten Informationen von charakteristischen Bereichen in Bildern. Feature Deskriptoren kodieren weitaus mehr als nur die geometrische Position von Pixeln: Es wird beispielsweise die Beleuchtung und teilweise affine Invarianz berücksichtigt. In der Literatur finden sich verschiedene Ansätze, die je nach Einsatzgebiet unterschiedliche Stärken besitzen. Nachfolgend werden einige Feature Deskriptoren vorgestellt, die verbreitete Anwendung durch ihre praktischen Erfolge erzielt haben. Für die weitere Verarbeitung der Features ist es erstrebenswert, dass ihre Darstellung möglichst kompakt ist. Deskriptoren werden als Vektoren von Zahlen kodiert, die abhängig vom Verfahren Informationen über einen Pixel und seine Nachbarschaft oder auch ein ganzes Bild enthalten. Je größer die Anzahl der Einträge eines Vektors, desto größer wird der Speicherbedarf und Rechenaufwand. Neben einer kompakten Darstellung werden daher  in der Praxis Verfahren verwendet um die Dimension weiter zu reduzieren.
+
+\todo{Under construction - auch die folgenden Deskriptoren}
+
+\subsection{Local Binary Patterns}
+
+Der Local Binary Pattern (LBP) Deskriptor erzeugt aus einem Bild eine Reihe Bitstrings als Deskriptoren. Die Länge der Bitstrings hängt hier von der verwendeten Größe der Nachbarschaft eines Pixel ab. Original wurde eine $3 \times 3$ Nachbarschaft verwendet, was zu einer Länge von acht führt (nur die Nachbarschaft wird kodiert). Für jeden Pixel wird nun bestimmt ob seine Intensität kleiner oder größer im Vergleich zu einem Schwellwert ist. Abhängig vom Ergebnis wird eine 0 oder 1 kodiert. Im Fall der $3 \times 3$ Nachbarschaft ergibt dies $2^8$ mögliche verschiedene Bitstrings, sodass der resultierende Featurevektor 256 Komponenten aufweist. LBP wurden um Invarianz gegenüber Rotationen und die Verarbeitung von Farbbildern erweitert. Durch die Entwicklung dieser Methode wurden vor allem im Bereich der Gesichtserkennung wesentliche Fortschritte gemacht \cite{lbp2002}.
+
+\subsection{Spatial Envelope}
+
+Einen ganz anderen Ansatz haben Torralba und Olivia \cite{mts2001} verfolgt: Statt Objekte durch lokale Features zu beschreiben, werden globale Eigenschaften betrachtet. Das Bild wird in einem Raum mit wenig Dimensionen abgebildet, dem sogenannten \textit{Spatial Envelope}. Die Autoren nutzen hier wahrnehmbare Dimensionen wie Natürlichkeit und Offenheit um den Raum zu definieren. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.  Bilder die in einer semantischen Kategorie Ähnlichkeiten aufweisen, liegen dann nah beieinander. Dieses Modell hat sich vor allem bewährt um eine Umgebung bzw. Landschaft zu klassifizieren. 
+
+\subsection{Histogram of Oriented Gradients}
+
+Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. Obwohl beispielsweise SIFT auch ein lokales Histogramm um einen \textit{keypoint} berechnet, werden beim HOG hingegen die Features des ganzen Bildes (bzw. Bereiches) berechnet, nicht nur von Nachbarschaften.
+
+\section{Lernverfahren}
+
+Ein System, dass ein Lernverfahren implementiert, wird genutzt um Muster in Datenströmen zu entdecken. Hierfür wird das System mit Trainingsdaten angelernt, um diese zu beurteilen und daraus Muster zu gewinnen. Wenn dieser Vorgang abgeschlossen ist, kann der Lernalgorithmus auf die eigentlichen Daten angewendet werden. In der Literatur wird zwischen verschiedene Lernmethoden unterschieden, die geläufigsten sind unüberwachtes und überwachtes Lernen:
 
 \begin{itemize}
-	\item Detaillierter ausführen / Weitere Deskriptoren (SURF, SUSAN) ?
-	\item Histogram of Oriented Gradients aufnehmen -> Autoencoder Basis
+	\item \textbf{Überwachtes Lernen (supervised Learning)} Ein Lehrer ist erforderlich, der überprüft, ob die Ausgabe des Netzes bezüglich des Eingabe korrekt ist. Das Netz lernt auf diese Weise Assoziationen zwischen den Ein- und Ausgaben herzustellen.
+	\item \textbf{Unüberwachtes Lernen (unsupervised Learning)} Ziel unüberwachter Lernalgorithmen ist aus großen Mengen von nicht kategorisierten Daten versteckte Strukturen zu entdecken. Um dies zu erreichen werden die Daten oft quantisiert oder in eine simplere Darstellung überführt.
 \end{itemize}
+
+Für die Featuregewinnung eignen sich vor allem unüberwachte Lernverfahren, da pro Bild viele hochdimensionale Deskriptoren gefundenen werden. Zum einen muss die Menge der erzeugten Deskriptoren auf die Wesentlichen reduziert werden, zum anderen eignen sich die 128 dimensionalen SIFT Feature Vektoren nur bedingt für einen Vergleich. Eine Möglichkeit besteht also darin durch ein Clustering Verfahren die Deskriptoren in Kategorien zu quantisieren, sodass beim Labeling eines Bildes nur noch ein Bruchteil an Vergleichen durchgeführt werden muss. Ein anderer Ansatz ist das Verringern der Feature Dimensionalität. Verfahren wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab und wurden bereits speziell für SIFT adaptiert (SIFT-PCA). Durch den Aufschwung maschineller Lernverfahren wurden jüngst auch neuronale Netze für diesen Zweck adaptiert. Ein Autoencoder ist ein spezielles neuronales Netzwerk, dass sich für das unbeaufsichtigte Lernen einer komprimierten Darstellung von Daten verwenden lässt. Im Folgenden werden zwei verschiedene unüberwachte Lernverfahren, dass Bag of Visual Words Modell und der Autoencoder, vorgestellt. Ziel ist es beide Verfahren zu implementieren und die Ergebnisse gegenüberzustellen.
 
 \section{Ansatz 1: Bag of Visual Words}
 
-Im ersten Ansatz soll das Bag of Visual Words Modell verfolgt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich die Visual Words zu generieren. Als Clustering Algorithmus soll hier Llyods heuristische Variante des k-means Algorithmus verwendet werden. Zunächst wird eine gängige sequentielle Implementierung angeführt, auf deren Basis die Parallelisierbarkeit durch Grafikkarten untersucht wird. Bei der Einordnung eines Features wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
+Im ersten Ansatz soll das Bag of Visual Words Modell genutzt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich, die \textit{Visual Words} zu generieren. Die \textit{Visual Words} werden durch ein Clustering der Feature-Vektoren gewonnen, daher handelt es sich hier um ein unüberwachtes Lernverfahren. Als Clustering Algorithmus wird hier Llyods heuristische Variante des k-means Algorithmus verwendet. Zunächst wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird. Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
 
 \subsection{Lloyds Algorithmus}
 
-Im Grundlagenkapitel wurde bereits der allgemeine Ablauf von Lloyds Algorithmus beschrieben, der sich grundlegend in drei Stufen einteilen lässt. Im Nachfolgendem Codelisting ist der Ablauf des Algorithmus in Pseudocode beschrieben. Als Parameter werden die Punkte $P$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster statt. Die Zuordnung von Punkten zu Clustern erfolgt in Zeile 7: $argminD$ wählt den Cluster aus, dessen Varianz am wenigsten bei Aufnahme des Punktes $p_{i}$ steigt. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in Zeile 9 durchgeführt.
+Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. Im nachfolgenden Codelisting ist der Ablauf des Algorithmus in Pseudocode beschrieben. Als Parameter werden die Punkte $P$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster statt. Die Zuordnung von Punkten zu Clustern erfolgt in Zeile 7: $argminD$ wählt den Cluster aus, dessen Varianz am wenigsten bei Aufnahme des Punktes $p_{i}$ steigt. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in Zeile 9 durchgeführt.
 
 \lstset{language=C}
 \begin{lstlisting}[mathescape=true]
@@ -43,25 +58,31 @@ kmeans_lloyd ($P, C, k$)
 			$c_{j} = \frac{1}{|c_{j}|} \sum_{n_{i} \in c_{j}} n_{i}$
 \end{lstlisting}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paars berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. 
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. 
 
-\begin{itemize}
-	\item theoretisch: http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
-	\item praktisch: https://github.com/serban/kmeans (siehe Mail)
-\end{itemize}
+\todo{Cluster Aktualisierung}
+% http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
 
 \subsection{Histogramme}
 
-TODO
+Ein sequentielles Histogramm kann als Programm in einer Schleife über die Daten ausgedrückt werden: Für jedes Element wird der Index der Klasse des Histogramms berechnet und um eins inkrementiert. Zur Normalisierung des Histogramms ist es anschließend notwendig, jede Klasse des Histogramms durch die Gesamtanzahl der Werte zu dividieren. Da es sich bei der Anzahl der Klassen jedoch um eine kleine Zahl, im Vergleich zur Anzahl der Elemente in den Daten, handelt, ist dieser Aufwand vernachlässigbar.
+
+\todo{Histogramm für Cluster erläutern}
+
+\begin{lstlisting}[mathescape=true]
+histogram ($P, C, H$)
+	for each $p_{i} \in P$
+		for each $c_{j} \in C$
+			$k = arminD(c_{j}, p_{i})$ 
+		$H_{k} = H_{k} + 1$		
+	for $1 .. |H|$
+		$H_{i} = H_{i} / |H|$
+\end{lstlisting}
 
 \section{Ansatz 2: Autoencoder}
 
-Im zweiten Ansatz soll ein Autoencoder genutzt werden um die Dimensionalität des Feature-Vektors zu reduzieren. In der Arbeit von [REF] wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Es werden durch den SIFT Detektor die \textit{interest points} eines Bildes ermittelt. Für jeden \textit{intereset Point} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
+Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und diesen Wissen zu transferieren. 
+Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Hier soll dieser genutzt werden, um die Dimensionalität des Feature-Vektors zu reduzieren. In der Arbeit von [REF] wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Es werden durch den SIFT Detektor die \textit{interest points} eines Bildes ermittelt. Für jeden \textit{interest point} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
 
-\begin{enumerate}
-	\item Intro Machine Learning, Aufschwung und Verbreitung 
-	\item Netzwerke zur Nutzung für beaufsichtigtes Lernen
-	\item Autoencoder für unbeaufsichtigtes Lernen
-	\item auch hier gibt es ein Paper, das mir viel zum Autoencoder liefert, auch bereits hier erwähnen?
-	\item GPU!
-\end{enumerate}
+\todo{Autoencoder für unbeaufsichtigtes Lernen, Einführung AE}
+\todo{Auch hier gibt es ein Paper, das mir viel zum Autoencoder liefert, auch bereits hier}

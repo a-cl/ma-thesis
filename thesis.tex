@@ -5,7 +5,7 @@
 % Sprachpaket für Deutsch (Umlaute, Trennung, deutsche Überschriften)
 \usepackage[ngerman]{babel}
 \usepackage{blindtext}
-%Graphikeinbindung, Hyperref (alles klickbar, Bookmarks),
+% Graphikeinbindung, Hyperref (alles klickbar, Bookmarks),
 \usepackage{graphicx, hyperref, amssymb}
 % Umlaute - nochmal, die oben gehen nicht...
 \usepackage[utf8]{inputenc}
@@ -23,10 +23,13 @@
 \definecolor{mygray}{rgb}{0.3,0.3,0.3}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 
+\newcommand{\todo}[1]{\textcolor{red}{TODO: {#1}}}
+
 % Genereller Style für Codelistings
 \lstset{ %
   backgroundcolor=\color{white},
   breakatwhitespace=false,
+  basicstyle=\small\sffamily,
   breaklines=true,
   captionpos=b,
   commentstyle=\color{mygreen},
@@ -35,10 +38,10 @@
   keepspaces=true,
   keywordstyle=\color{blue},
   language=Octave,
-  morekeywords={*, \_\_shared\_\_, until, each, synchronize threads},
+  morekeywords={__shared__, __global__, until, each, synchronize threads},
   numbers=left,
   numbersep=5pt,
-  numberstyle=\tiny\color{mygray},
+  numberstyle=\small\color{mygray},
   rulecolor=\color{black},
   showspaces=false,                
   showstringspaces=false,
@@ -48,7 +51,7 @@
   tabsize=2
 }
 
-% Optionen für neurale Netze
+% Optionen für neuronale Netze
 \def\layersep{2.5cm}
 
 % Festlegung Kopf- und Fußzeile     
@@ -60,8 +63,8 @@
 }{%
 	(\textwidth,.4pt)
 	{\pagemark\hfill Alexander-Sebastian Clauß}
-	{Version 1.0 vom \today \hfill \pagemark}
-	{Version 1.0 vom \today\hfill\pagemark} 
+	{Version 0.5 vom \today \hfill \pagemark}
+	{Version 0.5 vom \today\hfill\pagemark} 
 }
 \pagestyle{meinstil} 
 
