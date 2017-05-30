@@ -5,23 +5,42 @@
 	\item Verschiedene Tests auf: Rotation, Skalierung, etc
 \end{itemize}
 
-Im Folgenden werden Testgruppen von Bildern aufgebaut, anhand derer die Qualität der Ergebnisse und die Performance bewertet werden. 
+Im Folgenden werden Testgruppen von Bildern aufgebaut, anhand derer die Qualität der Ergebnisse und die Performance bewertet werden. Neben dem Bildmaterial der HsH werden für die Tests auch Bilder des Caltech101 \cite{cal2004}, um einen Vergleich mit anderen Arbeiten zu ermöglichen.
 
 \section{Caltech 101}
 
+Bei dem Caltech101 Daten handelt es sich um eine weit verbreitete Menge von Bilddaten, die vorwiegend zum Test von Algorithmen bezüglich der Objekterkennung in Bildern dient. Insgesamt liegen 101 Kategorien vor, die zwischen 40 und 800 Bildern enthalten. Auf der offiziellen Webseite \footnote{http://www.vision.caltech.edu/Image\textunderscore Datasets/Caltech101/} und im Artikel der Autoren wir empfohlen, die eigene Arbeit mit derer anderen vergleichbar zu halten, indem:
+
+\begin{itemize}
+	\item Eine feste Anzahl an Trainings- und Testbildern verwendet wird.
+	\item Experimente mit einer zufälligen Auswahl an Bildern wiederholt werden.
+	\item Ähnlich viele Bilder, wie in den Arbeiten anderer, verwendet werden (1, 3, 5, 10, 15, 20 oder 30 Trainingsbilder; 20 oder 30 Testbilder).
+\end{itemize}
+
 \begin{center}
-    \begin{tabular}{ | l | l | l | p{5cm} |}
-    \hline
-     			& Autoencoder & Autoencoder & Bag of Words & Bag gof Words  \\ \hline
-    Gruppe 1	& Sequentiell & Parallel 	& Sequentiell  & Parallel.  	\\ \hline
-    Gruppe 2 	& 			  & 			& 			   & 				\\ \hline
-    Gruppe 3 	& 			  & 		 	&			   &				\\ \hline 
-    Gruppe 4 	& 0			  & 			&			   &				\\ \hline
+    \begin{tabular}{l c c c c}
+     		 & \multicolumn{2}{c}{Autoencoder} & \multicolumn{2}{c}{Bag of Words}  \\
+    	     & Sequentiell & Parallel 	& Sequentiell  & Parallel  		\\ \hline
+    	     															\\[-0.9em] 
+    Gruppe 1 & 0.0		   & 0.0		& 0.0		   & 0.0			\\     
+    Gruppe 2 & 0.0		   & 0.0		& 0.0		   & 0.0			\\ 
+    Gruppe 3 & 0.0		   & 0.0	 	& 0.0		   & 0.0			\\ 
+    Gruppe 4 & 0.0		   & 0.0		& 0.0		   & 0.0			\\
     \end{tabular}
+	\captionof{table}{Laufzeiten der Caltech101 Testgruppen.}
 \end{center}
 
-\section{imagenet}
-TODO
-
 \section{HsH Daten}
-TODO
+
+\begin{center}
+    \begin{tabular}{l c c c c}
+     		 & \multicolumn{2}{c}{Autoencoder} & \multicolumn{2}{c}{Bag of Words}  \\
+    	     & Sequentiell & Parallel 	& Sequentiell  & Parallel  		\\ \hline
+    	     															\\[-0.9em] 
+    Gruppe 1 & 0.0		   & 0.0		& 0.0		   & 0.0			\\     
+    Gruppe 2 & 0.0		   & 0.0		& 0.0		   & 0.0			\\ 
+    Gruppe 3 & 0.0		   & 0.0	 	& 0.0		   & 0.0			\\ 
+    Gruppe 4 & 0.0		   & 0.0		& 0.0		   & 0.0			\\
+    \end{tabular}
+	\captionof{table}{Laufzeiten der Testgruppen für die HsH-Daten.}
+\end{center}
