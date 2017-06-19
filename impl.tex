@@ -34,16 +34,19 @@ Das Bag of Visual Words Modell wurde direkt in CUDA C umgesetzt. Sofern die Desk
 
 \subsection{Paralleler k-means Algorithmus}
 
-Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von \todo{[REF]}. Der Algorithmus erwartet einen Feature-Vektor, die Feature-Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{float} Werte dargestellt, sodass ein SIFT Feature-Vektor bzw. der Schwerpunkt eines Clusters $128 \times 4$ Byte $= 512$ Byte belegt. 
-
-\begin{itemize}
-	\item zweidimensionale Daten kopieren, Alternativen
-	\item Übersicht der Kernels (euclidDistance, findNearestCluster, computeDelta)
-\end{itemize}
+Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von \todo{[REF]}. Der Algorithmus erwartet einen Feature-Vektor, die Feature-Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt, sodass ein SIFT Feature-Vektor bzw. der Schwerpunkt eines Clusters $128 \times 4$ Byte $= 512$ Byte belegt. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{Float-Pointer-Pointer}), müssen diese in ein eindimensionales Arrays konvertiert werden, damit die Daten korrekt von \textit{host} zu \textit{device} kopiert werden können. 
 
 \subsubsection{Global memory}
 
-\todo{Wesentliche Teile der global memory Implementierung hier.}
+Die in der Konzeption vorgestellten Funktionen sind als Funktion in C umgesetzt worden. Von diesen sind drei CUDA kernels, also Funktionen die durch die Grafikkarte ausgeführt werden. Diese Funktionen werden solange in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde.
+
+\begin{itemize}
+	\item \textbf{Distanzberechnung} euclideanDistance(float *points, float *clusters)
+	\item \textbf{Cluster-Mitgliedschaft} findNearestCluster() agiert auf jeweils einem Feature. Der Index des Features ist somit von der $threadIdx$ abhängig und berechnet sich unter Berücksichtigung der Blockdimension als $blockDim.x * blockIdx.x + threaIdx.x$. Es wird der nächste Cluster zum Feature bestimmt und auch berechnet, ob sich die Zuordnung des Features verändert hat. \todo{Parallel reduction}
+	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die Anzahl der Veränderungen der Feature-Cluster Mitgliedschaft. Im wesentlichen werden durch eine  parallele Reduktion die Veränderungen die in \textit{intermediates} festgehalten wurden aufsummiert.
+\end{itemize}
+
+Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \textit{host} kopiert. Diese Zahl wird durch die Gesamtanzahl der Features dividiert, um so die relative Veränderung zu bestimmen. Ist diese kleiner als ein vorgegebener Schwellwert oder wurde eine maximale Anzahl an Iterationen erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
 
 \subsubsection{Shared memory}
 

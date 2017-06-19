@@ -55,6 +55,7 @@ Im Folgenden werden zwei Verfahren zur Feature Detektion und Extraktion vorgeste
 \end{figure}
 
 \subsection{Histogram of Oriented Gradients}
+\label{sec:hog}
 
 Ein Histogramm ist eine diskrete Funktion, welche die Häufigkeitsverteilung in einer Menge abbildet. Hierfür wird jeder Wert der Menge einer Klasse zugeordnet. Die Größe der Intervalle einer Klasse leiten sich aus der Größe des gesamten Wertebereichs und der Anzahl der Klasse ab. So kann beispielsweise die Verteilung der Pixel eines Bildes auf die Intensitäten als Histogramm betrachtet werden. Bei einem monochromatischen Bild liegen 256 Intensitätswerte vor, die je eine Klassen repräsentieren. Beim Bilden des Histogramms wird jeder Pixels betrachtet und der Zähler der Klasse um eins inkrementiert, in deren Wertebereich der Intensitätswert des Pixels fällt. Ein Histogramm ist normalisiert, wenn es die relative Verteilung in der Menge darstellt.
 In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein sehr heller Hintergrund und eine dunkle Katze, die den Großteil des Bildes ausmacht. Dies spiegelt sich auch im Histogramm wieder: Es ist eine große Mengen an Punkten im dunklen Bereich vorhanden (Intensität $< 128$) und eine kleine, extreme Häufung im hellen Bereich.
@@ -68,9 +69,14 @@ In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein 
 
 Das Histogramm of Oriented Gradients beschreibt die Änderung der Intensität von einer Menge benachbarter Pixel in einer Richtung an. Um ein HOG zu generieren wird das Bild in gleich große Zellen eingeteilt, die eine Nachbarschaft von Pixeln umfassen. Über die Pixel jeder Zelle werden nun die lokalen Gradienten berechnet. Diese fließen proportional zu ihrer Stärke in den kumulierten Gradienten der Zelle ein. Dabei hat jede Zelle eine feste, vorgegebene Anzahl an Klassen für die Orientierungen der Gradienten. 
 
-Dalal und Triggs \cite{hog2005} nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \todo{Abbildung} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
+Dalal und Triggs \cite{hog2005} nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \ref{img:hog} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
 
-\todo{Abbildung}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/hog.png}
+	\caption{Schematische Darstellung des Histogram of Oriented Gradients  \cite{dif2004}}
+	\label{img:hog}
+\end{figure}
 
 \subsection{Scale-invariant feature transform}
 
@@ -90,13 +96,14 @@ SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} en
 	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
 \end{enumerate}
 
-SIFT ist äußerst robust, da Änderungen im Grenzwert von Position und Orientierung den Feature-Vektor kaum beeinflussen. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Darstellung erfordert einen Raum mit 128 Dimensionen. \cite{dif2004}
-
-\todo{SIFT-PCA erwähnen}
+SIFT ist äußerst robust, da Änderungen im Grenzwert von Position und Orientierung den Feature-Vektor kaum beeinflussen. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Darstellung erfordert einen Raum mit 128 Dimensionen. \todo{SIFT-PCA erwähnen?}
 
 \section{K-means Clustering}
 
-Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, dessen Varianz sich bei Aufnahme des Vektors am Wenigsten erhöht. Aus diesem Grund setzt das k-means Clustering einen euklidischen Raum voraus.
+Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der diesem am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am Geringsten ist:
+
+$$ X = \sum_{i=1}^{n}min_{c_{j} \in C}D(x_{i}, c_{j}) $$
+
 Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Schwerpunkte der Cluster, wie beispielsweise der Algorithmus von Llyod. Zunächst beginnt Llyods Algorithmus mit einer Initialisierung der Schwerpunkte. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert, also die Vektor-Cluster-Zuordnung sich nicht mehr oder nur noch gering ändert oder eine maximale Anzahl an Iterationen erreicht wurde: 
 
 \begin{enumerate}
@@ -266,7 +273,7 @@ Von Hinton and Salakhutdinov \cite{sda2010} wurde 2006 das Konzept des Stacked A
 
 \todo{Abbildungen}
 
-\todo{Denoising Autoencoder}
+Ein Denoising Autoencoder dient dazu, dass auch ein korrektes Ergebnis zu erhalten, wenn in den Daten Rauschen vorliegt. Weiterhin ist es vorteilhaft verrauschte Testdaten zu verwenden, um so sicher zu stellen, dass der Autoencoder tatsächlich eine Abstraktion lernt und nicht nur eine feste Abbildung zwischen Ein- und Ausgabe. Hierfür ist es erforderlich die Testdaten durch ein stochastisches Verfahren zu korrumpieren. Dem liegt die Annahme zu Grunde, dass die Eingabe relativ robust gegenüber Verzerrungen ist.
 
 \section{CUDA}
 

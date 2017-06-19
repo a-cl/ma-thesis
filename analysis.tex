@@ -23,7 +23,15 @@ Einen ganz anderen Ansatz haben Torralba und Olivia \cite{mts2001} verfolgt: Sta
 
 \subsection{Histogram of Oriented Gradients}
 
-Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. Obwohl beispielsweise SIFT auch ein lokales Histogramm um einen \textit{keypoint} berechnet, werden beim HOG hingegen die Features des ganzen Bildes (bzw. Bereiches) berechnet, nicht nur von Nachbarschaften.
+Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. Obwohl beispielsweise SIFT auch ein lokales Histogramm um einen \textit{keypoint} berechnet, werden beim HOG hingegen die Features des ganzen Bildes (bzw. Bereiches) berechnet, nicht nur von Nachbarschaften. Das Verfahren zur Gewinnung eines HOG ist im Grundlagenkapitel unter \ref{sec:hog} beschrieben. 
+
+\subsection{SIFT}
+
+Der SIFT-Deskriptor trifft keine speziellen Annahmen über die vorliegenden Objekte
+
+\subsection{Bewertung der Deskriptoren}
+
+In der Literatur und Praxis hebt sich von allen Deskriptoren der SIFT-Deskriptor am meisten ab. Zwar gibt es für spezielle Anwendungsfälle geeignetere Deskriptoren, wie beispielsweise den LBP-Deskriptor für die Erkennung von Passanten, doch SIFT ist bis heute der beste \glqq Allrounder\grqq. Insofern eignet sich SIFT vor allem, wenn nicht bekannt ist, allgemeine Inhalte in einer Bildmenge vorliegen bzw. wenn mehr als eine spezielle Objektart berücksichtigt werden muss. Generell funktionieren die im folgenden vorgestellten Modelle mit jeder Art von (Bild-)Deskriptor: Die Modelle arbeiten genau aus diesem Grund nicht direkt mit den Bilddaten, sondern den Deskriptoren. Bei eben diesen handelt es sich lediglich um Vektoren aus dem Raum $\mathbb{R}^d$, wobei die Dimensionalität $d$ des Raums und damit die Anzahl der Elemente des Vektors abhängig vom Verfahren sind. Dies schränkt aber nicht die generelle Machbarkeit ein, sondern wirkt sich auf die Laufzeit bzw. den Speicherbedarf aus. Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, wird für die Gewinnung der Features das SIFT-Verfahren und somit auch das Histogram of Oriented Gradients verwendet. 
 
 \section{Lernverfahren}
 
@@ -57,9 +65,8 @@ kmeans_lloyd ($P, C, k$)
 			$c_{j} = \frac{1}{|c_{j}|} \sum_{n_{i} \in c_{j}} n_{i}$
 \end{lstlisting}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. 
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen, da die Vektoren aus denen der Mittelwert berechnet wird, genau einem Cluster zugeordnet sind.
 
-\todo{Cluster Aktualisierung}
 % http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
 
 \subsection{Histogramme}
@@ -84,4 +91,4 @@ Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neurona
 Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Hier soll dieser genutzt werden, um die Anzahl der Elemente des Feature-Vektors zu reduzieren. In der Arbeit von Zhao \cite{aed2016} wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Es werden durch den SIFT Detektor die \textit{keypoints} eines Bildes ermittelt. Für jeden \textit{keypoint} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
 
 \todo{Autoencoder für unbeaufsichtigtes Lernen, Einführung AE}
-\todo{Auch hier gibt es ein Paper, das mir viel zum Autoencoder liefert, auch bereits hier}
+\todo{}
