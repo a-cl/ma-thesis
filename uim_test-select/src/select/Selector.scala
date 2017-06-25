@@ -1,6 +1,7 @@
 package select
 
 import java.io.File
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -9,7 +10,7 @@ import scala.collection.mutable.ListBuffer
   *
   * @param strategy The strategy to use for the image selection.
   */
-class Selector (strategy: SelectionStrategy) {
+class Selector(strategy: SelectionStrategy) {
 
   /**
     * Reads all image files directly contained in the directories
@@ -19,7 +20,7 @@ class Selector (strategy: SelectionStrategy) {
     * @param paths The directories with the images to use.
     * @return List[Test]
     */
-  def selectTests (paths: List[String]): List[Test] = {
+  def selectTests(paths: List[String]): List[Test] = {
     val allSets = paths.map(path => new File(path))
     val invalid = allSets.filter(file => !file.isDirectory)
 
@@ -40,10 +41,11 @@ class Selector (strategy: SelectionStrategy) {
     * @param file The file to check.
     * @return Boolean
     */
-  private def isImage (file: File): Boolean = {
-    def isPNG (f: File): Boolean = f.getName.endsWith(".png")
-    def isJPG (f: File): Boolean = f.getName.endsWith(".jpg")
-    def isGIF (f: File): Boolean = f.getName.endsWith(".gif")
+  private def isImage(file: File): Boolean = {
+    def isPNG(f: File): Boolean = f.getName.endsWith(".png")
+    def isJPG(f: File): Boolean = f.getName.endsWith(".jpg")
+    def isGIF(f: File): Boolean = f.getName.endsWith(".gif")
+
     file.isFile && (isPNG(file) || isGIF(file) || isJPG(file))
   }
 

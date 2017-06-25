@@ -27,7 +27,7 @@ trait SelectionStrategy {
     * @param images The list of images to pick from.
     * @return File
     */
-  protected def getRandomImage (images: List[File]): File = {
+  protected def getRandomImage(images: List[File]): File = {
     images((Math.random() * (images.length - 1)).toInt)
   }
 
@@ -39,7 +39,7 @@ trait SelectionStrategy {
   *
   * @param amount The number of Tests to create.
   */
-class PickFixedAmountStrategy (override val amount: Int) extends SelectionStrategy {
+class PickFixedAmountStrategy(override val amount: Int) extends SelectionStrategy {
 
   override def select(images: List[File]): List[Test] = {
     val tests = ListBuffer[Test]()
@@ -60,16 +60,16 @@ class PickFixedAmountStrategy (override val amount: Int) extends SelectionStrate
   *
   * @param amount The number of tests to create.
   */
-abstract class PickByPredicateStrategy (override val amount: Int) extends SelectionStrategy {
+abstract class PickByPredicateStrategy(override val amount: Int) extends SelectionStrategy {
 
   /**
     * Returns true if the test should be added to the tests.
     *
     * @param test The test to check.
     */
-  def check (test: Test): Boolean
+  def check(test: Test): Boolean
 
-  override def select (images: List[File]): List[Test] = {
+  override def select(images: List[File]): List[Test] = {
     val tests = ListBuffer[Test]()
     var i = amount
 
@@ -92,7 +92,7 @@ abstract class PickByPredicateStrategy (override val amount: Int) extends Select
   *
   * @param amount The number of tests to create.
   */
-class PickSameClassStrategy (amount: Int) extends PickByPredicateStrategy(amount) {
+class PickSameClassStrategy(amount: Int) extends PickByPredicateStrategy(amount) {
 
   override def check(test: Test): Boolean = test.isSimilar
 
@@ -103,7 +103,7 @@ class PickSameClassStrategy (amount: Int) extends PickByPredicateStrategy(amount
   *
   * @param amount The number of tests to create.
   */
-class PickDiffClassStrategy (amount: Int) extends PickByPredicateStrategy(amount) {
+class PickDiffClassStrategy(amount: Int) extends PickByPredicateStrategy(amount) {
 
   override def check(test: Test): Boolean = !test.isSimilar
 

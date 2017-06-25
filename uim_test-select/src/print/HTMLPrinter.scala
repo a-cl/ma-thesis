@@ -1,6 +1,6 @@
 package print
 
-import java.io.{File, IOException, PrintWriter}
+import java.io.{IOException, PrintWriter}
 
 import select.Test
 
@@ -10,7 +10,7 @@ import select.Test
   */
 class HTMLPrinter extends Printer {
 
-  def print (kind: String, tests: List[Test]) {
+  def print(kind: String, tests: List[Test]) {
     try {
       val writer = new PrintWriter("tests_" + kind + ".html", "UTF-8")
 
@@ -28,11 +28,11 @@ class HTMLPrinter extends Printer {
       writer.println("</html>")
       writer.close()
     } catch {
-      case e: IOException => println("Error writing results:", e)
+      case e: IOException => println("Error writing HTML results:", e)
     }
   }
 
-  private def printCSS (writer: PrintWriter) = {
+  private def printCSS(writer: PrintWriter) = {
     writer.println("<style>")
     writer.println("  * { font: 17px 'Consolas', 'Open Sans', arial; }")
     writer.println("  table { border-collapse: collapse; margin: 10px; }")
@@ -41,7 +41,7 @@ class HTMLPrinter extends Printer {
     writer.println("</style>")
   }
 
-  private def printStats (writer: PrintWriter, tests: List[Test]) = {
+  private def printStats(writer: PrintWriter, tests: List[Test]) = {
     val stats = new Stats(tests)
 
     writer.println("  <table>")
@@ -62,7 +62,7 @@ class HTMLPrinter extends Printer {
     writer.println("  </table>")
   }
 
-  private def printTests (writer: PrintWriter, tests: List[Test]) = {
+  private def printTests(writer: PrintWriter, tests: List[Test]) = {
     writer.println("  <table>")
     writer.println("    <thead>")
     writer.println("      <tr>")
@@ -80,12 +80,12 @@ class HTMLPrinter extends Printer {
     writer.println("  </table>")
   }
 
-  private def printTest (writer: PrintWriter, test: Test, i: Int) = {
+  private def printTest(writer: PrintWriter, test: Test, i: Int) = {
     writer.println("      <tr>")
     writer.println("        <td>" + (i + 1) + "</td>")
     writer.println("        <td>" + getExtendedName(test.image1) + "</td>")
     writer.println("        <td>" + getExtendedName(test.image2) + "</td>")
-    writer.println("        <td>" + (if(test.isSimilar) "+" else "-") + "</td>")
+    writer.println("        <td>" + (if (test.isSimilar) "+" else "-") + "</td>")
     writer.println("      </tr>")
   }
 

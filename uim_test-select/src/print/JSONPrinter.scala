@@ -1,4 +1,5 @@
 package print
+
 import java.io.{File, IOException, PrintWriter}
 
 import select.Test
@@ -9,7 +10,7 @@ import select.Test
   */
 class JSONPrinter extends Printer {
 
-  override def print (kind: String, tests: List[Test]) = {
+  override def print(kind: String, tests: List[Test]) = {
     try {
       val writer = new PrintWriter("tests_" + kind + ".json", "UTF-8")
 
@@ -26,11 +27,11 @@ class JSONPrinter extends Printer {
       writer.println("}")
       writer.close()
     } catch {
-      case e: IOException => println("Error writing results:", e)
+      case e: IOException => println("Error writing JSON results:", e)
     }
   }
 
-  private def printLine (writer: PrintWriter, test: Test) = {
+  private def printLine(writer: PrintWriter, test: Test) = {
     writer.println("    {")
     writer.println("      \"image1\": \"" + escape(test.image1) + "\",")
     writer.println("      \"image2\": \"" + escape(test.image2) + "\",")
@@ -38,7 +39,7 @@ class JSONPrinter extends Printer {
     writer.print("    }")
   }
 
-  private def escape (file: File): String = {
+  private def escape(file: File): String = {
     file.getAbsolutePath.replaceAllLiterally("\\", "/")
   }
 }

@@ -4,13 +4,13 @@ import java.io.File
 
 import select.Test
 
-class Stats (val tests: List[Test]) {
+class Stats(val tests: List[Test]) {
+
+  def diff = total - same
 
   def total = tests.length
 
   def same = tests.count(test => test.isSimilar)
-
-  def diff = total - same
 
 }
 
@@ -22,9 +22,9 @@ trait Printer {
     *
     * @param tests The tests to Print
     */
-  def print (kind: String, tests: List[Test])
+  def print(kind: String, tests: List[Test])
 
-  protected def getExtendedName (file: File): String = {
+  protected def getExtendedName(file: File): String = {
     file.getParentFile.getName + "/" + file.getName
   }
 

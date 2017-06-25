@@ -8,7 +8,7 @@ import java.io.File
   * @param image1 the first image file.
   * @param image2 the second image file.
   */
-class Test (val image1: File, val image2: File) {
+class Test(val image1: File, val image2: File) {
 
   /**
     * Returns true if and only if the parent of image1 is the same
