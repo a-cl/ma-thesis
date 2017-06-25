@@ -12,3 +12,10 @@
 
 // output PDF
 thesis.pdf
+
+// test-select create files
+uim_test-select/out
+uim_test-select/.idea
+uim_test-select/out
+uim_test-select/tests*.html
+uim_test-select/tests*.json
