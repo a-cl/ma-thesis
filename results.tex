@@ -7,6 +7,24 @@
 
 Im Folgenden werden Testgruppen von Bildern aufgebaut, anhand derer die Qualität der Ergebnisse und die Performance bewertet werden. Neben dem Bildmaterial der HsH werden für die Tests auch Bilder des Caltech101 \cite{cal2004}, um einen Vergleich mit anderen Arbeiten zu ermöglichen.
 
+\section{Experimentaufbau}
+
+Das Experiment soll zeigen, wie gut der jeweilige Algorithmus geeignet ist, um unüberwacht die Ähnlichkeit zwischen zwei Bildern zu beurteilen. Ein simples Experiment könnte wie folgt aussehen: Anhand eines Modells wird das Histogramm der Feature-Vektoren eines Bildes berechnet. Wenn nun bekannt ist, welche Klasse des Histogramms für welches Visual Word steht, sollten die entsprechenden Visual Words einer Bildklasse immer eine hohe Wahrscheinlichkeit aufweisen. Problematisch bei diesem Ansatz ist jedoch:
+
+\begin{itemize}
+	\item Das verfahren ist nicht unüberwacht: Es muss bekannt seine welche Histogramm-Klassen welchen Visual Words entsprechen. 
+	\item Je nach gewählten $k$ ist das Experiment nicht aussagekräftig (kleines $k$, z.B. eins pro Klasse) oder sehr viel manueller Aufwand ist notwendig.
+\end{itemize}
+
+Geeigneter für diese Art des unüberwachten Lernens ist der Vergleich von zwei Bildern durch das Modell. Auch hierfür werden zunächst die Histogramme der Visual Words der jeweiligen Testbildern berechnet. Anhand einer Distanzmetrik kann dann die Ähnlichkeit der Histogramme bestimmt werden. Hier gibt es zwei Fälle zu unterscheiden:
+
+\begin{itemize}
+	\item \textbf{True Positives} Bei True Positives handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
+	\item \textbf{False Positives} Auch hier liegen die Testbilder in der gleichen oder einer verschiedenen Klasse, die Vorhersage durch das Modell ist jedoch nicht korrekt.
+\end{itemize}
+
+Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
+
 \section{Caltech 101}
 
 Bei dem Caltech101 Daten handelt es sich um eine weit verbreitete Menge von Bilddaten, die vorwiegend zum Test von Algorithmen bezüglich der Objekterkennung in Bildern dient. Insgesamt liegen 101 Kategorien vor, die zwischen 40 und 800 Bildern enthalten. Auf der offiziellen Webseite \footnote{http://www.vision.caltech.edu/Image\textunderscore Datasets/Caltech101/} und im Artikel der Autoren wir empfohlen, die eigene Arbeit mit derer anderen vergleichbar zu halten, indem:

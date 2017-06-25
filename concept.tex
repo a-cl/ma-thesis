@@ -1,14 +1,12 @@
 \chapter{Konzept}
 
-Das Kapitel Konzeption beschäftigt sich zunächst mit dem Prozess der Feature-Extraktion. Hierfür wird der SIFT Algorithmus nach Lowe genutzt. Folgend wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering und Histogramm Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Anschließend wird der geplante Ablauf zum Generieren eines Bag of Visual Word Modells und \textit{Labeling} eines Bildes durch das Modell erläutert.
+Die Konzeption beschäftigt sich zunächst mit dem Prozess der Feature-Extraktion. Hierfür wird der SIFT Algorithmus nach Lowe genutzt. Folgend wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering und Histogramm Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Anschließend wird der geplante Ablauf zum Generieren eines Bag of Visual Word Modells und \textit{Labeling} eines Bildes durch das Modell erläutert.
 Abschließend wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Autoencoder eingeführt, der aus einem HOG Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt.
 
 \section{Feature Extraktion}
 
-Die Extraktion der Features ist die Basis für beide Varianten der Klassifizierung. Das Bag of Visual Words Modell nutzt die von SIFT erzeugten Feature Deskriptor für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit Gradienten der \textit{keypoints} die vom SIFT Feature-Detektor ermittelt wurden. Aus diesem Grund werden die Feature-Vektoren und \textit{keypoints} beide berechnet und getrennt gespeichert.
-Der SIFT Feature-Deskriptor enthält 128 Dimensionen und ist so für einen Vergleich nur schwer geeignet: beispielsweise werden bei einem Bild der Größe $320px \times 200px$ bereits 100 bis 1000 Feature-Vektoren generiert. Es werden daher im folgenden zwei Ansätze vorgestellt, welche die Anzahl der Komponenten von Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
-
-\todo{Was noch hier, oder überhaupt?}
+Die Extraktion der Features ist der erste Schritt zur Erzeugung der Modelle. Das Bag of Visual Words Modell nutzt die vom SIFT-Verfahren erzeugten Feature-Deskriptoren direkt für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit den Gradienten der Nachbarschaft der \textit{keypoints} die vom SIFT Feature-Detektor ermittelt wurden. Die Extraktion der Features ist nicht Gegenstand der Parallelisierung bzw. Schwerpunkt dieser Arbeit. Es wird daher auf eine gängige Bibliothek zurückgegriffen, die sich in der Praxis bewährt hat. Sollte sich herausstellen, dass die Feature-Gewinnung einen nicht unerheblichen Teil der Gesamtberechnung ausmacht, kann die Implementierung später noch durch eine parallele bzw. GPU-gestüzte Variante ausgewechselt oder erweitert werden.
+Der SIFT Feature-Deskriptor enthält 128 Komponenten und ist so für einen Vergleich nur schwer geeignet: beispielsweise werden bei einem Bild der Größe $320px \times 200px$ bereits 100 bis 1000 Feature-Vektoren generiert. Es werden daher im folgenden zwei Ansätze vorgestellt, welche die Anzahl der Komponenten von Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
 
 \section{Ansatz 1: Bag of Visual Words}
 
