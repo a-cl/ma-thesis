@@ -17,5 +17,6 @@ thesis.pdf
 uim_test-select/out
 uim_test-select/.idea
 uim_test-select/caltech101
+uim_test-select/.metadata
 uim_test-select/tests*.html
 uim_test-select/tests*.json
