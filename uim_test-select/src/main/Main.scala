@@ -29,6 +29,10 @@ object Main {
   private val RAND_DIST = "rand"
 
   def main(args: Array[String]): Unit = {
+    if (args.length < 3) {
+      throw new Exception("Usage: command numberOfTests classDirectories...")
+    }
+
     val command = args(0)
     val testCount = Integer.parseInt(args(1))
     val sets = args.splitAt(2)._2.toList

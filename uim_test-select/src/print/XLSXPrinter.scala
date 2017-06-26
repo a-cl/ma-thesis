@@ -2,7 +2,6 @@ package print
 
 import java.io.{FileInputStream, FileOutputStream}
 
-import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow, XSSFSheet, XSSFWorkbook}
 import select.Test
 
@@ -21,11 +20,10 @@ class XLSXPrinter extends Printer {
     val streamOut = new FileOutputStream(RESULT_PATH)
     val workbook = new XSSFWorkbook(streamIn)
 
-    printSheet(tests, workbook, 0)
-    //printSheet(tests, workbook, 1)
-    //printSheet(tests, workbook, 2)
-    streamIn.close()
+    // 7 runs with different k, one per sheet
+    Range(0, 7).foreach { index => printSheet(tests, workbook, index) }
 
+    streamIn.close()
     workbook.write(streamOut)
     streamOut.close()
   }
@@ -44,9 +42,9 @@ class XLSXPrinter extends Printer {
     tests.zipWithIndex.foreach { case (test, rowIndex) =>
       val row = getOrCreateRow(sheet, rowIndex + 1)
 
-      getOrCreateCell(row, 0, CellType.STRING).setCellValue(test.image1.getAbsolutePath)
-      getOrCreateCell(row, 1, CellType.STRING).setCellValue(test.image2.getAbsolutePath)
-      getOrCreateCell(row, 3, CellType.STRING).setCellValue(if (test.isSimilar()) "+" else "-")
+      getOrCreateCell(row, 0, 1).setCellValue(test.image1.getAbsolutePath)
+      getOrCreateCell(row, 1, 1).setCellValue(test.image2.getAbsolutePath)
+      getOrCreateCell(row, 3, 1).setCellValue(if (test.isSimilar()) "+" else "-")
     }
   }
 
@@ -73,7 +71,7 @@ class XLSXPrinter extends Printer {
     * @param kind The type of the cell, if it needs to be created.
     * @return XSSFCell
     */
-  private def getOrCreateCell (row: XSSFRow, index: Int, kind: CellType): XSSFCell = {
+  private def getOrCreateCell (row: XSSFRow, index: Int, kind: Int): XSSFCell = {
     if (row.getCell(index) == null) row.createCell(index, kind)
     row.getCell(index)
   }
