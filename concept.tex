@@ -106,3 +106,22 @@ In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein S
 \subsection{TensorFlow}
 
 TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \grqq fließen\grqq und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
+TensorFlow folgt dem sogenannten \glqq lazy\grqq  Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Als nächsten müssen alle nötigen Variablen initialisiert werden. Erst durch das Erzeugen und Aufrufen einer \glqq Session\grqq wird das Modell trainiert bzw. auf Testdaten ausgeführt.
+
+\lstset{language=Python}
+\begin{lstlisting}
+import tensorflow as tf
+
+a = tf.placeholder(tf.int16)
+b = tf.placeholder(tf.int16)
+
+addOp = tf.add(a, b)
+
+init = tf.initialize_all_variables()
+
+with tf.Session() as sess:
+    sess.run(init)
+    print "Addition: %i" % sess.run(addOp, feed_dict={a: 2, b: 3})
+
+sess.close()
+\end{lstlisting}

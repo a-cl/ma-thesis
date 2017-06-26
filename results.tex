@@ -1,11 +1,7 @@
 \chapter{Evaluierung}
 
-\begin{itemize}
-	\item Testdaten: Caltech, imagenet, HsH
-	\item Verschiedene Tests auf: Rotation, Skalierung, etc
-\end{itemize}
-
-Im Folgenden werden Testgruppen von Bildern aufgebaut, anhand derer die Qualität der Ergebnisse und die Performance bewertet werden. Neben dem Bildmaterial der HsH werden für die Tests auch Bilder des Caltech101 \cite{cal2004}, um einen Vergleich mit anderen Arbeiten zu ermöglichen.
+Die Qualität der Ergebnisse der in der Implementierung realisierten Modelle werden in diesem Kapitel durch ein Testexperiment überprüft. Weiterhin werden Ausführungszeiten für beispielsweise verschieden große $k$ betrachtet, um eine Einsicht in die Performance der Algorithmen zu gewinnen.
+Im Kapitel Experimentaufbau wird zunächst das Experiement sowie verwendete Metriken und Ergebnistypen behandelt. Nachfolgend wird erläutert, wie die großen Menge an benötigten Testdaten wiederholbar und automatisiert aufgebaut wird. Dieser Abschnitt illustriert auch, wie eine Durchführung des Experiments von statten geht. Im letzten Teil werden dann konkrete Testgruppen aus den Caltech101 \cite{cal2004} Bilddaten erzeugt. Diese Menge an Bilddaten hat große Verbreitung im Bereich der Objekterkennung gefunden. Auf diese Weise ist ein Vergleich mit Arbeiten anderer prinzipiell möglich.
 
 \section{Experimentaufbau}
 
@@ -19,11 +15,15 @@ Das Experiment soll zeigen, wie gut der jeweilige Algorithmus geeignet ist, um u
 Geeigneter für diese Art des unüberwachten Lernens ist der Vergleich von zwei Bildern durch das Modell. Auch hierfür werden zunächst die Histogramme der Visual Words der jeweiligen Testbildern berechnet. Anhand einer Distanzmetrik kann dann die Ähnlichkeit der Histogramme bestimmt werden. Hier gibt es zwei Fälle zu unterscheiden:
 
 \begin{itemize}
-	\item \textbf{True Positives} Bei True Positives handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
+	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
 	\item \textbf{False Positives} Auch hier liegen die Testbilder in der gleichen oder einer verschiedenen Klasse, die Vorhersage durch das Modell ist jedoch nicht korrekt.
 \end{itemize}
 
 Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
+
+\section{Erzeugen und Ausführen von Testfällen}
+
+Die ROC-Kurve soll für verschiedene $k$ ermittelt werden. Um jeweils ein aussagekräftiges Ergebnis zu erhalten, muss eine große Anzahl an Bildern durch das Modell gegenübergestellt werden. Da hier mehr als 2000 Bildpaare verwendet werden sollen, wäre ein manueller Testaufbau mühsam und fehleranfällig. Aus diesem Grund wird dieser Prozess hier durch ein Programm automatisiert: Es werden zufällige Bildpaare ausgewählt und deren absolute Pfade in eine vorbereitete Excel-Tabelle eingetragen, sowie die Information, ob die Bilder in der selben Klasse liegen (\glqq -\grqq für verschiedene, \glqq +\grqq für dieselbe Klasse). Zwei Bilder liegen dabei in der selben Klasse, wenn sie im selben Ordner im Dateisystem enthalten sind. Die zu verwendenden Ordner (also Klassen), die Anzahl der zufällig zu generierenden Tests und das Verhältnis von gleichen zu verschiedenen Klassen muss bei der Erzeugung angegeben werden. Für jede Zeile der Exceltabelle werden dann die Histogramme der \textit{Visual Words} der beiden Bilder ermittelt und anhand der euklidischen Distanz verglichen. Der Algorithmus entscheidet, dass die Bilder in der selben Klasse liegen, \todo{wenn die Ähnlichkeit mindestens 75\% beträgt}. Nach dem alle Bilderpaare bewertet wurden, werden die Ergebnisse wieder in die Excel-Tabelle geschrieben und die ROC-Kurve durch eine Formel berechnet und in Excel visualisiert. Durch diesen Aufbau kann des Experiment immer mit einer großen, zufällig ausgewählten Menge an Bildern wiederholt werden.
 
 \section{Caltech 101}
 

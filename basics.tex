@@ -80,10 +80,18 @@ Dalal und Triggs \cite{hog2005} nutzten in ihrer Originalarbeit als Fenster eine
 
 \subsection{Scale-invariant feature transform}
 
-SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} entwickelt wurde. Neben der Invarianz der Skalierung der Features, berücksichtigt SIFT auch teilweise die Rotation, Beleuchtung und Perspektive. Der Algorithmus lässt sich in vier wesentliche Schritte unterteilt:
+SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} entwickelt wurde. Neben der Invarianz der Skalierung der Features, berücksichtigt SIFT auch teilweise die Rotation, Beleuchtung und Perspektive. SIFT kombiniert mehrere mathematische Operationen und Verfahren um den Deskriptor eines Features als Ergebnis zu erhalten. Die wichtigsten hiervon werden zunächst vorgestellt, da sie bei der folgenden Erläuterung des SIFT-Detektors und -Deskriptors wieder aufgegriffen werden.
+
+\textbf{Gaussche Filter}
+
+\textbf{Laplacian of Gaussians}
+
+\textbf{Difference of Gaussians (DOG)}
+
+Der Algorithmus lässt sich in vier wesentliche Schritte unterteilt:
 
 \begin{enumerate}
-	\item \textbf{Scale space} Im ersten Schritt wird die Invarianz der Skalierung behandelt. SIFT konstruiert hierfür einen \textit{scale space}. Hier werden aus dem Originalbild immer verzerrtere Versionen durch einen \todo{gausschen Filter} erzeugt. Die Größe der neuen Bilder wird halbiert und die Prozedur wiederholt. Alle verzerrten Bilder einer Größe bilden eine sogenannte Oktave. SIFT verwendet vier Oktaven und fünf Bilder pro Oktave um den \textit{scale space} zu erzeugen. Um Ecken und Kanten in einem Bild zu ermitteln, die Kandidaten für \textit{keypoints} sind, wird nun zwischen allen aufeinanderfolgenden Bildern einer Oktave die Differenz gebildet. Das Prinzip ist für zwei Oktaven in Abbildung \ref{img:sift_dog} dargestellt. Das Ergebnis ist eine Approximation des \todo{Laplacian of Gaussians}, jedoch ist dieses Verfahren weit weniger rechenintensiv. 
+	\item \textbf{Scale space} Im ersten Schritt wird die Invarianz der Skalierung behandelt. SIFT konstruiert hierfür einen \textit{scale space}. Hier werden aus dem Originalbild immer verzerrtere Versionen durch einen gausschen Filter erzeugt. Die Größe der neuen Bilder wird halbiert und die Prozedur wiederholt. Alle verzerrten Bilder einer Größe bilden eine sogenannte Oktave. SIFT verwendet vier Oktaven und fünf Bilder pro Oktave um den \textit{scale space} zu erzeugen. Um Ecken und Kanten in einem Bild zu ermitteln, die Kandidaten für \textit{keypoints} sind, wird nun zwischen allen aufeinanderfolgenden Bildern einer Oktave die Differenz gebildet. Das Prinzip ist für zwei Oktaven in Abbildung \ref{img:sift_dog} dargestellt. Das Ergebnis ist eine Approximation des Laplacian of Gaussians, jedoch ist dieses Verfahren weit weniger rechenintensiv. 
 
 \begin{figure}
 	\centering
@@ -91,7 +99,7 @@ SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} en
 	\caption{Difference of Gaussians Operator \cite{dif2004}}
 	\label{img:sift_dog}
 \end{figure}	
-	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DOG \todo{DOG erklären} Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DOG Bildes und des vorigen und nachfolgendem im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genau Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint} ausgehend.
+	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DOG Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DOG Bildes und des vorigen und nachfolgendem im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genau Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint} ausgehend.
 	\item \textbf{Bestimmung der Orientierung} Bei dem Aufbau des Feature Vektoren pro \textit{keypoint} wird die lokale Orientierung berechnet. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogram of Oriented Gradients. Hierfür werden zufällig Punkte aus der Nachbarschaft des \textit{keypoints} ausgewählt. Der Extremwert des Histogramms wird dann als dominante Orientierung verwendet.
 	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
 \end{enumerate}
