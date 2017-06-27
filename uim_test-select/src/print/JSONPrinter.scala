@@ -10,25 +10,24 @@ import select.Test
   */
 class JSONPrinter extends Printer {
 
-  override def print(kind: String, tests: List[Test]) = {
-    try {
-      val writer = new PrintWriter("tests_" + kind + ".json", "UTF-8")
+  override def RESULT_PATH: String = "./gen/tests.json"
 
-      writer.println("{")
-      writer.println("  \"tests\": [")
+  override def print(tests: List[Test]): Unit = {
+    val writer = getPrintWriter()
 
-      tests.zipWithIndex.foreach { case (test, i) =>
-        printLine(writer, test)
-        if (i != tests.length - 1) writer.println(",")
-        else writer.println("")
-      }
+    writer.println("{")
+    writer.println("  \"tests\": [")
 
-      writer.println("  ]")
-      writer.println("}")
-      writer.close()
-    } catch {
-      case e: IOException => println("Error writing JSON results:", e)
+    tests.zipWithIndex.foreach { case (test, i) =>
+      printLine(writer, test)
+      if (i != tests.length - 1) writer.println(",")
+      else writer.println("")
     }
+
+    writer.println("  ]")
+    writer.println("}")
+    writer.close()
+
   }
 
   private def printLine(writer: PrintWriter, test: Test) = {

@@ -1,7 +1,7 @@
 package main
 
-import print.{HTMLPrinter, JSONPrinter, XLSXPrinter}
-import select.{PickDiffClassStrategy, PickFixedAmountStrategy, PickSameClassStrategy, Selector}
+import print.{HTMLPrinter, JSONPrinter, TextPrinter, XLSXPrinter}
+import select._
 
 /**
   * Runs the test selector. How to:
@@ -24,9 +24,7 @@ object Main {
   private val htmlPrinter = new HTMLPrinter
   private val jsonPrinter = new JSONPrinter
   private val xlsxPrinter = new XLSXPrinter
-
-  private val EVEN_DIST = "even"
-  private val RAND_DIST = "rand"
+  private val textPrinter = new TextPrinter
 
   def main(args: Array[String]): Unit = {
     if (args.length < 3) {
@@ -38,19 +36,17 @@ object Main {
     val sets = args.splitAt(2)._2.toList
 
     command.toLowerCase match {
-      case EVEN_DIST => generateEvenDistribution(sets, testCount)
-      case RAND_DIST => generateRandomDistribution(sets, testCount)
+      case "even" => generateEvenDistribution(sets, testCount)
+      case "rand" => generateRandomDistribution(sets, testCount)
+      case _ => throw new Exception("Unknown distribution type: " + command)
     }
   }
 
   private def generateRandomDistribution(sets: List[String], count: Int) = {
     val strategy = new PickFixedAmountStrategy(count)
     val selector = new Selector(strategy)
-    val tests = selector.selectTests(sets)
 
-    htmlPrinter.print(RAND_DIST, tests)
-    jsonPrinter.print(RAND_DIST, tests)
-    xlsxPrinter.print(RAND_DIST, tests)
+    printTests(selector.selectTests(sets))
   }
 
   private def generateEvenDistribution(sets: List[String], count: Int) = {
@@ -61,11 +57,15 @@ object Main {
 
     val same = selectorSame.selectTests(sets)
     val diff = selectorDiff.selectTests(sets)
-    val tests = same.++(diff)
 
-    htmlPrinter.print(EVEN_DIST, tests)
-    jsonPrinter.print(EVEN_DIST, tests)
-    xlsxPrinter.print(EVEN_DIST, tests)
+    printTests(same.++(diff))
+  }
+
+  private def printTests (tests: List[Test]) = {
+    htmlPrinter.print(tests)
+    jsonPrinter.print(tests)
+    xlsxPrinter.print(tests)
+    textPrinter.print(tests)
   }
 
 }

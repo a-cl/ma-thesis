@@ -24,7 +24,12 @@ uim_bag-of-visual-words/Debug
 
 // test-select - generated files
 uim_test-select/out
+uim_test-select/gen
 uim_test-select/.idea
 uim_test-select/.metadata
 uim_test-select/tests*.html
 uim_test-select/tests*.json
+
+// omg more files
+.metadata
+RemoteSystemsTempFiles

@@ -5,31 +5,24 @@ import java.io.{IOException, PrintWriter}
 import select.Test
 
 /**
-  * Prints a List of Tests to the Scala console.
+  * Prints a List of Tests as a text file.
   */
 class TextPrinter extends Printer {
 
-  override def print(kind: String, tests: List[Test]) = {
-    try {
-      val writer = new PrintWriter("tests_" + kind + ".html", "UTF-8")
-      val stats = new Stats(tests)
+  override def RESULT_PATH = "./gen/tests.txt"
 
-      writer.print("Total " + stats.total + " ")
-      writer.print("Same " + stats.same + " ")
-      writer.println("Diff " + stats.diff + " ")
+  override def print(tests: List[Test]): Unit = {
+    val writer = getPrintWriter()
 
-      tests.foreach { test =>
-        val name1 = getExtendedName(test.image1)
-        val name2 = getExtendedName(test.image2)
-        val same = if (test.isSimilar()) "+" else "-"
+    tests.foreach { test =>
+      val name1 = test.image1.getAbsolutePath
+      val name2 = test.image2.getAbsolutePath
+      val same = if (test.isSimilar()) "+" else "-"
 
-        writer.println(name1 + " " + name2 + " " + same)
-      }
-
-      writer.close()
-    } catch {
-      case e: IOException => println("Error writing Text results:", e)
+      writer.println(name1 + " " + name2 + " " + same)
     }
+
+    writer.close()
   }
 
 }

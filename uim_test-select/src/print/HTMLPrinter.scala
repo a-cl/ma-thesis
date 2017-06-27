@@ -10,26 +10,24 @@ import select.Test
   */
 class HTMLPrinter extends Printer {
 
-  def print(kind: String, tests: List[Test]) {
-    try {
-      val writer = new PrintWriter("tests_" + kind + ".html", "UTF-8")
+  override def RESULT_PATH = "./gen/tests.html"
 
-      writer.println("<!DOCTYPE html>")
-      writer.println("<html>")
-      writer.println("<head>")
-      writer.println("  <title>ROC Tests</title>")
-      writer.println("  <meta charset=UTF-8>")
-      writer.println("</head>")
-      printCSS(writer)
-      writer.println("<body>")
-      printStats(writer, tests)
-      printTests(writer, tests)
-      writer.println("</body>")
-      writer.println("</html>")
-      writer.close()
-    } catch {
-      case e: IOException => println("Error writing HTML results:", e)
-    }
+  def print(tests: List[Test]): Unit = {
+    val writer = getPrintWriter()
+
+    writer.println("<!DOCTYPE html>")
+    writer.println("<html>")
+    writer.println("<head>")
+    writer.println("  <title>ROC Tests</title>")
+    writer.println("  <meta charset=UTF-8>")
+    writer.println("</head>")
+    printCSS(writer)
+    writer.println("<body>")
+    printStats(writer, tests)
+    printTests(writer, tests)
+    writer.println("</body>")
+    writer.println("</html>")
+    writer.close()
   }
 
   private def printCSS(writer: PrintWriter) = {

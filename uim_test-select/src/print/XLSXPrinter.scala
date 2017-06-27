@@ -12,10 +12,11 @@ import select.Test
   */
 class XLSXPrinter extends Printer {
 
-  val TEMPLATE_PATH = "./roc_template.xlsx"
-  val RESULT_PATH = "./roc_tests.xlsx"
+  private def TEMPLATE_PATH = "./roc_template.xlsx"
 
-  override def print(kind: String, tests: List[Test]): Unit = {
+  override def RESULT_PATH = "./gen/roc_tests.xlsx"
+
+  override def print(tests: List[Test]): Unit = {
     val streamIn = new FileInputStream(TEMPLATE_PATH)
     val streamOut = new FileOutputStream(RESULT_PATH)
     val workbook = new XSSFWorkbook(streamIn)
