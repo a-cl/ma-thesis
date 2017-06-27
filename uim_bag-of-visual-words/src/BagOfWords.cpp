@@ -8,8 +8,6 @@
 #include "BagOfWords.h"
 
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <dirent.h>
 
 #include <iomanip>
 #include <iostream>
@@ -38,6 +36,7 @@ BagOfWords::BagOfWords(unsigned int k) {
 	this->k = k;
 	this->count = -1;
 	this->size = SIFT_SIZE;
+	this->tests = vector<Test>();
 	this->initialized = false;
 	this->clusters = NULL;
 	this->membership = NULL;
@@ -56,7 +55,7 @@ void BagOfWords::createModel(vector<string> directories) {
 	Mat features;
 
 	for (int i = 0; i < directories.size(); i++) {
-		vector<string> images = this->readDir(directories[i]);
+		vector<string> images = readDir(directories[i]);
 		Mat imageFeatures = this->extractFeatures(images);
 		features.push_back(imageFeatures);
 		this->count += imageFeatures.rows;
@@ -141,10 +140,40 @@ void BagOfWords::readModel(string modelPath) {
 	this->initialized = true;
 }
 
-void BagOfWords::labelImage(string imagePath) {
+void BagOfWords::readTests (string filePath) {
+	this->tests = vector<Test>();
+	string line;
+	ifstream file;
+	file.open(filePath.c_str());
+
+	while (getline(file, line)) {
+		vector<string> tokens = split(line, ' ');
+		string img1 = tokens[0];
+		string img2 = tokens[1];
+		bool sameClass = tokens[2] == "-" ? false : true;
+		this->tests.push_back(Test(img1, img2, sameClass));
+	}
+
+	file.close();
+}
+
+void BagOfWords::executeTests() {
+	for (int i = 0; i < this->tests.size(); i++) {
+		Test test = this->tests[i];
+		float *histo1 = labelImage(test.getImage1());
+		float *histo2 = labelImage(test.getImage2());
+
+		test.setSimilarity(calculateSimilarity(histo1, histo2));
+		free(histo1);
+		free(histo2);
+	}
+
+}
+
+float* BagOfWords::labelImage(string imagePath) {
 	if (!this->initialized) {
 		cerr << "Cannot label image: No model provided." << endl;
-		return;
+		return (float*) calloc(k, sizeof(float));
 	}
 
 	const Mat img = imread(imagePath, 0);
@@ -166,13 +195,12 @@ void BagOfWords::labelImage(string imagePath) {
 		histo_cpu(matToPtr(&features), this->clusters, histo, this->k, count, this->size);
 	}
 
-	cout << "Word frequencies for " << imagePath << ": " << endl;
+	return histo;
+}
 
-	for (int i = 0; i < k; i++) {
-		cout << "bin " << i << ": " << histo[i] << endl;
-	}
-
-	free(histo);
+float BagOfWords::calculateSimilarity (float *histo1, float *histo2) {
+	// TODO: implement calculateSimilarity
+	return 0.5;
 }
 
 void BagOfWords::setMode(unsigned int mode) {
@@ -181,35 +209,6 @@ void BagOfWords::setMode(unsigned int mode) {
 
 void BagOfWords::setSize(unsigned int size) {
 	this->size = size;
-}
-
-vector<string> BagOfWords::readDir(string directory) {
-	DIR *dir;
-	vector<string> out;
-
-	class dirent *ent;
-	class stat st;
-
-	dir = opendir(directory.c_str());
-	while ((ent = readdir(dir)) != NULL) {
-		const string file_name = ent->d_name;
-		const string full_file_name = directory + "/" + file_name;
-
-		if (file_name[0] == '.')
-			continue;
-
-		if (stat(full_file_name.c_str(), &st) == -1)
-			continue;
-
-		const bool is_directory = (st.st_mode & S_IFDIR) != 0;
-
-		if (is_directory)
-			continue;
-
-		out.push_back(full_file_name);
-	}
-	closedir(dir);
-	return out;
 }
 
 Mat BagOfWords::extractFeatures(vector<string> imagePaths) {

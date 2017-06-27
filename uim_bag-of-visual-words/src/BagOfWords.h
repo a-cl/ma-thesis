@@ -12,6 +12,8 @@
 #include <string>
 #include <opencv2/core/core.hpp>
 
+#include "Test.h"
+
 using namespace std;
 using namespace cv;
 
@@ -30,13 +32,6 @@ public:
 	void createModel(vector<string> directories);
 
 	/**
-	 * Labels the image located at <imagePath>, based on the model <clusters>. First the features of the
-	 * image get extracted, next a histogram of the visual words is computed to obtain the frequencies.
-	 * <clusters> has to contain <k> many elements, each with a <FEATURE_SIZE> components.
-	 */
-	void labelImage(string imagePath);
-
-	/**
 	 * Writes a model file named <model>. The first line contains the number of clusters <k> and the feature
 	 * dimensions <size>. Each following row represents a cluster. <clusters> has to contain <k> many clusters
 	 * with <FEATURE_SIZE> many components.
@@ -49,6 +44,16 @@ public:
 	 * values, the cluster coordinates.
 	 */
 	void readModel(string modelPath);
+
+	/**
+	 * TODO
+	 */
+	void readTests (string filePath);
+
+	/**
+	 * TODO
+	 */
+	void executeTests ();
 
 	/**
 	 * Set the mode to GPU (1) or CPU (0);.
@@ -82,16 +87,26 @@ private:
 	// membership of features to clusters
 	int* membership;
 
-	/**
-	 * Helper function that returns a vector of all file names in <directory>.
-	 */
-	vector<string> readDir(string directory);
+	// Optional: Tests to execute
+	vector<Test> tests;
 
 	/**
 	 * Extracts all SIFT features from each image in <imagePaths> and returns them as a single Matrix of
 	 * size <numberOfFeatures> * 128 (SIFT dimension).
 	 */
 	Mat extractFeatures(vector<string> imagePaths);
+
+	/**
+	 * Labels the image located at <imagePath>, based on the model <clusters>. First the features of the
+	 * image get extracted, next a histogram of the visual words is computed to obtain the frequencies.
+	 * <clusters> has to contain <k> many elements, each with a <FEATURE_SIZE> components.
+	 */
+	float* labelImage(string imagePath);
+
+	/**
+	 * TODO
+	 */
+	float calculateSimilarity (float *histo1, float *histo2);
 };
 
 #endif /* BAGOFWORDS_H_ */

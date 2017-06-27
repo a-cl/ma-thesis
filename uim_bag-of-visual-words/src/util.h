@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 
+#include "Test.h"
+
 #include <opencv2/core/core.hpp>
 
 void initCUDA();
@@ -18,12 +20,14 @@ float** malloc2D(int rows, int cols);
 
 float** matToPtr(cv::Mat *features);
 
-void printHistogram(int* histogram, int length);
+void printHistogram(string imagePath, float *histo, int k);
 
 std::vector<std::string> split(const std::string s, char delim);
 
 template<typename T>
 void print_array(T& array, int m, int n);
+
+vector<string> readDir(string directory);
 
 double time();
 

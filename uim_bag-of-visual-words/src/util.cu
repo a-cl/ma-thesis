@@ -2,7 +2,9 @@
  * util.cpp
  */
 
+#include <dirent.h>
 #include <stdlib.h>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <math.h>
@@ -10,9 +12,12 @@
 #include <iterator>
 #include <vector>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <stdio.h>
 
 #include <opencv2/core/core.hpp>
+
+#include "Test.h"
 
 using namespace std;
 
@@ -71,16 +76,12 @@ void print_array(T& array, int m, int n) {
 	}
 }
 
-void printHistogram(int* histogram, int bins) {
-	cout << "Histogram" << endl;
-	int sum = 0;
+void printHistogram(string imagePath, float *histo, int k) {
+	cout << "Word frequencies for " << imagePath << ": " << endl;
 
-	for (int i = 0; i < bins; i++) {
-		sum += histogram[i];
-		cout << histogram[i] << " ";
+	for (int i = 0; i < k; i++) {
+		cout << "bin " << i << ": " << histo[i] << endl;
 	}
-
-	cout << endl << "sum: " << sum << endl;
 }
 
 vector<string> split(const string s, char delim) {
@@ -93,6 +94,35 @@ vector<string> split(const string s, char delim) {
 		result.push_back(item);
 	}
 	return result;
+}
+
+vector<string> readDir(string directory) {
+	DIR *dir;
+	vector<string> out;
+
+	class dirent *ent;
+	class stat st;
+
+	dir = opendir(directory.c_str());
+	while ((ent = readdir(dir)) != NULL) {
+		const string file_name = ent->d_name;
+		const string full_file_name = directory + "/" + file_name;
+
+		if (file_name[0] == '.')
+			continue;
+
+		if (stat(full_file_name.c_str(), &st) == -1)
+			continue;
+
+		const bool is_directory = (st.st_mode & S_IFDIR) != 0;
+
+		if (is_directory)
+			continue;
+
+		out.push_back(full_file_name);
+	}
+	closedir(dir);
+	return out;
 }
 
 double time () {

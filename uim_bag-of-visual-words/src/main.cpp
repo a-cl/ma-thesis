@@ -8,6 +8,8 @@
 #include <string>
 
 #include "BagOfWords.h"
+#include "Test.h"
+#include "util.h"
 
 using namespace std;
 
@@ -16,10 +18,12 @@ using namespace std;
 // generate model: 0, label image: 1
 const unsigned int TASK = 1;
 
+const int k = 5;
+
 // function definitions
 
 int main() {
-	BagOfWords *bow = new BagOfWords(5);
+	BagOfWords *bow = new BagOfWords(k);
 	bow->setMode(0);
 
 	if (TASK == 0) {
@@ -34,8 +38,9 @@ int main() {
 		bow->createModel(files);
 		bow->writeModel();
 	} else if (TASK == 1) {
+		bow->readTests("tests.txt");
 		bow->readModel("model");
-		bow->labelImage("caltech101/dolphin/image_0001.jpg");
+		bow->executeTests();
 	}
 
 	delete bow;
