@@ -3,6 +3,7 @@ package select
 import java.io.File
 
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 /**
   * A Selector selects random image pairs from the directories
@@ -32,7 +33,7 @@ class Selector(strategy: SelectionStrategy) {
       memo.++=(set.listFiles.filter(isImage))
     }
 
-    strategy.select(images.toList)
+    Random.shuffle(strategy.select(images.toList))
   }
 
   /**

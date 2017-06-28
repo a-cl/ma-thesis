@@ -17,7 +17,7 @@ class TextPrinter extends Printer {
     tests.foreach { test =>
       val name1 = test.image1.getAbsolutePath
       val name2 = test.image2.getAbsolutePath
-      val same = if (test.isSimilar()) "+" else "-"
+      val same = if (test.isSameClass()) "+" else "-"
 
       writer.println(name1 + " " + name2 + " " + same)
     }

@@ -34,7 +34,7 @@ class JSONPrinter extends Printer {
     writer.println("    {")
     writer.println("      \"image1\": \"" + escape(test.image1) + "\",")
     writer.println("      \"image2\": \"" + escape(test.image2) + "\",")
-    writer.println("      \"same_class\": " + test.isSimilar + "")
+    writer.println("      \"same_class\": " + test.isSameClass + "")
     writer.print("    }")
   }
 

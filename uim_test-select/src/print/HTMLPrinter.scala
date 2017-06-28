@@ -81,7 +81,7 @@ class HTMLPrinter extends Printer {
     writer.println("        <td>" + (i + 1) + "</td>")
     writer.println("        <td>" + getExtendedName(test.image1) + "</td>")
     writer.println("        <td>" + getExtendedName(test.image2) + "</td>")
-    writer.println("        <td>" + (if (test.isSimilar) "+" else "-") + "</td>")
+    writer.println("        <td>" + (if (test.isSameClass) "+" else "-") + "</td>")
     writer.println("      </tr>")
   }
 

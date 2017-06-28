@@ -13,15 +13,6 @@ trait SelectionStrategy {
   def amount: Int
 
   /**
-    * Creates test cases from the list of provided images and
-    * returns them as a list.
-    *
-    * @param images The list of images with the candidates.
-    * @return List[Test]
-    */
-  def select(images: List[File]): List[Test]
-
-  /**
     * Returns a random image of images.
     *
     * @param images The list of images to pick from.
@@ -31,36 +22,18 @@ trait SelectionStrategy {
     images((Math.random() * (images.length - 1)).toInt)
   }
 
-}
-
-/**
-  * Creates amount many tests randomly from all images. Duplicates
-  * included.
-  *
-  * @param amount The number of Tests to create.
-  */
-class PickFixedAmountStrategy(override val amount: Int) extends SelectionStrategy {
-
-  override def select(images: List[File]): List[Test] = {
-    val tests = ListBuffer[Test]()
-
-    for (_ <- 0 until amount) {
-      val image1 = getRandomImage(images)
-      val image2 = getRandomImage(images)
-      tests.+=(new Test(image1, image2))
-    }
-    tests.toList
-  }
+  /**
+    * Creates test cases from the list of provided images and
+    * returns them as a list.
+    *
+    * @param images The list of images with the candidates.
+    * @return List[Test]
+    */
+  def select(images: List[File]): List[Test]
 
 }
 
-/**
-  * Performs a check on every created test to decide if it should
-  * be added to the test list.
-  *
-  * @param amount The number of tests to create.
-  */
-abstract class PickByPredicateStrategy(override val amount: Int) extends SelectionStrategy {
+abstract class PredicateStrategy extends SelectionStrategy {
 
   /**
     * Returns true if the test should be added to the tests.
@@ -69,7 +42,7 @@ abstract class PickByPredicateStrategy(override val amount: Int) extends Selecti
     */
   def check(test: Test): Boolean
 
-  override def select(images: List[File]): List[Test] = {
+  def select(images: List[File]): List[Test] = {
     val tests = ListBuffer[Test]()
     var i = amount
 
@@ -85,6 +58,7 @@ abstract class PickByPredicateStrategy(override val amount: Int) extends Selecti
     }
     tests.toList
   }
+
 }
 
 /**
@@ -92,9 +66,9 @@ abstract class PickByPredicateStrategy(override val amount: Int) extends Selecti
   *
   * @param amount The number of tests to create.
   */
-class PickSameClassStrategy(amount: Int) extends PickByPredicateStrategy(amount) {
+class PickSameClassStrategy(override val amount: Int) extends PredicateStrategy {
 
-  override def check(test: Test): Boolean = test.isSimilar
+  override def check(test: Test): Boolean = test.isSameClass
 
 }
 
@@ -103,8 +77,25 @@ class PickSameClassStrategy(amount: Int) extends PickByPredicateStrategy(amount)
   *
   * @param amount The number of tests to create.
   */
-class PickDiffClassStrategy(amount: Int) extends PickByPredicateStrategy(amount) {
+class PickDiffClassStrategy(override val amount: Int) extends PredicateStrategy {
 
-  override def check(test: Test): Boolean = !test.isSimilar
+  override def check(test: Test): Boolean = !test.isSameClass
+
+}
+
+/**
+  * Picks half of amount same class and half of amount different class many
+  * tests.
+  *
+  * @param amount The number of tests to create.
+  */
+class PickEvenStrategy (override val amount: Int) extends SelectionStrategy {
+
+  private val sameStrategy = new PickSameClassStrategy(amount / 2)
+  private val diffStrategy = new PickDiffClassStrategy(amount / 2)
+
+  override def select(images: List[File]): List[Test] = {
+    sameStrategy.select(images).++(diffStrategy.select(images))
+  }
 
 }

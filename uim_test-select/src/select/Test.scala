@@ -8,7 +8,7 @@ import java.io.File
   * @param image1 the first image file.
   * @param image2 the second image file.
   */
-class Test(val image1: File, val image2: File) {
+class Test(val image1: File, val image2: File, var similarity: Float = 0.0f) {
 
   /**
     * Returns true if and only if the parent of image1 is the same
@@ -17,7 +17,7 @@ class Test(val image1: File, val image2: File) {
     *
     * @return Boolean
     */
-  def isSimilar(): Boolean = {
+  def isSameClass(): Boolean = {
     image1.getParentFile.equals(image2.getParentFile)
   }
 

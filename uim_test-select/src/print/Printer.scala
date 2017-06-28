@@ -10,7 +10,7 @@ class Stats(val tests: List[Test]) {
 
   def total: Int = tests.length
 
-  def same: Int = tests.count(test => test.isSimilar())
+  def same: Int = tests.count(test => test.isSameClass())
 
 }
 
