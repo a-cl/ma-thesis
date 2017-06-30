@@ -2,7 +2,7 @@ package writer
 
 import java.io.{File, FileInputStream, FileOutputStream}
 
-import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 class Test (val image1: File, val image2: File, val similarity: Float) {
   def isSameClass: Boolean = image1.getParentFile.equals(image2.getParentFile)
@@ -10,10 +10,7 @@ class Test (val image1: File, val image2: File, val similarity: Float) {
 
 class ExcelWriter {
 
-  val RESULT_PATH = "./gen/roc_tests.xlsx"
-  val TEMPLATE_PATH = "roc_template.xlsx"
-
-  private val streamIn = new FileInputStream(TEMPLATE_PATH)
+  private val streamIn = new FileInputStream("roc_template.xlsx")
   private val workbook = new XSSFWorkbook(streamIn)
 
   streamIn.close()
@@ -54,8 +51,8 @@ class ExcelWriter {
     }
   }
 
-  def save (): Unit = {
-    val streamOut = new FileOutputStream(RESULT_PATH)
+  def save (path: String): Unit = {
+    val streamOut = new FileOutputStream(path + ".xlsx")
     workbook.write(streamOut)
     streamOut.close()
   }
