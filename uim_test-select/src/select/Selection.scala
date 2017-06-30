@@ -3,12 +3,21 @@ package select
 import java.io.File
 
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
+
+class Test (val image1: File, val image2: File) {
+
+  def isSameClass: Boolean = {
+    image1.getParentFile.equals(image2.getParentFile)
+  }
+
+}
 
 /**
   * A SelectionStrategy decides how to pick images from a
   * provided source.
   */
-trait SelectionStrategy {
+trait Selection {
 
   def amount: Int
 
@@ -33,7 +42,7 @@ trait SelectionStrategy {
 
 }
 
-abstract class PredicateStrategy extends SelectionStrategy {
+abstract class PredicateSelection extends Selection {
 
   /**
     * Returns true if the test should be added to the tests.
@@ -62,40 +71,25 @@ abstract class PredicateStrategy extends SelectionStrategy {
 }
 
 /**
-  * Only Adds a test if the images are in the same class (same folder).
-  *
-  * @param amount The number of tests to create.
-  */
-class PickSameClassStrategy(override val amount: Int) extends PredicateStrategy {
-
-  override def check(test: Test): Boolean = test.isSameClass
-
-}
-
-/**
-  * Only Adds a test if the images differ in class (different folder).
-  *
-  * @param amount The number of tests to create.
-  */
-class PickDiffClassStrategy(override val amount: Int) extends PredicateStrategy {
-
-  override def check(test: Test): Boolean = !test.isSameClass
-
-}
-
-/**
   * Picks half of amount same class and half of amount different class many
   * tests.
   *
   * @param amount The number of tests to create.
   */
-class PickEvenStrategy (override val amount: Int) extends SelectionStrategy {
+class PickEvenSelection(override val amount: Int) extends Selection {
 
-  private val sameStrategy = new PickSameClassStrategy(amount / 2)
-  private val diffStrategy = new PickDiffClassStrategy(amount / 2)
+  private val same = new PredicateSelection {
+    override def amount: Int = PickEvenSelection.this.amount / 2
+    override def check(test: Test): Boolean = test.isSameClass
+  }
+
+  private val diff = new PredicateSelection {
+    override def amount: Int = PickEvenSelection.this.amount / 2
+    override def check(test: Test): Boolean = !test.isSameClass
+  }
 
   override def select(images: List[File]): List[Test] = {
-    sameStrategy.select(images).++(diffStrategy.select(images))
+    Random.shuffle(same.select(images).++(diff.select(images)))
   }
 
 }

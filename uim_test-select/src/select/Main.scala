@@ -1,25 +1,30 @@
 package select
 
+import java.io.File
+
 /**
   * Runs the test selector. How to:
   *
-  * [testCount] [...sets]
-  *
-  * testCount: number of tests to create
-  * sets:      paths of directories to use
+  * path:         Path to the image folders
+  * setCount:     Number of categories to use
+  * trainPerSet:  Number of training samples per set
+  * testPerSet:   Number of test samples per set
+  * testCount:    Number of tests to create
   */
 object Main {
 
-
   def main(args: Array[String]): Unit = {
-    val testCount = Integer.parseInt(args(0))
-    val sets = args.splitAt(1)._2.toList
+    val path = args(0)
+    val setCount = args(1).toInt
+    val trainPerSet = args(2).toInt
+    val testPerSet = args(3).toInt
+    val testCount = args(4).toInt
 
-    val textPrinter = new TextPrinter
-    val strategy = new PickEvenStrategy(testCount)
-    val tests = new Selector(strategy).selectTests(sets)
+    val dataBase = new Database(path)
+    val dataSet = dataBase.createDataSet(setCount, trainPerSet, testPerSet, testCount)
+    val printer = new Printer
 
-    textPrinter.print(tests)
+    printer.print(dataSet)
   }
 
 }
