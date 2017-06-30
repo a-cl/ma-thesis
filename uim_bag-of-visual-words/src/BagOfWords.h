@@ -22,38 +22,40 @@ const unsigned int SIFT_SIZE = 128;
 
 class BagOfWords {
 public:
-	BagOfWords(const unsigned int k);
+	BagOfWords(string path, const unsigned int k);
 
 	virtual ~BagOfWords();
 
 	/**
-	 * TODO
+	 * Creates a new model based in the training data located at this <path> + train.txt. The model will k
+	 * many clusters.
 	 */
-	void createModel(vector<string> directories);
+	void createModel();
 
 	/**
-	 * Writes a model file named <model>. The first line contains the number of clusters <k> and the feature
-	 * dimensions <size>. Each following row represents a cluster. <clusters> has to contain <k> many clusters
-	 * with <FEATURE_SIZE> many components.
+	 * Writes a model file to this <path> + model. The first line contains the number of clusters k and the
+	 * feature dimensions size. Each following row represents a cluster. clusters has to contain k many clusters
+	 * with SIFT_SIZE many components.
 	 */
 	void writeModel();
 
 	/*
-	 * Reads a model file located at <modelPath>. The first line of the model contains the number of clusters k
-	 * and the feature dimension dim. The rest of the file contains <k> rows, the clusters, with <dim> many float
-	 * values, the cluster coordinates.
+	 * Reads a model file located at this <path> + model. The first line of the model contains the number of
+	 * clusters k and the feature dimension dim. The rest of the file contains k rows, the clusters, with dim
+	 * many float values, the cluster coordinates.
 	 */
-	void readModel(string modelPath);
+	void readModel();
 
 	/**
-	 * TODO
+	 * Reads all tests specified at this <path> + tests.txt and executes them against this model. The results
+	 * will be saved to disk afterwards.
 	 */
-	void readTests (string filePath);
+	void runTests ();
 
 	/**
-	 * TODO
+	 * Set k to a new value. This does not effect the current model, but the test run on the current model.
 	 */
-	void executeTests ();
+	void setK(unsigned int k);
 
 	/**
 	 * Set the mode to GPU (1) or CPU (0);.
@@ -66,6 +68,9 @@ public:
 	void setSize(unsigned int size);
 
 private:
+	// path to test and train data
+	string path;
+
 	// CPU or GPU mode
 	unsigned int mode;
 
@@ -79,7 +84,7 @@ private:
 	unsigned long count;
 
 	// true if a model is present
-	bool initialized;
+	bool modelInitialized;
 
 	// the model
 	float** clusters;
@@ -91,20 +96,39 @@ private:
 	vector<Test> tests;
 
 	/**
-	 * Extracts all SIFT features from each image in <imagePaths> and returns them as a single Matrix of
+	 * Extracts all SIFT features from the image located at <imagePath> and returns them as a Matrix of
 	 * size <numberOfFeatures> * 128 (SIFT dimension).
 	 */
-	Mat extractFeatures(vector<string> imagePaths);
+	Mat extractFeature(string imagePath);
 
 	/**
 	 * Labels the image located at <imagePath>, based on the model <clusters>. First the features of the
 	 * image get extracted, next a histogram of the visual words is computed to obtain the frequencies.
 	 * <clusters> has to contain <k> many elements, each with a <FEATURE_SIZE> components.
 	 */
-	float* labelImage(string imagePath);
+	float* computeVisualWords(string imagePath);
 
 	/**
-	 * TODO
+	 * Reads in the test data specified at <path> + tests.txt. The file is in the format:
+	 * <path_to_image1> <path_to_image2> <sameClass>
+	 *
+	 * where <sameClass> is a "+" to indicate a same and "-" to indicate a different class.
+	 */
+	void readTestData ();
+
+	/**
+	 * Executes the test initialized by readTestData. Stores the results in the internal tests vector.
+	 */
+	void executeTests ();
+
+	/**
+	 * Writes the tests contained in the internal test vector to this <path> + tests<k>.txt where <k> is
+	 * the number of clusters of this bag of visual words.
+	 */
+	void writeTestResults ();
+
+	/**
+	 * Calculates the mean squared error from <histo1> and <histo2> and returns the result as a float.
 	 */
 	float calculateSimilarity (float *histo1, float *histo2);
 };

@@ -8,13 +8,15 @@
 #include "BagOfWords.h"
 
 #include <stdlib.h>
-
+#include <stdio.h>
+#include <time.h>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -31,15 +33,24 @@ using namespace cv;
 #include "kmeans_gpu.h"
 #include "util.h"
 
-BagOfWords::BagOfWords(unsigned int k) {
+string intToString (int a) {
+    ostringstream temp;
+    temp<<a;
+    return temp.str();
+}
+
+BagOfWords::BagOfWords(string path, unsigned int k) {
+	this->path = path;
 	this->mode = 0;
 	this->k = k;
 	this->count = -1;
 	this->size = SIFT_SIZE;
 	this->tests = vector<Test>();
-	this->initialized = false;
+	this->modelInitialized = false;
 	this->clusters = NULL;
 	this->membership = NULL;
+
+	srand(time(NULL));
 }
 
 BagOfWords::~BagOfWords() {
@@ -47,46 +58,47 @@ BagOfWords::~BagOfWords() {
 	free(this->membership);
 }
 
-void BagOfWords::createModel(vector<string> directories) {
+void BagOfWords::createModel() {
 	cout << "Generating model ";
-	cout << (mode == 0 ? " (GPU)" : " (CPU)") << endl;
+	cout << (mode == 0 ? "(GPU)" : "(CPU)") << endl;
 	cout << "Extracting features" << endl;
 
+	string line;
+	ifstream file;
+	file.open((this->path + "/train.txt").c_str());
 	Mat features;
 
-	for (int i = 0; i < directories.size(); i++) {
-		vector<string> images = readDir(directories[i]);
-		Mat imageFeatures = this->extractFeatures(images);
+	while (getline(file, line)) {
+		Mat imageFeatures = this->extractFeature(line);
 		features.push_back(imageFeatures);
 		this->count += imageFeatures.rows;
-
-		cout << "Extraction of directory " << directories[i];
-		cout << " completed (" << imageFeatures.rows << " features)." << endl;
 	}
+	cout << "Extraction completed (" << features.rows << " features)" << endl;
 
 	this->clusters = malloc2D(k, this->size);
 	this->membership = (int *) malloc(this->count * sizeof(int*));
-	cout << "Clustering features" << endl;
+	cout << "Clustering features with k = " << intToString(this->k) << endl;
 
 	if (this->mode == 0) {
 		kmeans_gpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
 	} else {
 		kmeans_cpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
 	}
-	this->initialized = true;
+	this->modelInitialized = true;
 	cout << "Clustering completed" << endl;
 }
 
 void BagOfWords::writeModel() {
-	if (!this->initialized) {
-		cerr << "Cannot write model: No model provided." << endl;
+	if (!this->modelInitialized) {
+		cerr << "Cannot write model: No model created." << endl;
 		return;
 	}
 
-	cout << "Writing model" << endl;
+	cout << "Writing model and membership" << endl;
 
 	ofstream file;
-	file.open("model");
+	string modelFile = "/model" + intToString(this->k);
+	file.open((this->path + modelFile).c_str());
 	file << this->k << " " << this->size << "\n";
 
 	for (int i = 0; i < this->k; i++) {
@@ -97,9 +109,8 @@ void BagOfWords::writeModel() {
 	}
 	file.close();
 
-	cout << "Writing membership" << endl;
-
-	file.open("membership");
+	string memberFile = "/membership" + intToString(this->k);
+	file.open((this->path + memberFile).c_str());
 	file << count << "\n";
 
 	for (int i = 0; i < this->count; i++) {
@@ -108,12 +119,13 @@ void BagOfWords::writeModel() {
 	file.close();
 }
 
-void BagOfWords::readModel(string modelPath) {
-	cout << "Reading model: " << modelPath << endl;
+void BagOfWords::readModel() {
+	cout << "Reading model" << endl;
 
 	string line;
 	ifstream file;
-	file.open(modelPath.c_str());
+	string modelName = "/model" + intToString(this->k);
+	file.open((this->path + modelName).c_str());
 	int i = 0;
 
 	getline(file, line);
@@ -121,7 +133,6 @@ void BagOfWords::readModel(string modelPath) {
 	istringstream(first[0]) >> this->k;
 	istringstream(first[1]) >> this->size;
 
-	//free(this->clusters);
 	this->clusters = (float**) malloc(this->k * sizeof(float**));
 
 	while (getline(file, line)) {
@@ -137,14 +148,22 @@ void BagOfWords::readModel(string modelPath) {
 	// TODO: membership + count
 
 	file.close();
-	this->initialized = true;
+	this->modelInitialized = true;
 }
 
-void BagOfWords::readTests (string filePath) {
+void BagOfWords::runTests () {
+	this->readTestData();
+	this->executeTests();
+	this->writeTestResults();
+}
+
+void BagOfWords::readTestData () {
+	cout << "Reading tests" << endl;
+
 	this->tests = vector<Test>();
 	string line;
 	ifstream file;
-	file.open(filePath.c_str());
+	file.open((this->path + "/test.txt").c_str());
 
 	while (getline(file, line)) {
 		vector<string> tokens = split(line, ' ');
@@ -158,20 +177,45 @@ void BagOfWords::readTests (string filePath) {
 }
 
 void BagOfWords::executeTests() {
-	for (int i = 0; i < this->tests.size(); i++) {
-		Test test = this->tests[i];
-		float *histo1 = labelImage(test.getImage1());
-		float *histo2 = labelImage(test.getImage2());
+	cout << "Executing tests" << endl;
 
-		test.setSimilarity(calculateSimilarity(histo1, histo2));
-		free(histo1);
-		free(histo2);
+	float *histo1 = (float*) calloc(this->k, sizeof(float));
+	float *histo2 = (float*) calloc(this->k, sizeof(float));
+
+	for (int i = 0; i < this->tests.size(); i++) {
+		if (i > 0 && (i + 1) % 100 == 0) {
+			cout << "Finished " << (i + 1) << " tests" << endl;
+		}
+
+		Test test = this->tests[i];
+		histo1 = computeVisualWords(test.getImage1());
+		histo2 = computeVisualWords(test.getImage2());
+		this->tests[i].setSimilarity(calculateSimilarity(histo1, histo2));
 	}
 
+	free(histo1);
+	free(histo2);
 }
 
-float* BagOfWords::labelImage(string imagePath) {
-	if (!this->initialized) {
+void BagOfWords::writeTestResults() {
+	cout << "Writing tests" << endl;
+
+	ofstream file;
+	string fileName = "/tests" + intToString(this->k) + ".txt";
+	file.open((this->path + fileName).c_str());
+
+	for (int i = 0; i < this->tests.size(); i++) {
+		Test test = tests[i];
+		String sameClass = test.isSameClass() ? "+" : "-";
+
+		file << test.getImage1() << " " << test.getImage2() << " " << sameClass << " "
+			 << std::fixed << std::setprecision(8) << test.getSimilarity() << endl;
+	}
+	file.close();
+}
+
+float* BagOfWords::computeVisualWords(string imagePath) {
+	if (!this->modelInitialized) {
 		cerr << "Cannot label image: No model provided." << endl;
 		return (float*) calloc(k, sizeof(float));
 	}
@@ -187,8 +231,6 @@ float* BagOfWords::labelImage(string imagePath) {
 	const unsigned long count = features.rows;
 	float *histo = (float*) calloc(k, sizeof(float));
 
-	cout << "Computing histogram for " << imagePath << "" << endl;
-
 	if (this->mode == 0) {
 		histo_gpu(matToPtr(&features), this->clusters, histo, this->k, count, this->size);
 	} else {
@@ -199,8 +241,29 @@ float* BagOfWords::labelImage(string imagePath) {
 }
 
 float BagOfWords::calculateSimilarity (float *histo1, float *histo2) {
-	// TODO: implement calculateSimilarity
-	return 0.5;
+	float mse = 0;
+
+	for (int i = 0; i < this->k; i++) {
+		float err = histo2[i] - histo1[i];
+		mse += err * err;
+	}
+
+	return mse / this->k;
+}
+
+Mat BagOfWords::extractFeature(string imagePath) {
+	const Mat img = imread(imagePath, 0);
+	cv::Ptr<Feature2D> f2d = xfeatures2d::SIFT::create();
+	vector<KeyPoint> keypoints;
+	Mat descriptors;
+
+	f2d->detect(img, keypoints);
+	f2d->compute(img, keypoints, descriptors);
+	return descriptors;
+}
+
+void BagOfWords::setK(unsigned int k) {
+	this->k = k;
 }
 
 void BagOfWords::setMode(unsigned int mode) {
@@ -209,22 +272,4 @@ void BagOfWords::setMode(unsigned int mode) {
 
 void BagOfWords::setSize(unsigned int size) {
 	this->size = size;
-}
-
-Mat BagOfWords::extractFeatures(vector<string> imagePaths) {
-	Mat features;
-
-	for (int i = 0; i < imagePaths.size(); i++) {
-		const Mat img = imread(imagePaths[i], 0);
-		cv::Ptr<Feature2D> f2d = xfeatures2d::SIFT::create();
-		vector<KeyPoint> keypoints;
-		Mat descriptors;
-
-		f2d->detect(img, keypoints);
-		f2d->compute(img, keypoints, descriptors);
-		features.push_back(descriptors);
-		cout << "  Extracted " << descriptors.rows << " features from " << imagePaths[i] << endl;
-	}
-
-	return features;
 }
