@@ -2,15 +2,15 @@ package select
 
 import java.io.{File, PrintWriter}
 
-class Printer {
+object Printer {
 
-  def print(dataSet: DataSet): Unit = {
-    writeTests(dataSet.test)
-    writeTrain(dataSet.train)
+  def print(path: String, dataSet: DataSet): Unit = {
+    writeTests(path + "/test.txt", dataSet.test)
+    writeTrain(path + "/train.txt", dataSet.train)
   }
 
-  private def writeTests (tests: List[Test]) = {
-    val writer = new PrintWriter("gen/tests.txt")
+  private def writeTests (path: String, tests: List[Test]) = {
+    val writer = getWriter(path)
 
     tests.foreach { test =>
       val name1 = test.image1.getAbsolutePath
@@ -22,14 +22,17 @@ class Printer {
     writer.close()
   }
 
+  private def writeTrain (path: String, train: List[File]) = {
+    val writer = getWriter(path)
 
-  private def writeTrain (train: List[File]) = {
-    val writer = new PrintWriter("gen/train.txt")
-
-    train.foreach { file =>
-      writer.println(file.getAbsoluteFile)
-    }
+    train.foreach(file => writer.println(file.getAbsoluteFile))
     writer.close()
+  }
+
+  private def getWriter (path: String): PrintWriter = {
+    val file = new File(path)
+    file.getParentFile.mkdirs()
+    new PrintWriter(file)
   }
 
 }

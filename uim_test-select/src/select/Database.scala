@@ -27,8 +27,7 @@ class Database (path: String) {
 
   private def getSets (count: Int): Sets = {
     val files = root.listFiles.filter(f => f.isDirectory).to[ListBuffer]
-    val setCount = if (count > files.length) files.length else count
-    val sets = getRandomFiles(files, setCount)
+    val sets = getRandomFiles(files, count)
     val map = new Sets()
 
     sets.foreach { set =>
@@ -52,7 +51,9 @@ class Database (path: String) {
   }
 
   private def getRandomFiles (files: ListBuffer[File], count: Int): List[File] = {
-    Range(0, count).map { _ =>
+    val max = if (count > files.length) files.length else count
+
+    Range(0, max).map { _ =>
       val index = (Math.random() * (files.length - 1)).toInt
       val file = files(index)
       files.-=(file)

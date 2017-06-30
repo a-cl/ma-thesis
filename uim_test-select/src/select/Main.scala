@@ -5,7 +5,8 @@ import java.io.File
 /**
   * Runs the test selector. How to:
   *
-  * path:         Path to the image folders
+  * sourcePath:   Path to the image folders
+  * targetPath:   Path to write the results to
   * setCount:     Number of categories to use
   * trainPerSet:  Number of training samples per set
   * testPerSet:   Number of test samples per set
@@ -14,17 +15,17 @@ import java.io.File
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val path = args(0)
-    val setCount = args(1).toInt
-    val trainPerSet = args(2).toInt
-    val testPerSet = args(3).toInt
-    val testCount = args(4).toInt
+    val sourcePath = args(0)
+    val targetPath = args(1)
+    val setCount = args(2).toInt
+    val trainPerSet = args(3).toInt
+    val testPerSet = args(4).toInt
+    val testCount = args(5).toInt
 
-    val dataBase = new Database(path)
-    val dataSet = dataBase.createDataSet(setCount, trainPerSet, testPerSet, testCount)
-    val printer = new Printer
+    val db = new Database(sourcePath)
+    val data = db.createDataSet(setCount, trainPerSet, testPerSet, testCount)
 
-    printer.print(dataSet)
+    Printer.print(targetPath, data)
   }
 
 }
