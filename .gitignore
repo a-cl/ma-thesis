@@ -13,8 +13,9 @@
 // output PDF
 thesis.pdf
 
-// image data
+// image and data
 caltech101
+data
 
 // bag of visual words - generated files
 uim_bag-of-visual-words/models
