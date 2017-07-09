@@ -88,9 +88,10 @@ void histo_gpu(float **features, float **clusters, float *histo, const unsigned 
 	cudaMemcpy(deviceClusters, clusterArray, clusterMem, cudaMemcpyHostToDevice);
 	cudaMemset(deviceHisto, 0, histoMem);
 
-	cout << "Starting histogram kernel" << endl;
-	cout << "  Blocks: " << numberOfBlocksInGrid << endl;
-	cout << "  Threads: " << NumberOfThreadsPerBlock << endl;
+	// TODO: DEBUG
+	//cout << "Starting histogram kernel" << endl;
+	//cout << "  Blocks: " << numberOfBlocksInGrid << endl;
+	//cout << "  Threads: " << NumberOfThreadsPerBlock << endl;
 
 	// kernel invocation
 	histo_kernel<<<numberOfBlocksInGrid, dimBlock, sharedMem>>>(deviceFeatures, deviceClusters, deviceHisto, k, count,

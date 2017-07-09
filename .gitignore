@@ -13,8 +13,9 @@
 // output PDF
 thesis.pdf
 
-// image data
+// image and data
 caltech101
+data
 
 // bag of visual words - generated files
 uim_bag-of-visual-words/models
@@ -24,7 +25,17 @@ uim_bag-of-visual-words/Debug
 
 // test-select - generated files
 uim_test-select/out
+uim_test-select/gen
 uim_test-select/.idea
 uim_test-select/.metadata
-uim_test-select/tests*.html
-uim_test-select/tests*.json
+
+// excel-writer - generated files
+uim_excel-writer/out
+uim_excel-writer/gen
+uim_excel-writer/data
+uim_excel-writer/.idea
+uim_excel-writer/.metadata
+
+// omg more files
+.metadata
+RemoteSystemsTempFiles
