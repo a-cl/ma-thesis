@@ -88,7 +88,26 @@ histogram ($P, C, H$)
 \section{Ansatz 2: Autoencoder}
 
 Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und diesen Wissen zu transferieren. 
-Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Hier soll dieser genutzt werden, um die Anzahl der Elemente des Feature-Vektors zu reduzieren. In der Arbeit von Zhao \cite{aed2016} wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Es werden durch den SIFT Detektor die \textit{keypoints} eines Bildes ermittelt. Für jeden \textit{keypoint} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
+Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe, siehe REF[AE].
+
+\subsection{Autoencoder am Beispiel von Bildern}
+
+Ein populäres Beispiel für die Verwendung von Autoencoder ist das Erkennen von Ziffern in einem Bild. In der Praxis wird ein solches Verfahren beispielsweise zur Digitalisierung von Handschrift oder automatisierten Bestätigung von \textit{Captcha}-Feldern\footnote{Ein sogenanntes \textit{Captach}-Feld fordert einen Benutzer auf, den auf einem Bild angezeigten Text einzugeben um zum Beispiel ein Formular zu bestätigen. Durch die Verwendung eines Bildes ist das Auslesen der Zeichen aus der Webseite nicht möglich.} genutzt.
+Die Bilder der Ziffern liegen alle in den gleichen Dimensionen vor. Hieraus bestimmt sich die Größe der ersten Schicht des Autoencoders: Bei Bildern der Größe $m \times n$, umfasst die erste Schicht ebenfalls $m \times n$ Neuronen, um die Eingabe weiterzuleiten. Die genaue Anzahl der Größe der folgenden Schichten leitet sich aus Experimenten ab: Sowohl mit Anzahl als auch Neuronenanzahl kann variiert werden um die besten Resultate zu ermitteln.
+Im Training werden Encoder und Decoder des Autoencoders hintereinander angewandt, wie in Abbildung \ref{img:ae_mnist} dargestellt. Zunächst wird die komprimierte Darstellung aus der Eingabe erzeugt um diese anschließend wieder zu dekodieren. Die so erhaltene Rekonstruktion wird mit dem Original verglichen und die Größe des Fehlers bestimmt.
+Im Test ist es nur Ziel den Encoder anzuwenden und die komprimierte Darstellung aufzubewahren. Der Autoencoder wurde im vorigen Schritt trainiert, sodass auf Basis der kompakten Daten eine Klassifizierung erfolgen kann.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.55]{images/ae_mnist.png}
+	\caption{Prozess der Enkodierung und Dekodierung von Ziffern durch einen Autoencoder.}
+	\label{img:ae_mnist}
+\end{figure}
+
+\subsection{Autoencoder für Bild Features}
+
+Im vorigen Kapitel wurde veranschaulicht, wie ein Autoencoder direkt mit den Pixeln eines Bildes arbeitet. Durch eine abschließende Schicht zur Klassifizierung wird das Bild schließlich eingeordnet. Da aber in vielen Anwendungsfällen nicht direkt mit Pixeln gearbeitet werden kann, ist es wünschenswert, dass der Autoencoder stattdessen mit Features von Bildern arbeitet.
+Hier soll dieser genutzt werden, um die Anzahl der Elemente des Feature-Vektors zu reduzieren. In der Arbeit von Zhao \cite{aed2016} wurde bereits vorgestellt, wie auf Basis eines Autoencoders ein Bilddeskriptor erzeugt werden kann. Hier werden durch den SIFT Detektor die \textit{keypoints} eines Bildes ermittelt. Für jeden \textit{keypoint} werden die lokalen Gradienten in horizontale und vertikale Richtung einer $41 \times 41$ großen Nachbarschaft berechnet. Diese werden in einem Vektor der Größe $2 \times 39 \times 39 = 3042$ gespeichert. Der Encoder besteht aus fünf Stufen, um die Gradienten zu komprimieren.
 
 \todo{Autoencoder für unbeaufsichtigtes Lernen, Einführung AE}
 \todo{}
