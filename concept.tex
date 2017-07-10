@@ -105,8 +105,21 @@ In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein S
 
 \subsection{Aufbereitung der Features}
 
-Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Zunächst werden die \textit{keypoints} durch einen SIFT-Detektor ausgewählt. Um die gefundenen \textit{keypoints} wird nun jeweils eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Zum Aufbau des Feature-Vektors werden von diesen Nachbarschaften die Gradienten in horizontale und vertikale Richtung berechnet. Mathematisch entspricht dies einer Konvolution des Ausschnittes mit einem entsprechenden Sobel-Filter. Bei einem Filter mit einem Kernel der Größe $3 \times 3$ entsteht so pro Richtung eine $39 \times 39$ Matrix. Diese werden normalisiert und anschließend zusammen kodiert, sodass der 3042-elementige Feature-Vektor entsteht, der durch den Autoencoder verarbeitet werden kann.
-\todo{Sobel}
+Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Zunächst werden die \textit{keypoints} durch einen SIFT-Detektor ausgewählt. Um die gefundenen \textit{keypoints} wird nun jeweils eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Zum Aufbau des Feature-Vektors werden von diesen Nachbarschaften die Gradienten in horizontale und vertikale Richtung berechnet. Mathematisch entspricht dies einer Konvolution des Ausschnittes mit einem Sobel-Operator. Aus einem Originalbild $O$ werden die Gradienten-Bilder $G_{x}$ und $G_{y}$ durch die Multiplikation mit einer Matrix pro Richtung erzeugt:  
+
+$$ G_{x} = O * \begin{bmatrix}
+  1 & 0 & -1 \\
+  2 & 0 & -2 \\
+  1 & 0 & -1
+\end{bmatrix} \quad
+G_{y} = O * \begin{bmatrix}
+   1 &  2 &  1 \\
+   0 &  0 &  0 \\
+  -1 & -2 & -1
+\end{bmatrix}
+$$
+
+Bei einem Filter mit einem Kernel der Größe $3 \times 3$ entsteht so pro Richtung eine $39 \times 39$ Matrix. Diese werden normalisiert und anschließend zusammen kodiert, sodass der 3042-elementige Feature-Vektor entsteht, der durch den Autoencoder verarbeitet werden kann.
 
 \subsection{TensorFlow}
 
