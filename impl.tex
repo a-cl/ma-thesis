@@ -26,8 +26,6 @@ Mat extractFeatures (String imagePath) {
 }
 \end{lstlisting}
 
-In Python funktioniert die Verwendung analog, da auch hier die \textit{opencv} Bibliothek genutzt wurde.
-
 \section{Ansatz 1: Bag of Visual Words}
 
 Das Bag of Visual Words Modell wurde direkt in CUDA C umgesetzt. Sofern die Deskriptoren aus den Trainingsbildern extrahiert wurden, kann durch \textit{generateModel} die Generierung eines Modells gestartet werden. Hier werden die Features, die Anzahl der Cluster und eine Referenz auf eine Liste von Mitgliedschaften erwartet. Neben den Schwerpunkten der Cluster werden die Mitgliedschaften berechnet: Pro Cluster liegt eine Liste vor, die alle \textit{keypoints}, die zu dem Cluster gehören, enthält. Sowohl die Schwerpunkte der Cluster als auch die Mitgliedschaften werden nach der Verarbeitung auf die Festplatte in verschiedene Dateien geschrieben. Die Schwerpunkte der Cluster werden zeilenweise in die Datei \textit{modelPath}/clusters geschrieben, sodass sich $k$ Zeilen mit 128 Elementen bei der Verwendung von SIFT ergeben. Die Mitgliedschaften der Features zu Cluster wird in der Datei \textit{modelPath}/membership gespeichert und enthält so viele Zeilen wie Features vorliegen. Jede Zeile enthält die $x$ und $y$ Koordinaten des \textit{keypoints} und den Index des zugehörigen Clusters. Der Index bezieht sich hierbei auf die Position des Clusters in der Datei \textit{modelPath}/clusters.
@@ -76,15 +74,64 @@ Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, al
 
 \section{Ansatz 2: Autoencoder}
 
+In diesem Kapitel wird behandelt wie der Autoencoder in Python und TensorFlow umgesetzt wurde. Zunächst wird auf die Erhebung der Feature-Vektoren unter Verwendung der \textit{opencv}-Bibliothek eingegangen. Anschließend erfolgt eine Übersicht des Python-Codes zur Definition des Autoencoders.
+
+\subsection{Erhebung der Feature-Vektoren}
+
+Um die 3042-elementigen Feature-Vektoren zu extrahieren, wurde hier ebenfalls die \textit{opencv}-Bibliothek genutzt. Der Prozess lässt sich in drei Schritte untergliedern. Um alle Features eines Bildes zu erhalten, wird die Funktion \textit{extractFeatures} mit dem Pfad zu einer Bilddatei ausgerufen. Es wird das Bild eingelesen, konvertiert und durch den \textit{opencv} SIFT-Detektor die \textit{keypoints} ermittelt. Die Berechnung der Gradienten der Nachbarschaften um diese \textit{keypoints} erfolgt dann durch die Funktion \textit{computeDescriptors}:
+
+\lstset{language=Python}
+\begin{lstlisting}
+def computeDescriptors(image, keypoints):
+  descriptors = []
+  
+  for keypoint in keypoints:
+  	patch = getPatch(image, keypoint)
+  	gradients = computeGradients(patch)
+  	descriptors.append(gradients)
+  return descriptors
+  
+def getPatch (image, keypoint):
+  x, y = keypoint.pt[0], keypoint.pt[1]
+  return image[y-20:y+21, x-20:x+21]
+\end{lstlisting}
+
+Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hierbei handelt es sich um die Nachbarschaften der Größe $41 \times 41$. Die Gradienten in vertikale und horizontale Richtung eines solchen \textit{Patches} werden durch \textit{computeGradients} bestimmt. In Zeile 2 und 3 in Abbildung \ref{lst:compGrad} findet die Konvolution des Patches mit dem Sobel-Operator statt, den \textit{opencv} anbietet.
+
+\lstset{language=Python,label={lst:compGrad}}
+\begin{lstlisting}
+def computeGradients(image):
+  grad_x = cv2.Sobel(image, cv2.CV16S, 1, 0)
+  grad_y = cv2.Sobel(image, cv2.CV16S, 0, 1)
+  return [grad_x, grad_y]
+\end{lstlisting}
+
+\subsection{Autoencoder Modell in TensorFlow}
+
 Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch NVIDIAs CUDA unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
 
 \lstset{language=Python}
 \begin{lstlisting}
 from deepautoencoder import StackedAutoEncoder
+import cv2
+import numpy
 
-model = StackedAutoEncoder(dims=[3], activations=['relu'], epoch=[1000], loss='rmse', lr=0.007, batch_size=50, print_step=100)
-                       
-result = model.fit_transform(x)
+features = extractAllFeatures(imagePaths)
+index = numpy.random.rand(features.shape[0]) < 0.8
+train = features[index]
+test = features[~index]
+
+model = StackedAutoEncoder(
+  dims=[3042, 1024, 512, 128, 36],
+  activations=['relu', 'relu', 'relu', 'relu', 'relu'], 
+  epoch=[3000, 3000, 3000, 2000, 1000], 
+  loss='rmse', 
+  lr=0.007, 
+  batch_size=100
+)
+
+model.fit(train)
+result = model.transform(test)
 \end{lstlisting}
 
 \begin{enumerate}

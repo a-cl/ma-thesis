@@ -103,10 +103,15 @@ In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein S
 	\label{img:ae_model}
 \end{figure}
 
+\subsection{Aufbereitung der Features}
+
+Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Zunächst werden die \textit{keypoints} durch einen SIFT-Detektor ausgewählt. Um die gefundenen \textit{keypoints} wird nun jeweils eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Zum Aufbau des Feature-Vektors werden von diesen Nachbarschaften die Gradienten in horizontale und vertikale Richtung berechnet. Mathematisch entspricht dies einer Konvolution des Ausschnittes mit einem entsprechenden Sobel-Filter. Bei einem Filter mit einem Kernel der Größe $3 \times 3$ entsteht so pro Richtung eine $39 \times 39$ Matrix. Diese werden normalisiert und anschließend zusammen kodiert, sodass der 3042-elementige Feature-Vektor entsteht, der durch den Autoencoder verarbeitet werden kann.
+\todo{Sobel}
+
 \subsection{TensorFlow}
 
 TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \grqq fließen\grqq und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
-TensorFlow folgt dem sogenannten \glqq lazy\grqq  Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Als nächsten müssen alle nötigen Variablen initialisiert werden. Erst durch das Erzeugen und Aufrufen einer \glqq Session\grqq wird das Modell trainiert bzw. auf Testdaten ausgeführt.
+TensorFlow folgt dem sogenannten \glqq lazy\grqq  Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \glqq Session\grqq wird das Modell trainiert bzw. auf Testdaten ausgeführt.
 
 \lstset{language=Python}
 \begin{lstlisting}
