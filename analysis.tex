@@ -1,17 +1,13 @@
 \chapter{Analyse}
 
-Ziel der Arbeit ist es, dass ein Anwender die in der HsH-Datenbank vorhandenen Bilddaten in eine Menge von $k$ verschiedenen Gruppen einteilen kann, um so semantische Informationen über die Bilder zu gewinnen. Das $k$ kann hierbei vom Anwender vorgegeben werden um verschiedene Gruppen zu erhalten und so unterschiedliche Informationen in Bildern zu entdecken. 
-In diesem Rahmen sollen zwei Methoden miteinander verglichen werden, die eine Gruppierung von Bildern auf Basis von sogenannten Feature-Deskriptoren ermöglichen.  Die so entstandenen Modelle erlauben es weitere Bilder zu \textit{labeln}, d.h. die Gruppe zu bestimmen, der sie angehören. Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Verschiedene Objekte oder Merkmale die auf mehreren Bildern vorhanden sind, besitzen selten die gleiche Position, daher sollten Rotation, Skalierung und Translationen berücksichtigt werden können. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände realisiert. Eine Reihe von geeigneten und verbreiteten Deskriptoren wird im Kapitel \nameref{extraction} vorgestellt und diskutiert.
-Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen viele Komponenten auf, was eine effiziente Berechnung nicht möglich macht. Aus diesem Grund werden zwei unüberwachte Lernverfahren vorgestellt: Zum Einen wird das Bag of Visual Words Modell behandelt, zum Anderen der Autoencoder. Beide Modelle bilden die erhobenen Feature-Vektoren auf einen Raum mit weniger Dimensionen ab, um so eine effizientere Berechnung der \textit{Labels} zu ermöglichen. Da, je nach gewünschtem Modell, zum Aufbauen desselben Tausende bis Millionen von Features verarbeitet werden müssen, wird bei der Betrachtung der beiden Ansätze geprüft, wie eine Beschleunigung der Berechnung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden, als durch CPUs.
-
-\todo{cuda besser einführen, kurze cuda Sektion?}
+Das Analysekapitel beginnt mit einer Vorstellung einiger unterschiedlicher populärer Feature-Detektoren bzw. Deskriptoren. Anhand dieses Überblicks wird dann entschieden, welche Detektoren / Deskriptoren verwendet werden. Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen viele Komponenten auf, was eine effiziente Berechnung nicht möglich macht.
+Anschließend werden Verfahren betrachtet, die die entstandenen Feature-Deskriptoren gruppieren bzw. komprimieren um anhand dieser Darstellung eine Klassifizierung zu ermöglichen .Im Folgenden Kapitel Machine Learning werden Algorithmen die sich für diesen Zweck eignen untersucht. Zunächst wird auf den Prozess des unüberwachten Lernens eingegangen, um so die Auswahl möglicher Modelle einzuengen. Daraufhin erfolgt eine Auswahl an zwei Modelle die im Weiteren dieser Arbeit im Fokus stehen und realisiert werden. 
+Da, je nach gewünschtem Modell, zum Aufbauen desselben, Tausende bis Millionen von Features verarbeitet werden müssen, wird bei der Betrachtung der beiden Ansätze geprüft, wie eine Beschleunigung der Berechnung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden als durch CPUs. Da Nvidias CUDA an der Hochschule Hannover sowohl gelehrt als auch zu Forschungszwecken genutzt wird und sich die \todo{Architektur} auch international in Forschung und Wirtschaft etabliert hat \todo{[REF]}, soll diese als technische Basis dienen. 
 
 \section{Feature Deskriptoren}
 \label{extraction}
 
-Feature Deskriptoren enthalten Informationen von charakteristischen Bereichen in Bildern. Feature Deskriptoren kodieren weitaus mehr als nur die geometrische Position von Pixeln: Es wird beispielsweise die Beleuchtung und teilweise affine Invarianz berücksichtigt. In der Literatur finden sich verschiedene Ansätze, die je nach Einsatzgebiet unterschiedliche Stärken besitzen. Nachfolgend werden einige Feature Deskriptoren vorgestellt, die verbreitete Anwendung durch ihre praktischen Erfolge erzielt haben. Für die weitere Verarbeitung der Features ist es erstrebenswert, dass ihre Darstellung möglichst kompakt ist. Deskriptoren werden als Vektoren von Zahlen kodiert, die abhängig vom Verfahren Informationen über einen Pixel und seine Nachbarschaft oder auch ein ganzes Bild enthalten. Je größer die Anzahl der Einträge eines Vektors, desto größer wird der Speicherbedarf und Rechenaufwand. Neben einer kompakten Darstellung werden daher in der Praxis weitere Verfahren verwendet, um die Anzahl der Komponenten eines Vektors weiter zu reduzieren.
-
-\todo{Under construction - auch die folgenden Deskriptoren}
+Feature Deskriptoren enthalten Informationen von charakteristischen Bereichen in Bildern. Dabei kodieren sie weitaus mehr als nur die geometrische Position von Pixeln: Es wird beispielsweise die Beleuchtung und teilweise affine Invarianz berücksichtigt. In der Literatur finden sich verschiedene Ansätze, die je nach Einsatzgebiet unterschiedliche Stärken besitzen. Auf diese Weise soll auch ein Gefühl für die unterschiedlichen Arten von Deskriptoren und den vielfältigen Möglichkeiten der Feature-Auswahl und Beschreibung vermittelt werden. Nachfolgend werden einige Feature Deskriptoren vorgestellt, die verbreitete Anwendung durch ihre praktischen Erfolge erzielt haben. Für die weitere Verarbeitung der Features ist es erstrebenswert, dass ihre Darstellung möglichst kompakt ist. Deskriptoren werden als Vektoren von Zahlen kodiert, die abhängig vom Verfahren Informationen über einen Pixel und seine Nachbarschaft oder auch ein ganzes Bild enthalten. Je größer die Anzahl der Einträge eines Vektors, desto größer wird der Speicherbedarf und Rechenaufwand. Neben einer kompakten Darstellung werden daher in der Praxis weitere Verfahren verwendet, um die Anzahl der Komponenten eines Vektors weiter zu reduzieren. 
 
 \subsection{Local Binary Patterns}
 
@@ -23,17 +19,60 @@ Einen ganz anderen Ansatz haben Torralba und Olivia \cite{mts2001} verfolgt: Sta
 
 \subsection{Histogram of Oriented Gradients}
 
-Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. Obwohl beispielsweise SIFT auch ein lokales Histogramm um einen \textit{keypoint} berechnet, werden beim HOG hingegen die Features des ganzen Bildes (bzw. Bereiches) berechnet, nicht nur von Nachbarschaften. Das Verfahren zur Gewinnung eines HOG ist im Grundlagenkapitel unter \ref{sec:hog} beschrieben. 
+Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. \todo{Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren} bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. 
+Um ein HOG zu generieren wird das Bild in gleich große Zellen eingeteilt, die eine Nachbarschaft von Pixeln umfassen. Über die Pixel jeder Zelle werden nun die lokalen Gradienten berechnet. Diese fließen proportional zu ihrer Stärke in den kumulierten Gradienten der Zelle ein. Dabei hat jede Zelle eine feste, vorgegebene Anzahl an Klassen für die Orientierungen der Gradienten. 
+Dalal und Triggs nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \ref{img:hog} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/hog.png}
+	\caption{Schematische Darstellung des Histogram of Oriented Gradients  \cite{dif2004}}
+	\label{img:hog}
+\end{figure}
 
 \subsection{SIFT}
 
-Der SIFT-Deskriptor trifft keine speziellen Annahmen über die vorliegenden Objekte
+SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} entwickelt wurde. Neben der Invarianz der Skalierung der Features, berücksichtigt SIFT auch teilweise die Rotation, Beleuchtung und Perspektive. SIFT kombiniert mehrere mathematische Operationen und Verfahren um den Deskriptor eines Features als Ergebnis zu erhalten. Der Algorithmus lässt sich in vier wesentliche Schritte unterteilt:
+
+\begin{enumerate}
+	\item \textbf{Scale space} Im ersten Schritt wird die Invarianz der Skalierung behandelt. SIFT konstruiert hierfür einen \textit{scale space}. Hier werden aus dem Originalbild durch den \textit{Difference of Gaussians} immer verzerrtere Versionen erzeugt. Die Größe der neuen Bilder wird halbiert und die Prozedur wiederholt. Alle verzerrten Bilder einer Größe bilden eine sogenannte Oktave. SIFT verwendet vier Oktaven und fünf Bilder pro Oktave um den \textit{scale space} zu erzeugen. Um Ecken und Kanten in einem Bild zu ermitteln, die sich als Kandidaten für \textit{keypoints} eignen, wird nun zwischen allen aufeinanderfolgenden Bildern einer Oktave die Differenz gebildet. Das Prinzip ist für zwei Oktaven in Abbildung \ref{img:sift_dog} dargestellt. Das Ergebnis ist eine Approximation des Laplacian of Gaussians, jedoch ist dieses Verfahren weit weniger rechenintensiv. 
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/sift_dog.png}
+	\caption{Difference of Gaussians Operator \cite{dif2004}}
+	\label{img:sift_dog}
+\end{figure}	
+	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DoG-Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DoG-Bildes und des vorigen und nachfolgendem im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genau Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint} ausgehend.
+	\item \textbf{Bestimmung der Orientierung} Bei dem Aufbau der Feature-Vektoren pro \textit{keypoint} wird die lokale Orientierung berechnet. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogram of Oriented Gradients. Hierfür werden zufällig Punkte aus der Nachbarschaft des \textit{keypoints} ausgewählt. Der Extremwert des Histogramms wird dann als dominante Orientierung verwendet.
+	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
+\end{enumerate}
+
+SIFT ist äußerst robust, da Änderungen im Grenzwert von Position und Orientierung den Feature-Vektor kaum beeinflussen. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Darstellung erfordert einen Raum mit 128 Dimensionen. \todo{
+very good performance in image matching [Mikolaczyk and Schmid03]} \cite{idp2005}
 
 \subsection{Bewertung der Deskriptoren}
 
-In der Literatur und Praxis hebt sich von allen Deskriptoren der SIFT-Deskriptor am meisten ab. Zwar gibt es für spezielle Anwendungsfälle geeignetere Deskriptoren, wie beispielsweise den LBP-Deskriptor für die Erkennung von Passanten, doch SIFT ist bis heute der beste \glqq Allrounder\grqq. Insofern eignet sich SIFT vor allem, wenn nicht bekannt ist, allgemeine Inhalte in einer Bildmenge vorliegen bzw. wenn mehr als eine spezielle Objektart berücksichtigt werden muss. Generell funktionieren die im folgenden vorgestellten Modelle mit jeder Art von (Bild-)Deskriptor: Die Modelle arbeiten genau aus diesem Grund nicht direkt mit den Bilddaten, sondern den Deskriptoren. Bei eben diesen handelt es sich lediglich um Vektoren aus dem Raum $\mathbb{R}^d$, wobei die Dimensionalität $d$ des Raums und damit die Anzahl der Elemente des Vektors abhängig vom Verfahren sind. Dies schränkt aber nicht die generelle Machbarkeit ein, sondern wirkt sich auf die Laufzeit bzw. den Speicherbedarf aus. Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, wird für die Gewinnung der Features das SIFT-Verfahren und somit auch das Histogram of Oriented Gradients verwendet. 
+Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Verschiedene Objekte oder Merkmale die auf mehreren Bildern vorhanden sind, besitzen selten die gleiche Position, daher sollten Rotation, Skalierung und Translationen berücksichtigt werden können. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände realisiert. In der Literatur und Praxis hebt sich von allen Deskriptoren der SIFT-Deskriptor in dieser Hinsicht am meisten ab. Zwar gibt es für spezielle Anwendungsfälle geeignetere Deskriptoren, wie beispielsweise den LBP-Deskriptor für die Erkennung von Passanten, doch SIFT ist bis heute der beste \glqq Allrounder\grqq zur Objekterkennung. Insofern ist SIFT auch ein guter Ausgangspunkt, wenn mehr als eine spezielle Objektart berücksichtigt werden muss. Generell funktionieren die im folgenden vorgestellten Modelle mit jeder Art von (Bild-)Deskriptor: Die Modelle arbeiten genau aus diesem Grund nicht direkt mit den Bilddaten, sondern den Deskriptoren. Bei eben diesen handelt es sich lediglich um Vektoren aus dem Raum $\mathbb{R}^d$, wobei die Dimensionalität $d$ des Raums und damit die Anzahl der Elemente des Vektors abhängig vom Verfahren sind. Dies schränkt aber nicht die generelle Machbarkeit ein, sondern wirkt sich auf die Laufzeit bzw. den Speicherbedarf aus. Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, wird für die Gewinnung der \text{keypoints} das SIFT-Verfahren verwendet. 
 
-\section{Lernverfahren}
+\todo{Komponenten von SIFT betrachten, zwar viele aber nicht genug für alle Verfahren}
+\todo{Eventuell ML anschließen, nach Modellwahl?}
+\todo{Überleitung wie das in die Modelle passt, warum Gradienten für AE}
+
+\section{Machine Learning}
+
+\todo{Intro} \cite{aml2003}\newline
+
+Was ist ML? (Pattern Recognition, Rechenleistung\newline
+  - Klassifizierung (Expected Loss, memory / cpu, Lern- und Trainingsphase)\newline
+  - Clustering (dimensionality reduction, kmeans\newline
+Lernarten (unsupervised, Modelle)\newline
+Auswahl BoVW und AE
+
+Aus diesem Grund werden zwei unüberwachte Lernverfahren vorgestellt: 
+Zum Einen wird das Bag of Visual Words Modell behandelt, zum Anderen der Autoencoder. Beide Modelle bilden die erhobenen Feature-Vektoren auf einen Raum mit weniger Dimensionen ab, um so die Berechnungen für Klassifizierungen zu vereinfachen.
+
+\subsection{Lernverfahren}
 
 Ein System, dass ein Lernverfahren implementiert, wird genutzt um Muster in Datenströmen zu entdecken. Hierfür wird das System mit Trainingsdaten angelernt, um diese zu beurteilen und daraus Muster zu gewinnen. Wenn dieser Vorgang abgeschlossen ist, kann der Lernalgorithmus auf die eigentlichen Daten angewendet werden. In der Literatur wird zwischen verschiedene Lernmethoden unterschieden, die geläufigsten sind unüberwachtes und überwachtes Lernen:
 
@@ -42,7 +81,16 @@ Ein System, dass ein Lernverfahren implementiert, wird genutzt um Muster in Date
 	\item \textbf{Unüberwachtes Lernen (unsupervised Learning)} Ziel unüberwachter Lernalgorithmen ist aus großen Mengen von nicht kategorisierten Daten versteckte Strukturen zu entdecken. Um dies zu erreichen werden die Daten oft quantisiert oder in eine simplere Darstellung überführt.
 \end{itemize}
 
-Für die Featuregewinnung eignen sich vor allem unüberwachte Lernverfahren, da pro Bild viele Deskriptoren gefundenen werden, die in einem hochdimensionalen Raum liegen. Zum einen muss die Menge der erzeugten Deskriptoren auf die Wesentlichen reduziert werden, zum anderen eignen sich die SIFT Feature-Vektoren mit ihren 128 Elementen nur bedingt für einen direkten Vergleich. Eine Möglichkeit besteht darin, durch ein Clustering Verfahren die Deskriptoren in Kategorien zu quantisieren, sodass beim \textit{Labeling} eines Bildes nur noch ein Bruchteil an Vergleichen durchgeführt werden muss. Ein anderer Ansatz ist das Verringern der Feature Dimensionalität. Verfahren wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab und wurden bereits speziell für SIFT adaptiert (SIFT-PCA). Durch den Aufschwung maschineller Lernverfahren wurden jüngst auch neuronale Netze für diesen Zweck adaptiert. Ein Autoencoder ist ein spezielles neuronales Netzwerk, dass sich für das unbeaufsichtigte Lernen einer komprimierten Darstellung von Daten verwenden lässt. Im Folgenden werden zwei verschiedene unüberwachte Lernverfahren, dass Bag of Visual Words Modell und der Autoencoder, vorgestellt. Ziel ist es beide Verfahren zu implementieren und die Ergebnisse gegenüberzustellen.
+Für die Featuregewinnung eignen sich vor allem unüberwachte Lernverfahren, da pro Bild viele Deskriptoren gefundenen werden, die in einem hochdimensionalen Raum liegen. Zum einen muss die Menge der erzeugten Deskriptoren auf die Wesentlichen reduziert werden, zum anderen eignen sich die SIFT Feature-Vektoren mit ihren 128 Elementen nur bedingt für einen direkten Vergleich. Eine Möglichkeit besteht darin, durch ein Clustering Verfahren die Deskriptoren in Kategorien zu quantisieren, sodass beim \textit{Labeling} eines Bildes nur noch ein Bruchteil an Vergleichen durchgeführt werden muss. Ein anderer Ansatz ist das Verringern der Feature Dimensionalität. Verfahren wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab und wurden bereits speziell für SIFT adaptiert (SIFT-PCA). 
+
+\textbf{Unsupervised Learning Modelle}
+
+Durch den Aufschwung maschineller Lernverfahren wurden jüngst auch neuronale Netze für diesen Zweck adaptiert. Ein Autoencoder ist ein spezielles neuronales Netzwerk, dass sich für das unbeaufsichtigte Lernen einer komprimierten Darstellung von Daten verwenden lässt. Im Folgenden werden zwei verschiedene unüberwachte Lernverfahren, dass Bag of Visual Words Modell und der Autoencoder, vorgestellt. Ziel ist es beide Verfahren zu implementieren und die Ergebnisse gegenüberzustellen.
+\todo{andere}
+
+\subsection{Auswahl geeigneter Modelle}
+
+\todo{TODO}
 
 \section{Ansatz 1: Bag of Visual Words}
 
@@ -65,7 +113,7 @@ kmeans_lloyd ($P, C, k$)
 			$c_{j} = \frac{1}{|c_{j}|} \sum_{n_{i} \in c_{j}} n_{i}$
 \end{lstlisting}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen, da die Vektoren aus denen der Mittelwert berechnet wird, genau einem Cluster zugeordnet sind.
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
 
 % http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
 
@@ -89,22 +137,24 @@ histogram ($P, C, H$)
 
 Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und diesen Wissen zu transferieren. 
 Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe. Eine Einführung in die Funktionsweise ist im Grundlagenkapitel unter dem Abschnitt REF[AE] zu finden.
-Zunächst wird vorgestellt wie ein Autoencoder direkt mit den Pixeln eines Bildes arbeitet, um einzelne Ziffern auf einem Bild zu erkennen. Um nicht direkt die Pixel verwenden zu müssen, wird anschließend ein Deskriptor betrachtet der Informationen über die Gradienten kodiert, wie er von Zaho \cite{aed2016} verwendet wurde.
+\todo{Hyperparamter}
+Ein Autoencoder der mit Feature-Deskriptoren von Bildern arbeitet, wurde von Zaho \cite{aed2016} vorgeschlagen.
 
-\subsection{Autoencoder am Beispiel von Bildern}
+\subsection{Hyperparameters}
 
-Ein populäres Beispiel für die Verwendung von Autoencoder ist das Erkennen von Ziffern in einem Bild. Die Bilder der Ziffern liegen alle in den gleichen Dimensionen vor. Hieraus bestimmt sich die Größe der ersten Schicht des Autoencoders: Bei Bildern der Größe $m \times n$, umfasst die erste Schicht ebenfalls $m \times n$ Neuronen, um die Eingabe weiterzuleiten. Die genaue Anzahl der Größe der folgenden Schichten leitet sich aus Experimenten ab: Sowohl mit Anzahl als auch Neuronenanzahl kann variiert werden um die besten Resultate zu ermitteln. Da die Rekonstruktion von 
-Im Training werden Encoder und Decoder des Autoencoders hintereinander angewandt, wie in Abbildung \ref{img:ae_mnist} dargestellt. Es wird die komprimierte Darstellung aus der Eingabe erzeugt um diese anschließend wieder zu dekodieren. Die so erhaltene Rekonstruktion wird mit dem Original verglichen und die Größe des Fehlers bestimmt, um das Netz zu aktualisieren.
-Im Test ist es nur Ziel den Encoder anzuwenden, um auf Basis der komprimierten Darstellung eine Klassifizierung durchzuführen. 
+Parameter Kapitel (Anzahl Layer, Anzahl Neuronen pro Schicht, Aktivierungsfunktionen , Art der Verbindungen (Pooling, etc), meist fully connected in Beispielen, Feature-Größe beeinflusst gesamte Netzarchitektur)\newline
 
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.55]{images/ae_mnist.png}
-	\caption{Prozess der Enkodierung und Dekodierung von Ziffern durch einen Autoencoder.}
-	\label{img:ae_mnist}
-\end{figure}
+\todo{Hyperparameters
+Unfortunately, not every aspect of CNNs can be learned in so straightforward a manner. There is still a long list of decisions that a CNN designer must make.
+For each convolution layer, How many features? How many pixels in each feature?
+For each pooling layer, What window size? What stride?
+For each extra fully connected layer, How many hidden neurons?
+In addition to these there are also higher level architectural decisions to make: How many of each layer to include? In what order? Some deep neural networks can have over a thousand layers, which opens up a lot of possibilities.
+With so many combinations and permutations, only a small fraction of the possible CNN configurations have been tested. CNN designs tend to be driven by accumulated community knowledge, with occasional deviations showing surprising jumps in performance. And while we have covered the building blocks of vanilla CNNs, there are lots of other tweaks that have been tried and found effective, such as new layer types and more complex ways to connect layers with each other.}
 
 \subsection{Autoencoder für Bild Features}
 
-Im vorigen Kapitel wurde veranschaulicht, wie ein Autoencoder direkt mit den Pixeln eines Bildes arbeitet. Durch eine abschließende Schicht zur Klassifizierung wird das Bild schließlich eingeordnet. Da aber in vielen Anwendungsfällen nicht direkt mit Pixeln gearbeitet werden kann, ist es wünschenswert, dass der Autoencoder stattdessen mit Features von Bildern arbeitet. Für die Extraktion geeigneter \textit{keypoints} hat sich der SIFT-Detektor bewährt, der Deskriptor hat jedoch bereits eine so kompakte Darstellung, sodass es nicht möglich ist ein tiefes Netzwerk aufzubauen. Stattdessen sollen die \textit{keypoints} als Basis für die Erstellung eines Deskriptors dienen: Dieser kodiert, wie in der Arbeit von Zhao \cite{aed2016} vorgeschlagen, die Gradienten in horizontale und vertikale Richtung der Nachbarschaft eines \textit{keypoints}. Als Größe für die Nachbarschaft wurde eine Matrix der Größe $41 \times 41$ Pixeln verwendet. Auf die Wahl der Größe wurde nicht näher eingegangen. Durch diese bestimmt sich die Größe des Feature-Vektors: Pro Richtung ergibt sich eine $39 \times 39$ Matrix und damit insgesamt ein Feature-Vektor der Länge $2 \times 39 \times 39 = 3042$. In der Arbeit wird nicht näher auf die Art der Kantendetektion eingegangen, um die Gradienten zu ermitteln. Jedoch ist es wahrscheinlich, dass ein Sobel-Operator mit einem Filterkern der Größe $3 \times 3$ verwendet wurde: Dadurch können die jeweils erste und letzte Zeile und Spalte der Bildmatrix nicht berücksichtigt werden, sodass sich eine $39 \times 39$ Matrix für die Gradienten ergibt.
+Ein populäres Beispiel für die Verwendung von Autoencoder ist das Erkennen von Ziffern in einem Bild. Solch ein Netzwerk arbeitet direkt mit den Pixeln des Bildes: Bei einem Bild mit $m \times n$ Pixeln, umfasst die erste Schicht ebenfalls $m \times n$ Neuronen, für jeden Pixel eines. Wie üblich, umfassen die folgenden Schichten weniger Neuronen. Durch eine abschließende Schicht zur Klassifizierung wird das Bild schließlich eingeordnet. Da aber in vielen Anwendungsfällen nicht direkt mit Pixeln gearbeitet werden kann, ist es wünschenswert, dass der Autoencoder stattdessen mit Features von Bildern arbeitet. Für die Extraktion geeigneter \textit{keypoints} hat sich der SIFT-Detektor bewährt, der Deskriptor hat jedoch bereits eine zu kompakte Darstellung um ein tiefes Netzwerk aufzubauen. Stattdessen sollen die \textit{keypoints} als Basis für die Erstellung eines Deskriptors dienen: Dieser kodiert, wie in der Arbeit von Zhao \cite{aed2016} vorgeschlagen, die Gradienten in horizontale und vertikale Richtung der Nachbarschaft eines \textit{keypoints}. Als Größe für die Nachbarschaft wurde eine Matrix der Größe $41 \times 41$ Pixeln verwendet. Auf die Wahl der Größe wurde nicht näher eingegangen. Durch diese bestimmt sich die Größe des Feature-Vektors: Pro Richtung ergibt sich eine $39 \times 39$ Matrix und damit insgesamt ein Feature-Vektor der Länge $2 \times 39 \times 39 = 3042$. In der Arbeit wird nicht näher auf die Art der Kantendetektion eingegangen, um die Gradienten zu ermitteln. Jedoch ist es wahrscheinlich, dass ein Sobel-Operator mit einem Filterkern der Größe $3 \times 3$ verwendet wurde: Dadurch können die jeweils erste und letzte Zeile und Spalte der Bildmatrix nicht berücksichtigt werden, sodass sich eine $39 \times 39$ Matrix für die Gradienten ergibt.
 Der Feature-Vektor mit 3042 Elementen bildet nun eine gute Basis, um einen mehrschichtigen Autoencoder zu entwickeln, der sukzessiv eine abstraktere Repräsentation lernt. Der von Zhao vorgeschlagene Encoder besteht aus fünf Stufen. Die erste Schicht besteht aus 3042 Neuronen um die Eingabe weiterzuleiten. Folgend werden 1024, 512, 128 und schließlich 36 Neuronen für die Kodierung verwendet. \todo{Die Neuronen jeder Schicht besitzen eine lineare Aktivierungsfunktion}. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
+
+\todo{Zhaos Grafik und Parameter aufführen, dann in Konzeption eigenes Modell}
