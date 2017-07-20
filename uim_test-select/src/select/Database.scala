@@ -2,13 +2,14 @@ package select
 
 import java.io.File
 
-import scala.collection.mutable.{HashMap, ListBuffer}
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class DataSet (val train: List[File], val test: List[Test])
 
 class Database (path: String) {
 
-  type Sets = HashMap[File, List[File]]
+  type Sets = mutable.HashMap[File, List[File]]
 
   val root = new File(path)
 
@@ -18,16 +19,16 @@ class Database (path: String) {
 
   def createDataSet (setCount: Int, trainPerSet: Int, testPerSet: Int, testCount: Int): DataSet = {
     val selection = new PickEvenSelection(testCount)
-    val sets = getSets(setCount)
+    val sets = getSets(setCount, trainPerSet + testPerSet)
     val (train, rest) = getSamples(sets, trainPerSet)
     val (tests, _) = getSamples(rest, testPerSet)
 
     new DataSet(train, selection.select(tests))
   }
 
-  private def getSets (count: Int): Sets = {
+  private def getSets (count: Int, total: Int): Sets = {
     val files = root.listFiles.filter(f => f.isDirectory).to[ListBuffer]
-    val sets = getRandomFiles(files, count)
+    val sets = getRandomFiles(files, count, file => file.listFiles.length >= total)
     val map = new Sets()
 
     sets.foreach { set =>
@@ -40,7 +41,7 @@ class Database (path: String) {
   private def getSamples (sets: Sets, count: Int): (List[File], Sets) = {
     val rest = new Sets()
     val files = sets.keys.flatMap { key =>
-      getRandomFiles(sets(key).to[ListBuffer], count)
+      getRandomFiles(sets(key).to[ListBuffer], count, _ => true)
     }.toList
 
     sets.keys.foreach { key =>
@@ -50,15 +51,23 @@ class Database (path: String) {
     (files, rest)
   }
 
-  private def getRandomFiles (files: ListBuffer[File], count: Int): List[File] = {
+  private def getRandomFiles (files: ListBuffer[File], count: Int, predicate: File => Boolean): List[File] = {
     val max = if (count > files.length) files.length else count
+    val result = ListBuffer[File]()
+    var i = 0
 
-    Range(0, max).map { _ =>
+    while (i < max || files.isEmpty) {
       val index = (Math.random() * (files.length - 1)).toInt
       val file = files(index)
-      files.-=(file)
-      file
-    }.toList
+
+      if (predicate(file)) {
+        files.-=(file)
+        result.+=(file)
+        i = i + 1
+      }
+    }
+
+    result.toList
   }
 
   private def isImage(file: File): Boolean = {

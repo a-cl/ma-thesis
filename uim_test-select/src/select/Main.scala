@@ -11,6 +11,9 @@ import java.io.File
   * trainPerSet:  Number of training samples per set
   * testPerSet:   Number of test samples per set
   * testCount:    Number of tests to create
+  *
+  * 1# ../caltech101 ../data/test/50k/ 10 15 20 1500
+  * 2# ../caltech101 ../data/test/new/ 3  80 40 1500
   */
 object Main {
 
@@ -22,6 +25,7 @@ object Main {
     val testPerSet = args(4).toInt
     val testCount = args(5).toInt
 
+    print("train " + trainPerSet)
     val db = new Database(sourcePath)
     val data = db.createDataSet(setCount, trainPerSet, testPerSet, testCount)
 

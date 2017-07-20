@@ -14,8 +14,6 @@ object Reader {
     val map = new DataSheet
 
     readDir(file).foreach { set =>
-      println("Reading" + set.getName)
-
       val tests = Source.fromFile(set).getLines().toList.map { line =>
         val tokens = line.split(" ")
         val image1 = new File(tokens(0))
@@ -23,7 +21,7 @@ object Reader {
         val similarity = if (tokens.length > 3) tokens(3).toFloat else 0.0001f
         new Test(image1, image2, similarity)
       }.sortWith { (test1, test2) =>
-        test1.similarity < test2.similarity
+        test1.similarity > test2.similarity
       }
 
       map.put(getK(set), tests)
