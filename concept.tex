@@ -1,11 +1,11 @@
 \chapter{Konzept}
 
 Die Konzeption beschäftigt sich zunächst mit dem Prozess der Feature-Extraktion. Hierfür wird der SIFT Algorithmus nach Lowe genutzt. Folgend wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering und Histogramm Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Anschließend wird der geplante Ablauf zum Generieren eines Bag of Visual Word Modells und \textit{Labeling} eines Bildes durch das Modell erläutert.
-Abschließend wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Autoencoder eingeführt, der aus einem HOG Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt.
+Abschließend wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie sich solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.
 
 \section{Feature Extraktion}
 
-Die Extraktion der Features ist der erste Schritt zur Erzeugung der Modelle. Das Bag of Visual Words Modell nutzt die vom SIFT-Verfahren erzeugten Feature-Deskriptoren direkt für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit den Gradienten der Nachbarschaft der \textit{keypoints} die vom SIFT Feature-Detektor ermittelt wurden. Die Extraktion der Features ist nicht Gegenstand der Parallelisierung bzw. Schwerpunkt dieser Arbeit. Es wird daher auf eine gängige Bibliothek zurückgegriffen, die sich in der Praxis bewährt hat. Sollte sich herausstellen, dass die Feature-Gewinnung einen nicht unerheblichen Teil der Gesamtberechnung ausmacht, kann die Implementierung später noch durch eine parallele bzw. GPU-gestüzte Variante ausgewechselt oder erweitert werden.
+Die Extraktion der Features ist der erste Schritt zur Erzeugung der Modelle. Das Bag of Visual Words Modell nutzt die vom SIFT-Verfahren erzeugten Feature-Deskriptoren direkt für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit den Gradienten der Nachbarschaft der \textit{keypoints} die vom SIFT Feature-Detektor ermittelt wurden. Die Extraktion der Features ist nicht Gegenstand der Parallelisierung bzw. Schwerpunkt dieser Arbeit. Es wird daher auf eine gängige Bibliothek zurückgegriffen, die sich in der Praxis bewährt hat. 
 Der SIFT Feature-Deskriptor enthält 128 Komponenten und ist so für einen Vergleich nur schwer geeignet: beispielsweise werden bei einem Bild der Größe $320px \times 200px$ bereits 100 bis 1000 Feature-Vektoren generiert. Es werden daher im folgenden zwei Ansätze vorgestellt, welche die Anzahl der Komponenten von Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
 
 \section{Ansatz 1: Bag of Visual Words}
@@ -37,7 +37,7 @@ kmeans_gpu
 
 \subsection{Parallele Reduzierung von Histogrammen}
 
-Die Berechnung eines Histogramms kann hervorragend parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im global Speicher vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
+Die Berechnung eines Histogramms kann hervorragend parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
 
 \lstset{language=C}
 \begin{lstlisting}
@@ -72,7 +72,7 @@ Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunäch
 
 \subsubsection{Generierung des Modells}
 
-Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}>/membership. \todo{single extractFeature}
+Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}/membership. \todo{single extractFeature}
 
 \begin{figure}
 	\centering
@@ -94,7 +94,16 @@ Sofern ein Modell erstellt wurde, können auf dessen Basis Bilder verglichen wer
 
 \section{Ansatz 2: Autoencoder}
 
-In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein Stacked Denoising Autoencoder verwendet wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Der Autoencoder soll eine komprimierte Darstellung der Gradientenvektoren erzielen, die aus den \textit{keypoints} berechnet werden. Hierfür werden Patches der Größe $41 \times 41$ Pixel, zentriert auf den \textit{keypoints}, extrahiert und die Gradienten in horizontale und vertikale Richtung bestimmt. Pro Richtung werden dadurch 1521 Werte erfasst, denn die Gradienten werden in einem Fenster der Größe $39 \times 39$ ermittelt. Dadurch resultiert ein Vektor mit 3042 Elementen für zwei Richtungen. Folglich besitzt der Autoencoder in der Eingabeschicht 3042 Neuronen. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. In der Arbeit von Zhao wurde bereits aufgezeigt, dass der modellierte Autoencoder state of the art Ergebnisse erzielt: Die Ergebnisse des Autoencoders wurden unter verschiedenen Kriterien mit den Ergebnissen der SIFT-PCA und \todo{zweite Methode} Methode verglichen. Dabei erkannte der Autoencoder in fast allen vielen die gleichen Features, jedoch durch einen 36 statt 128 elementigen Feature-Vektor. Theoretisch wird hier also das gleiche Ergebnis in einem Drittel der Zeit ermittelt.
+In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Im Kapitel \ref{AufbereitungFeatures} werden die Funktionen zur Detektion der \textit{keypoints} und zur Erzeugung des Feature-Vektors aus diesen behandelt. Hieraus ergeben sich bereits erste Anforderungen an den Autoencoder, die im folgenden Kapitel detailliert werden. Es wird zunächst auf den Aufbau des Netzes eingegangen: Anzahl der Schichten sowie der Neuronen, Aktivierungsfunktionen und weitere Parameter des Netzes. Abschließend werden der Trainings- und Testprozess beschrieben, so wie sie von Zhao ausgeführt wurden.
+
+\subsection{Aufbereitung der Features}
+\label{AufbereitungFeatures}
+
+Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Die Extraktion der Features erfolgt in diesem Ansatz nicht durch SIFT, da der 128-elementige Feature-Vektor zu kompakt für ein tiefes Netz mit vielen Verbindungen ist. \todo{keypoints ermitteln}. Um jeden \textit{keypoints} wird nun eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. In der Arbeit von Zhao wurde hier ein Gauß-Filter verwendet. Dadurch entsteht pro Richtung eine $39 \times 39$ Matrix, die den Gradienten beschreibt. \todo{orientierung, x-achse}. Diese werden normalisiert und zusammen kodiert. Auf diese Weise wird so ein Feature-Vektor mit $2 \times 39 \times 39 = 3042$ Elementen aufgebaut. Folglich muss der Autoencoder in der Eingabeschicht 3042 Neuronen besitzen. 
+
+\subsection{Modell und Parameter}
+
+Die grundlegenden Züge des Netzes wurden bereits Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. 
 
 \begin{figure}
 	\centering
@@ -102,24 +111,6 @@ In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein S
 	\caption{Schichten des verwendeten Autoencoders \cite{aed2016}}
 	\label{img:ae_model}
 \end{figure}
-
-\subsection{Aufbereitung der Features}
-
-Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Zunächst werden die \textit{keypoints} durch einen SIFT-Detektor ausgewählt. Um die gefundenen \textit{keypoints} wird nun jeweils eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Zum Aufbau des Feature-Vektors werden von diesen Nachbarschaften die Gradienten in horizontale und vertikale Richtung berechnet. Mathematisch entspricht dies einer Konvolution des Ausschnittes mit einem Sobel-Operator. Aus einem Originalbild $O$ werden die Gradienten-Bilder $G_{x}$ und $G_{y}$ durch die Multiplikation mit einer Matrix pro Richtung erzeugt:  
-
-$$ G_{x} = O * \begin{bmatrix}
-  1 & 0 & -1 \\
-  2 & 0 & -2 \\
-  1 & 0 & -1
-\end{bmatrix} \quad
-G_{y} = O * \begin{bmatrix}
-   1 &  2 &  1 \\
-   0 &  0 &  0 \\
-  -1 & -2 & -1
-\end{bmatrix}
-$$
-
-Bei einem Filter mit einem Kernel der Größe $3 \times 3$ entsteht so pro Richtung eine $39 \times 39$ Matrix. Diese werden normalisiert und anschließend zusammen kodiert, sodass der 3042-elementige Feature-Vektor entsteht, der durch den Autoencoder verarbeitet werden kann.
 
 \subsection{TensorFlow}
 
