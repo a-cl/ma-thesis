@@ -2,7 +2,7 @@
 
 Das Analysekapitel beginnt mit einer Vorstellung einiger unterschiedlicher populärer Feature-Detektoren bzw. Deskriptoren. Anhand dieses Überblicks wird dann entschieden, welche Detektoren / Deskriptoren verwendet werden. Ein Vergleich von Bildern anhand von Features ist nicht unmittelbar möglich. Die Feature-Vektoren weisen viele Komponenten auf, was eine effiziente Berechnung nicht möglich macht.
 Anschließend werden Verfahren betrachtet, die die entstandenen Feature-Deskriptoren gruppieren bzw. komprimieren um anhand dieser Darstellung eine Klassifizierung zu ermöglichen .Im Folgenden Kapitel Machine Learning werden Algorithmen die sich für diesen Zweck eignen untersucht. Zunächst wird auf den Prozess des unüberwachten Lernens eingegangen, um so die Auswahl möglicher Modelle einzuengen. Daraufhin erfolgt eine Auswahl an zwei Modelle die im Weiteren dieser Arbeit im Fokus stehen und realisiert werden. 
-Da, je nach gewünschtem Modell, zum Aufbauen desselben, Tausende bis Millionen von Features verarbeitet werden müssen, wird bei der Betrachtung der beiden Ansätze geprüft, wie eine Beschleunigung der Berechnung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden als durch CPUs. Da Nvidias CUDA an der Hochschule Hannover sowohl gelehrt als auch zu Forschungszwecken genutzt wird und sich die \todo{Architektur} auch international in Forschung und Wirtschaft etabliert hat \todo{[REF]}, soll diese als technische Basis dienen. 
+Da, je nach gewünschtem Modell, zum Aufbauen desselben, Tausende bis Millionen von Features verarbeitet werden müssen, wird bei der Betrachtung der beiden Ansätze geprüft, wie eine Beschleunigung der Berechnung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden als durch CPUs. Da Nvidias CUDA an der Hochschule Hannover sowohl gelehrt als auch zu Forschungszwecken genutzt wird und sich CUDA auch international in Forschung und Wirtschaft etabliert hat, soll die Plattform als technische Basis dienen. 
 
 \section{Feature Deskriptoren}
 \label{extraction}
@@ -19,7 +19,7 @@ Einen ganz anderen Ansatz haben Torralba und Olivia \cite{mts2001} verfolgt: Sta
 
 \subsection{Histogram of Oriented Gradients}
 
-Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. \todo{Dalal und Triggs \cite{hog2005} nutzten diesen Verfahren} bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. 
+Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. Da sich Gradienten eignen um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen \cite{hog2005}. 
 Um ein HOG zu generieren wird das Bild in gleich große Zellen eingeteilt, die eine Nachbarschaft von Pixeln umfassen. Über die Pixel jeder Zelle werden nun die lokalen Gradienten berechnet. Diese fließen proportional zu ihrer Stärke in den kumulierten Gradienten der Zelle ein. Dabei hat jede Zelle eine feste, vorgegebene Anzahl an Klassen für die Orientierungen der Gradienten. 
 Dalal und Triggs nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \ref{img:hog} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
 
@@ -48,15 +48,11 @@ SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} en
 	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
 \end{enumerate}
 
-SIFT ist äußerst robust, da Änderungen im Grenzwert von Position und Orientierung den Feature-Vektor kaum beeinflussen. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Mikolajczyk und Schmid haben 2005 SIFT mit anderen Deskriptoren wie \todo{DESC} verglichen und kamen zu dem Ergebnis, dass SIFT sehr gut hinsichtlich \todo{der Geschwindigkeit und des Speicherbedarfs} performt \cite{idp2005}. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Beschreibung erfordert einen Feature-Vektor mit 128 Komponenten.
+SIFT ist äußerst robust, da Änderungen im Grenzwert von Position und Orientierung den Feature-Vektor kaum beeinflussen. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Mikolajczyk und Schmid haben 2005 SIFT mit anderen Deskriptoren (u.a. shape context, komplexe Filter, gradient location and orientation histogram, moment invariants, ...) verglichen und kamen zu dem Ergebnis, dass SIFT sehr gut hinsichtlich Präzison abschneidet \cite{idp2005}. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Beschreibung erfordert einen Feature-Vektor mit 128 Komponenten.
 
 \subsection{Bewertung der Deskriptoren}
 
-Eine wesentliche Eigenschaft die der Deskriptor aufweisen sollte, ist affine Invarianz. Verschiedene Objekte oder Merkmale die auf mehreren Bildern vorhanden sind, besitzen selten die gleiche Position, daher sollten Rotation, Skalierung und Translationen berücksichtigt werden können. Gegenwärtig ist aber noch kein Deskriptor vorhanden, der eine Einbeziehung aller möglichen Umstände realisiert. In der Literatur und Praxis hebt sich von allen Deskriptoren der SIFT-Deskriptor in dieser Hinsicht am meisten ab. Zwar gibt es für spezielle Anwendungsfälle geeignetere Deskriptoren, wie beispielsweise den LBP-Deskriptor für die Erkennung von Passanten, doch SIFT ist bis heute der beste \glqq Allrounder\grqq  zur Objekterkennung. Insofern ist SIFT auch ein guter Ausgangspunkt, wenn mehr als eine spezielle Objektart berücksichtigt werden muss. Generell funktionieren die im folgenden vorgestellten Modelle mit jeder Art von (Bild-)Deskriptor: Die Modelle arbeiten genau aus diesem Grund nicht direkt mit den Bilddaten, sondern den Deskriptoren. Bei eben diesen handelt es sich lediglich um Vektoren aus dem Raum $\mathbb{R}^d$, wobei die Dimensionalität $d$ des Raums und damit die Anzahl der Elemente des Vektors abhängig vom Verfahren sind. Dies schränkt aber nicht die generelle Machbarkeit ein, sondern wirkt sich auf die Laufzeit bzw. den Speicherbedarf aus. Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, wird für die Gewinnung der \text{keypoints} das SIFT-Verfahren verwendet. 
-
-\todo{Komponenten von SIFT betrachten, zwar viele aber nicht genug für alle Verfahren}
-\todo{Eventuell ML anschließen, nach Modellwahl?}
-\todo{Überleitung wie das in die Modelle passt, warum Gradienten für AE}
+Generell funktionieren die im folgenden vorgestellten Modelle mit jeder Art von (Bild-)Deskriptor: Die Modelle arbeiten genau aus diesem Grund nicht direkt mit den Bilddaten, sondern den Deskriptoren. Bei eben diesen handelt es sich lediglich um Vektoren aus dem Raum $\mathbb{R}^d$, wobei die Dimensionalität $d$ des Raums und damit die Anzahl der Elemente des Vektors abhängig vom Verfahren sind. Dies schränkt aber nicht die generelle Machbarkeit ein, sondern wirkt sich auf die Laufzeit bzw. den Speicherbedarf aus. Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, müsste mit einer Reihe verschiedener Deskriptoren experimentiert werden. Da eine Umsetzung aller geeigneten Deskriptoren den Rahmen dieser Arbeit sprengen würde, soll zunächst anhand einer Art von Deskriptor eine Basis geschaffen werden. Die zuvor vorgestellten Deskriptoren grenzen sich teilweise mehr, teilweise weniger voneinander ab: Der Spatial Envelope bietet einen ganz anderen Anwendungsfall als beispielsweise SIFT oder LBP. SIFT kann unter vielen Umständen Personen in Bildern erkennen, ist aber nicht darauf spezialisiert wie die LBP. Im Bereich der Objekterkennung ist SIFT jedoch der beste \glqq Allrounder\grqq.
 
 \section{Machine Learning}
 
@@ -83,25 +79,45 @@ Nach dem Aufbau des Modells findet dann durch das System die Klassifizierung von
 Je nach Fragestellung haben sich unterschiedliche Methodiken entwickelt, um den Lernprozess in einem System abzubilden. Im Wesentlichen werden drei Arten des maschinellen Lernens unterschieden:
 
 \begin{itemize}
-	\item \textbf{Überwachtes Lernen (supervised learning)} Ein überwachtes Lernverfahren soll eine Funktion lernen, die Eingaben ihren Ausgaben zuordnet. Diese Funktion wird anhand von Trainingsdaten gelernt, die demzufolge aus Paaren von Eingaben und ihren dazugehörigen Ausgaben bestehen.
+	\item \textbf{Überwachtes Lernen (supervised learning)} Ein überwachtes Lernverfahren soll eine Funktion $f$ lernen, die Eingaben ($x$) ihren Ausgaben ($y$) zuordnet, sodass gilt: $y = f(x)$ . Diese Funktion wird anhand von Trainingsdaten gelernt, die demzufolge aus Paaren von Eingaben und ihren dazugehörigen Ausgaben bestehen.
 	\item \textbf{Unüberwachtes Lernen (unsupervised learning)} Ziel unüberwachter Lernalgorithmen ist es, großen Mengen von nicht kategorisierten Daten zu gruppieren oder zu komprimieren. Dadurch können Beziehungen in den Daten entdeckt bzw. kompaktere Darstellungen erreicht werden.
 	\item \textbf{Verstärkendes Lernen (reinforcement learning)} Beim verstärkenden Lernen hat ein Agent die Aufgabe ein vorgegebenes Ziel zu erreichen, indem er mit seiner Umwelt agiert. Die Umwelt ist dabei eine Menge von Zuständen zwischen denen der Agent durch eine Aktion wechselt. Dabei hat jede Aktion eine Belohnungen oder Bestrafungen zufolge. Der Agent optimiert dann sein Verhalten, um die erhaltenen Belohnungen zu maximieren.
 \end{itemize}
 
-Überwachte und unüberwachte Lernverfahren unterscheiden sich im Wesentlichen über ihre Annahmen in der kausalen Struktur: Beim überwachten Lernen ist es notwendig, dass sowohl Ursachen (Eingaben) als auch Effekte (Ausgaben) gemessen wurden. Beim unüberwachten Lernen hingegen sind die Eingaben latente Variablen. Das heißt sie sind nicht direkt gemessen worden, sondern durch mathematische Verfahren von Observationen abgeleitet. Dadurch ist ein exploratives Vorgehen möglich. Es können Beziehungen in den Daten entdeckt und Gruppierungen bzw. Klassifizierungen durchgeführt werden. \todo{Why unsupervised}
+Überwachte und unüberwachte Lernverfahren unterscheiden sich im Wesentlichen über ihre Annahmen in der kausalen Struktur: Beim überwachten Lernen ist es notwendig, dass sowohl Ursachen (Eingaben) als auch Effekte (Ausgaben) gemessen wurden. Beim unüberwachten Lernen hingegen sind die Eingaben latente Variablen. Das heißt sie sind nicht direkt gemessen worden, sondern durch mathematische Verfahren von Observationen abgeleitet. Dadurch ist ein exploratives Vorgehen möglich. Es können Beziehungen in den Daten entdeckt und Gruppierungen bzw. Klassifizierungen durchgeführt werden.
 
 \subsection{Auswahl geeigneter Modelle}
 
-Für die Featuregewinnung eignen sich vor allem unüberwachte Lernverfahren, \todo{warum} da pro Bild viele Deskriptoren gefundenen werden, die in einem hochdimensionalen Raum liegen. Zum einen muss die Menge der erzeugten Deskriptoren auf die Wesentlichen reduziert werden, zum anderen eignen sich die SIFT Feature-Vektoren mit ihren 128 Elementen nur bedingt für einen direkten Vergleich. \todo{Hier: denkbar größerer Feature-Vektor, den ein Netz lernt} Eine Möglichkeit besteht darin, durch ein Clustering Verfahren die Deskriptoren in Kategorien zu quantisieren, sodass beim \textit{Labeling} eines Bildes nur noch ein Bruchteil an Vergleichen durchgeführt werden muss. Ein anderer Ansatz ist das Verringern der Feature Dimensionalität. Verfahren wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab und wurden bereits speziell für SIFT adaptiert (SIFT-PCA). Für diesen Zweck wurden auch neuronale Netze adaptiert. \todo{Convolutional}. Ein Autoencoder hingegen ist ein spezielles neuronales Netzwerk, welches für das Lernen einer komprimierten Darstellung von Daten verwenden wird.
+\todo{Why unsupervised, dann Modelle}
+Bevor ein Modell ausgewählt wird, soll vorab ein Überblick über die verschiedenen Verfahren im Bereich des unüberwachten Lernens gegeben werden. Die Verfahren werden in die Kategorien \textit{Clustering} und \textit{Dimensionality Reduction (Reduzierung der Dimensionalität} eingeteilt. 
+
+\textbf{Clustering-Verfahren} quantisieren die Daten in Gruppen. Eine Gruppe steht hier für ein semantisches Merkmal und vertritt eine Menge von konkreten Daten. Unter Clustering Verfahren fallen Algorithmen wie k-means, hierarchical clustering oder etwa das Gaussian Mixture Model. Ein Clustering Algorithmus hat in dem Kontext dieser Arbeit das Ziel, eine großen Menge Feature-Deskriptoren auf die Wesentlichen zu reduzieren. Durch diese Quantisierung in $n$ Gruppen müssen, bei einer Bewertung eines neuen Deskriptors, nur Vergleiche mit $n$ Deskriptoren durchgeführt werden, statt mit jedem Deskriptor der Ursprungsmenge.
+
+\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. In diesem Fall vertreten die Dimensionen semantische Merkmale. Methoden wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab. Ein moderneren Ansatz für diesen Zweck ist die Verwendung neuronaler Netze. Ein Autoencoder ist ein spezielles neuronales Netzwerk, welches für das Lernen einer komprimierten Darstellung von Daten verwenden wird. Das Konzept des Autoencoders reicht zwar bis in 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton entwickelt worden.
 
 Aus den möglichen Modellen sollen der Bag of Visual Words und der Autoencoder umgesetzt werden. Der Bag of Visual Words führt im Wesentlichen ein Clustering der Feature-Vektoren durch und erreicht so eine kompakte Histogrammdarstellung dieser. K-means ist ein bekanntes und etabliertes Verfahren, dass inzwischen auch für die parallele Ausführung auf Grafikkarten adaptiert wurde.
-\todo{NN}.
-Im Folgenden werden zwei verschiedene unüberwachte Lernverfahren, dass Bag of Visual Words Modell und der Autoencoder, vorgestellt. Ziel ist es beide Verfahren zu implementieren und die Ergebnisse gegenüberzustellen.
-\todo{TODO, BoVW (etabliert, kmeans, data mining) und AE (neu, ML, kompression)}
+Hinsichtlich der Verfahren zur Reduzierung von Dimensionen soll ein Autoencoder verwendet werden: Dieser bringt unter anderem dem Vorteil mit sich, das seine Architektur bereits auf eine parallele Verarbeitung ausgelegt ist und nicht \glqq extra\grqq berücksichtigt werden muss. Des weiteren sind klassische Methoden wie die Hauptkomponentenanaylse bereits zahlreich betrachtet worden. Ein Autoencoder hingegen ist in diesem Bereich ein wenig verbreiteter Vertreter.  
+
+\todo{Mehr in allen Abschnitten}
 
 \section{Ansatz 1: Bag of Visual Words}
 
-Im ersten Ansatz soll das Bag of Visual Words Modell genutzt werden. Zu Beginn liegen die Feature-Vektoren vor, die in der vorigen Phase extrahiert wurden. Um das Codebook aufzubauen ist es erforderlich, die \textit{Visual Words} zu generieren. Die \textit{Visual Words} werden durch ein Clustering der Feature-Vektoren gewonnen, daher handelt es sich hier um ein unüberwachtes Lernverfahren. Als Clustering Algorithmus wird hier Llyods heuristische Variante des k-means Algorithmus verwendet. Zunächst wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird. Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
+Im ersten Ansatz soll der Bag of Visual Words genutzt werden. Dieses Modell lehnt sich an das Bag of Words Modell aus dem Bereich Information Retrival an und wird zur Klassifizierung von Dokumenten genutzt. Beim Bag of Words wird das Auftreten jedes Wortes in einem Dokument gezählt und durch die Anzahl aller Wörter im Vokabular dividiert, um so einen normalisierten Wert zu erhalten, welcher die relative Häufigkeit eines Wortes angibt. Das Vokabular wird \textit{Codebook} genannt, die Wörter sind die \textit{Codewords}. \linebreak
+Dieses Modell wurde von der Computer Vision adaptiert um Bilder zu klassifizieren. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. Zunächst wird auf Llyods heuristische Variante des k-means Algorithmus näher eingegangen. Es wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird. 
+Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
+
+\subsection{Funktionsweise}
+Um \textit{Visual Words} aus einer Menge von Trainingsbildern zu erhalten, werden zunächst Feature-Vektoren aus den Bildern extrahiert. Die Features werden dann durch ein Clusteringverfahren gruppiert. Die Idee ist, dass ähnliche Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ ein große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook}.
+Auf Basis des \textit{Codebooks} kann der Bag of Visual Words von Bildern erzeugt werden. Hierfür werden wieder die Features eines Bildes extrahiert. Aus diesen Daten wird nun eine Histogrammdarstellung des Bildes erzeugt: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.45]{images/bovw.png}
+	\caption{Training und Test, bzw. Anwendung, des Bag of Visual Word Modells. \todo{ref}}
+	\label{img:bovw}
+\end{figure}
+
+\todo{Quelle}
 
 \subsection{Lloyds Algorithmus}
 
@@ -142,18 +158,79 @@ histogram ($P, C, H$)
 \section{Ansatz 2: Autoencoder}
 
 Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und diesen Wissen zu transferieren. 
-Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe. Eine Einführung in die Funktionsweise ist im Grundlagenkapitel unter dem Abschnitt REF[AE] zu finden.
+Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe. 
+Als erstes wird im folgenden Abschnitt der Aufbau und die Funktionsweise eines Autoencoders erläutert. Darauf aufbauend werden zwei Erweiterungen des Autoencoders vorgestellt: Der Stacked Autoencoder und der Denoising Autoencoder. Ersterer wird verwendet, um effektiv tiefe Netzwerke zu konstruieren, letzterer ermöglicht eine korrekte Konstruktion aus verzerrten Daten.
 \todo{Einleitung AE in Bildverarbeitung, Schwierigkeit Konstruktion AE, daher Zhao}. Ein Autoencoder der mit Feature-Deskriptoren von Bildern arbeitet, wurde von Zaho \cite{aed2016} vorgeschlagen. In einem Experiment wurde gezeigt, dass dieser Autoencoder \textit{state of the art} Ergebnisse erzielt: die Ergebnisse wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Aus diesem Grund soll Zhaos Autoencoder adaptiert werden. Der hierfür verwendete Feature Deskriptor und der Aufbau des Netzes werden im Kapitel \ref{AEFeatures} beschrieben.
 
-\subsection{Autoencoder in der Bildverarbeitung}
+\subsection{Aufbau und Funktionsweise}
 
-\todo{Allgemeines}
+Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass eine komprimierte Kodierung der Eingabe lernt. Ein Autoencoder versucht die Daten zu rekonstruieren und kann daher unbeaufsichtigt lernen: Die rekonstruierten Daten können anhand einer Distanzmetrik mit den Originaldaten verglichen werden. Anschließend kann die Größe des Fehlers berechnet werden und durch \textit{Backpropagation} die Gewichtesmatrix aktualisiert werden.
+Um die Originaldaten als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Input layers} der Anzahl der Neuronen im \textit{Output layer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Schicht zu Schicht ab um die Anzahl der Komponenten weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus der komprimierten Repräsentation Schicht für Schicht zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten. Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$  mit $p < n$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Diese Parameter werden durch den Autoencoder optimiert. Die Darstellung $y$ wird in diesm Kontext auch als \textit{code} bzw. latente Variablen bezeichnet. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion: $z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$ berechnet. \cite{ssn1997}.
+
+In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet der als Eingabe einen Vektor $x \in [0,1]^4$ entgegen nimmt. Dieser wird auf den Vektor $y$ mit drei Komponenten abbildet, da der \textit{Hidden layer} drei Neuronen enthält. Die Rekonstruktion $z$ aus $y$ erfolgt dann durch die Berechnung der Dekodierungsfunktion.
+
+\begin{figure}
+	\centering
+
+	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
+    \tikzstyle{every pin edge}=[<-,shorten <=1pt]
+    \tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+    \tikzstyle{input neuron}=[neuron, fill=green!50];
+    \tikzstyle{output neuron}=[neuron, fill=red!50];
+    \tikzstyle{hidden neuron}=[neuron, fill=blue!50];
+    \tikzstyle{annot} = [text width=6em, text centered]
+
+    % Draw the input layer nodes
+    \foreach \name / \y in {1,...,4}
+        \node[input neuron, pin=left:$x_{\y}$] (I-\name) at (0,-\y) {};
+
+    % Draw the hidden layer nodes
+    \foreach \name / \y in {1,2,3}
+        \path[yshift=-0.5cm]
+            node[hidden neuron] (H-\name) at (\layersep,-\y cm) {$y_{\y}$};
+    
+    % Draw the output layer nodes
+    \foreach \name / \y in {1,...,4}
+        \node[output neuron,pin={[pin edge={->}]right:$z_{\y}$}, right of=H-3] (O-\name) at (\layersep,-\y) {};
+
+    % Connect every node in the input layer with every node in the
+    % hidden layer.
+    \foreach \source in {1,...,4}
+        \foreach \dest in {1,2,3}
+            \path (I-\source) edge (H-\dest);
+
+    % Connect every node in the hidden layer with the output layer
+    \foreach \source in {1,2,3}
+        \foreach \dest in {1,...,4}
+        	\path (H-\source) edge (O-\dest);
+
+    % Annotate the layers
+    \node[annot,above of=H-1, node distance=1.5cm] (hl) {Hidden layer};
+    \node[annot,left of=hl] {Input layer};
+    \node[annot,right of=hl] {Output layer};
+	\end{tikzpicture}
+
+	\caption{Beispiel eines simplen Autoencoders}
+	\label{img:example_ae}
+\end{figure}
+
+\subsection{Stacked Denoising Autoencoder}
+
+Von Hinton and Salakhutdinov \cite{dae2006} wurde 2006 das Konzept des Stacked Autoencoders eingeführt, um einige Probleme mit herkömmlichen Autoencoder zu überwinden. Bei Netzwerken mit mehr als einem \textit{Hidden Layer} erzielt die Gradientenabstiegs-Methode, aufgrund der zunehmenden Verzerrung der Gradienten, bei der Rückpropagierung keine guten Ergebnisse mehr. In vielen Ansätzen wurde auch eine zufällige Initialisierung der Gewichte gewählt. Hier besteht die Gefahr, dass der Algorithmus in einem lokalen Optimum verbleibt. Wenn die anfänglichen Gewichte hingegen bereits nah an einer guten Lösung liegen, sinkt die Wahrscheinlichkeit eines lokalen Optimums. Aus diesem Grund wurde das Pretraining für Autoencoder mit mehr als einer Schicht vorgeschlagen. Hierfür wird im Training jedes Paar aneinanderliegender Schichten als ein Autoencoder aufgefasst. Das Pretraining besteht aus drei Schritten, die wiederholt werden, bis alle Autoencoder trainiert sind.
+
+\begin{enumerate}
+	\item Es wird der aktuelle Autoencoder trainiert. Zu Beginn besteht dieser aus dem \textit{Input} und folgendem \textit{Hidden layer}.
+	\item Nun wird der Decoder des trainierten Autoencoders entfernt und ein neuer Autoencoder erzeugt. Dieser besitzt den \textit{Hidden layer} des trainierten Autoencoders als \textit{Input layer}.
+	\item Das Training wird mit dem neuen Autoencoder fortgeführt.
+\end{enumerate}
+
+Ein Stacked Denoising Autoencoder \cite{sda2010} dient dazu, dass auch ein korrektes Ergebnis zu erhalten, wenn in den Daten Rauschen vorliegt. Weiterhin ist es vorteilhaft verrauschte Testdaten zu verwenden, um so sicher zu stellen, dass der Autoencoder tatsächlich eine Abstraktion lernt und nicht nur eine feste Abbildung zwischen Ein- und Ausgabe. Hierfür ist es erforderlich die Testdaten durch ein stochastisches Verfahren zu korrumpieren. Dem liegt die Annahme zu Grunde, dass die Eingabe relativ robust gegenüber Verzerrungen ist. \todo{Grafik, RBMS, mehr Denoising}
 
 \subsection{Autoencoder für Bild Features}
 \label{AEFeatures}
+\todo{Allgemeines, verschiedene Ansätze}
+
 Ein populäres Beispiel für die Verwendung von Autoencoder ist das Erkennen von Ziffern in einem Bild. Solch ein Netzwerk arbeitet direkt mit den Pixeln des Bildes: Bei einem Bild mit $m \times n$ Pixeln, umfasst die erste Schicht ebenfalls $m \times n$ Neuronen, für jeden Pixel Eines. Wie üblich, umfassen die folgenden Schichten weniger Neuronen. Durch eine abschließende Schicht zur Klassifizierung wird das Bild schließlich eingeordnet. Da aber in vielen Anwendungsfällen nicht direkt mit Pixeln gearbeitet werden kann, ist es wünschenswert, dass der Autoencoder stattdessen mit Features von Bildern arbeitet. Für die Extraktion geeigneter \textit{keypoints} hat sich der SIFT-Detektor bewährt, der Deskriptor hat jedoch bereits eine zu kompakte Darstellung um ein tiefes Netzwerk aufzubauen.
 \todo{Viele Parameter und Entscheidungen, daher Zhaos Ansatz (Anzahl Layer, Anzahl Neuronen pro Schicht, Aktivierungsfunktionen , Art der Verbindungen (Pooling, etc), meist fully connected in Beispielen, Feature-Größe beeinflusst gesamte Netzarchitektur)}
-Zhao \cite{aed2016} hat aus diesem Grund einen anderen Feature-Vektor erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Dieser Feature-Vektor ist eine Kodierung der Gradienten von Patches in vertikale und horizontale Richtung. Die Patches sind hier eine Nachbarschaft der Größe $41 \times 41$, jeweils zentriert auf einem\textit{keypoint}. Letztendlich wird ein Feature-Vektor mit 3042 Elementen erzeugt, der durch den Autoencoder komprimiert werden soll.
-Der Feature-Vektor mit 3042 Elementen bildet nun eine gute Basis, um einen mehrschichtigen Autoencoder zu entwickeln, der sukzessiv eine abstraktere Repräsentation lernt. Der von Zhao vorgeschlagene Encoder besteht aus fünf Stufen. Die erste Schicht besteht aus 3042 Neuronen um die Eingabe weiterzuleiten. Folgend werden 1024, 512, 128 und schließlich 36 Neuronen für die Kodierung verwendet. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
-
-\todo{Zhaos Grafik und Parameter aufführen, dann in Konzeption eigenes Modell}
+\todo{[Konzept]Zhao \cite{aed2016} hat aus diesem Grund einen anderen Feature-Vektor erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Dieser Feature-Vektor ist eine Kodierung der Gradienten von Patches in vertikale und horizontale Richtung. Die Patches sind hier eine Nachbarschaft der Größe $41 \times 41$, jeweils zentriert auf einem\textit{keypoint}. Letztendlich wird ein Feature-Vektor mit 3042 Elementen erzeugt, der durch den Autoencoder komprimiert werden soll.
+Der Feature-Vektor mit 3042 Elementen bildet nun eine gute Basis, um einen mehrschichtigen Autoencoder zu entwickeln, der sukzessiv eine abstraktere Repräsentation lernt. Der von Zhao vorgeschlagene Encoder besteht aus fünf Stufen. Die erste Schicht besteht aus 3042 Neuronen um die Eingabe weiterzuleiten. Folgend werden 1024, 512, 128 und schließlich 36 Neuronen für die Kodierung verwendet. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.}
