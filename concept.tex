@@ -68,7 +68,7 @@ void histogram_kernel (float *buffer, long size, int *histo, int bins) {
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
-Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Da verschiedene Modelle erstellt werden sollen, müssen diese gespeichert und auch wieder eingelesen werden können. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es einem Anwender möglich sein ein neues Bild anhand des Modells zu labeln. Dieser Prozess ist in Kapitel Labeling eines Bildes dargestellt.
+Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. \todo{Da verschiedene Modelle erstellt werden sollen, müssen diese gespeichert und auch wieder eingelesen werden können}. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es möglich sein, dass Histogramm der \textit{Visual Words} weiterer Bilder zu bestimmen. Auf diese Weise können Ähnlichkeiten zwischen Bildern auf Basis ihrer Histogrammdarstellung gemessen werden. Dieser Prozess ist in Kapitel Labeling eines Bildes dargestellt.
 
 \subsubsection{Generierung des Modells}
 
