@@ -108,12 +108,7 @@ Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten herv
 
 $$ DoG(x, y, \sigma_{1}, \sigma_{2}) = I * G_{\sigma_2} - I * G_{\sigma_1}$$
 
-\section{Bag of Visual Words}
-
-Das Bag of Words Modell stammt aus dem Bereich Information Retrival und wird zur Klassifizierung von Dokumenten genutzt. Es wird das Auftreten jedes Wortes in einem Dokument gezählt und durch die Anzahl aller Wörter im Vokabular dividiert, um so einen normalisierten Wert zu erhalten, welcher die relative Häufigkeit eines Wortes angibt. Das Vokabular wird \textit{Codebook} genannt, die Wörter sind die \textit{Codewords}. \linebreak
-Dieses Modell wurde von der Computer Vision adaptiert um Bilder zu klassifizieren. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. Zunächst wird auf eine Familie der Clustering-Algorithmen, k-means, näher eingegangen. Auf diesem Verständnis aufbauend wird dann die Funktionsweise des Bag of Visual Words behandelt.
-
-\subsection{K-means Clustering}
+\section{K-means Clustering}
 
 Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der diesem am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Oft wird hier der quadrierte Fehler durch k-means minimiert, also beispielsweise $D = ||x_{i} - c_{j}||^{2}$. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am Geringsten ist:
 
@@ -136,26 +131,11 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 	\label{img:kmeans}
 \end{figure}
 
-\subsection{Funktionsweise}
-Um \textit{Visual Words} aus einer Menge von Trainingsbildern zu erhalten, werden zunächst Feature-Vektoren aus den Bildern extrahiert. Die Features werden dann durch ein Clusteringverfahren gruppiert. Die Idee ist, dass ähnliche Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ ein große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook}.
-Auf Basis des \textit{Codebooks} kann der Bag of Visual Words von Bildern erzeugt werden. Hierfür werden wieder die Features eines Bildes extrahiert. Aus diesen Daten wird nun eine Histogrammdarstellung des Bildes erzeugt: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert.
+\section{Neuronale Netze}
 
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.45]{images/bovw.png}
-	\caption{Training und Test, bzw. Anwendung, des Bag of Visual Word Modells. \todo{ref}}
-	\label{img:bovw}
-\end{figure}
+Neuronale Netze sind dem Aufbau und der Funktionsweise der Neuronen des menschlichen Gehirns nachempfunden. Es wird eine Menge von künstlichen Neuronen genutzt, um eine Lösung für ein Problem zu gestalten. Erste theoretische Überlegungen tauchten bereits in den 40er Jahren auf. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie Machine Learning finden neuronale Netze seit Mitte der 80er Jahre vermehrt praktische Anwendung und akademische Zuwendung \cite{nnk2007}. Dadurch, dass neuronale Netze von Natur aus hoch parallel arbeiten können, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
 
-\todo{Quelle}
-
-\section{Autoencoder}
-
-Ein Autoencoder ist ein spezielles neuronales Netzwerk. Diese Netze werden für das unbeaufsichtigte Lernen einer komprimierten Darstellung von Daten genutzt. Zunächst wird hierfür ein Überblick über das Themengebiet der neuronale Netze im Allgemeinen gegeben und anschließend die Funktionsweise eines Autoencoders erläutert. Darauf aufbauend werden zwei Erweiterungen des Autoencoders vorgestellt, um Rauschen in den Daten und tiefe Netzwerke berücksichtigen.
-
-\subsection{Neuronale Netze}
-
-Neuronale Netze sind dem Aufbau und der Funktionsweise der Neuronen des menschlichen Gehirns nachempfunden. Es wird eine Menge von künstlichen Neuronen genutzt, um eine Lösung für ein Problem zu gestalten. Erste theoretische Überlegungen tauchten bereits in den 40er Jahren auf. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie Machine Learning finden neuronale Netze seit Mitte der 80er Jahre vermehrt praktische Anwendung und akademische Zuwendung. Dadurch, dass neuronale Netze von Natur aus hoch parallel arbeiten können, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
+\subsection{Modell}
 Ein neuronales Netz besteht aus einer Menge Neuronen, die in Schichten im Netzwerk angeordnet sind. Jedes Neuron besitzt einen Aktivierungszustand und einen Schwellwert. Von diesen hängt ab, ob ein Signal weitergeleitet wird. Neuronen benachbarter Schichten sind vollständig durch gewichtete Kanten miteinander verbunden. Diese Beziehung wird in einer Gewichtsmatrix ausgedrückt. Eine Kante zwischen zwei Neuronen die nicht verbunden sind, hat dann den Wert 0 als Gewicht, um die Abwesenheit auszudrücken. 
 Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\mathbb{R}^n$ dargestellt wird. Die erste Schicht des Netzwerks, der \textit{Input layer}, leitet das Signal nur an die nächste Schicht weiter und besitzt daher $n$ Neuronen. Die letzte Schicht, der \textit{Ouput layer}, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^m$, wobei $m$ die Anzahl der Elemente des Vektors angibt. Zwischen diesen beiden Schichten können sich beliebig viele \textit{Hidden layer} befinden. Die \textit{Hidden layer} bilden somit den Kern des Netzes, deren Kantengewichtungen, Kanten oder Neuronen während eines Lernprozess angepasst werden können. In Abbildung \ref{img:nnexample} ist ein Netz mit drei Schichten dargestellt. Der \textit{Input layer} nimmt einen Vektor mit vier Komponenten als Eingabe entgegen. Die Werte des Vektors werden an jedes der fünf Neuron im \textit{Hidden Layer} weitergeleitet, was durch die Kanten symbolisiert wird. Jede Kante besitzt dabei ein Gewicht, dass aus Gründen der Übersicht nicht aufgeführt ist. Schließlich werden die Ausgaben des \textit{Hidden layers} an das einzige Neuron des \textit{Output layers} geschickt und von diesem als Ergebnis $z$ ausgegeben.
 
@@ -261,6 +241,8 @@ Die Verarbeitung eines Signals in einem Neuron ist in Abbildung \ref{img:neuron}
 	\label{img:neuron}
 \end{figure}
 
+\subsection{Training eines Netzes}
+
 Wurde ein neuronales Netz konstruiert, folgt darauf die Trainingsphase. Durch das Training ist es möglich, dass ein Netzwerk Neuronen oder Verbindungen hinzufügt bzw. entfernt, den Schwellwert für die Aktivierung von Neuronen verändert oder die Gewichte zwischen Neuronen anpasst. Pro Trainingselement wird die Fehlerquote $F$ zwischen dem angestrebten Ergebnis $z'$ und der Ausgabe des Netzes $z$ berechnet:
 $$ F(z, z')=\sum_{i=0}^{n}(z'_{i} - z_{i})^2 $$
 Durch eine Lernregel werden abhängig von der Fehlerquote beispielsweise die Gewichte der Kanten angepasst. Für Netze ohne \textit{Hidden layer} eignet sich hier die Hebbsche oder Delta Lernregel. Für Netze mit mindestens einem \textit{Hidden layer}, hat sich das \textit{Backpropagation} Verfahren etabliert. \textit{Backpropagation} minimiert den Gradientenabstieg auf der Fehleroberfläche die $F$ aufspannt. Der Algorithmus geht in drei Schritten vor:
@@ -270,71 +252,6 @@ Durch eine Lernregel werden abhängig von der Fehlerquote beispielsweise die Gew
 	\item \textbf{Fehlerberechnung} Die Fehler des \textit{Output layers} werden, durch einen Vergleich mit den erwarteten Werten, berechnet. Falls die Fehler unterhalb einer vorgegebenen Grenze liegen, ist das Training beendet. Andernfalls wird fortgefahren.
 	\item \textbf{Backward Pass} In diesem Schritt wird die Fehlerquote rückwärts durch das Netz propagiert. Die Gewichte an den Verbindungen zwischen Neuronen werden in Abhängigkeit ihres Einflusses auf den Fehler Schicht für Schicht aktualisiert.
 \end{enumerate}
-
-\todo{Gradienten erläutern}
-
-\subsection{Funktionsweise}
-Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass eine komprimierte Kodierung der Eingabe lernt. Ein Autoencoder versucht die Daten zu rekonstruieren und kann daher unbeaufsichtigt lernen: Die rekonstruierten Daten können anhand einer Distanzmetrik mit den Originaldaten verglichen werden. Anschließend kann die Größe des Fehlers berechnet werden und durch \textit{Backpropagation} die Gewichtesmatrix aktualisiert werden.
-Um die Originaldaten als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Input layers} der Anzahl der Neuronen im \textit{Output layer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Schicht zu Schicht ab um die Anzahl der Komponenten weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus der komprimierten Repräsentation Schicht für Schicht zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten. Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$  mit $p < n$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Diese Parameter werden durch den Autoencoder optimiert. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion: $z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$ berechnet. \cite{ssn1997}. \todo{This image z is usually referred to as code, latent variables, or latent representation}
-
-In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet der als Eingabe einen Vektor $x \in [0,1]^4$ entgegen nimmt. Dieser wird auf den Vektor $y$ mit drei Komponenten abbildet, da der \textit{Hidden layer} drei Neuronen enthält. Die Rekonstruktion $z$ aus $y$ erfolgt dann durch die Berechnung der Dekodierungsfunktion.
-
-\begin{figure}
-	\centering
-
-	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
-    \tikzstyle{every pin edge}=[<-,shorten <=1pt]
-    \tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{input neuron}=[neuron, fill=green!50];
-    \tikzstyle{output neuron}=[neuron, fill=red!50];
-    \tikzstyle{hidden neuron}=[neuron, fill=blue!50];
-    \tikzstyle{annot} = [text width=6em, text centered]
-
-    % Draw the input layer nodes
-    \foreach \name / \y in {1,...,4}
-        \node[input neuron, pin=left:$x_{\y}$] (I-\name) at (0,-\y) {};
-
-    % Draw the hidden layer nodes
-    \foreach \name / \y in {1,2,3}
-        \path[yshift=-0.5cm]
-            node[hidden neuron] (H-\name) at (\layersep,-\y cm) {$y_{\y}$};
-    
-    % Draw the output layer nodes
-    \foreach \name / \y in {1,...,4}
-        \node[output neuron,pin={[pin edge={->}]right:$z_{\y}$}, right of=H-3] (O-\name) at (\layersep,-\y) {};
-
-    % Connect every node in the input layer with every node in the
-    % hidden layer.
-    \foreach \source in {1,...,4}
-        \foreach \dest in {1,2,3}
-            \path (I-\source) edge (H-\dest);
-
-    % Connect every node in the hidden layer with the output layer
-    \foreach \source in {1,2,3}
-        \foreach \dest in {1,...,4}
-        	\path (H-\source) edge (O-\dest);
-
-    % Annotate the layers
-    \node[annot,above of=H-1, node distance=1.5cm] (hl) {Hidden layer};
-    \node[annot,left of=hl] {Input layer};
-    \node[annot,right of=hl] {Output layer};
-	\end{tikzpicture}
-
-	\caption{Beispiel eines simplen Autoencoders}
-	\label{img:example_ae}
-\end{figure}
-
-\subsection{Stacked Denoising Autoencoder}
-
-Von Hinton and Salakhutdinov \cite{dae2006} wurde 2006 das Konzept des Stacked Autoencoders eingeführt, um einige Probleme mit herkömmlichen Autoencoder zu überwinden. Bei Netzwerken mit mehr als einem Hidden Layer erzielt die Gradientenabstiegs-Methode, aufgrund der zunehmenden Verzerrung der Gradienten, bei der Rückpropagierung keine guten Ergebnisse mehr. In vielen Ansätzen wurde auch eine zufällige Initialisierung der Gewichte gewählt. Hier besteht die Gefahr, dass der Algorithmus in einem lokalen Optimum verbleibt. Wenn die anfänglichen Gewichte hingegen bereits nah an einer guten Lösung liegen, sinkt die Wahrscheinlichkeit eines lokalen Optimums. Aus diesem Grund wurde das Pretraining für Autoencoder mit mehr als einer Schicht vorgeschlagen. Hierfür wird im Training jedes Paar aneinanderliegender Schichten als ein Autoencoder aufgefasst. Das Pretraining besteht aus drei Schritten, die wiederholt werden, bis alle Autoencoder trainiert sind.
-
-\begin{enumerate}
-	\item Es wird der aktuelle Autoencoder trainiert. Zu Beginn besteht dieser aus dem \textit{Input} und folgendem \textit{Hidden layer}.
-	\item Nun wird der Decoder des trainierten Autoencoders entfernt und ein neuer Autoencoder erzeugt. Dieser besitzt den \textit{Hidden layer} des trainierten Autoencoders als \textit{Input layer}.
-	\item Das Training wird mit dem neuen Autoencoder fortgeführt.
-\end{enumerate}
-
-Ein Stacked Denoising Autoencoder \cite{sda2010} dient dazu, dass auch ein korrektes Ergebnis zu erhalten, wenn in den Daten Rauschen vorliegt. Weiterhin ist es vorteilhaft verrauschte Testdaten zu verwenden, um so sicher zu stellen, dass der Autoencoder tatsächlich eine Abstraktion lernt und nicht nur eine feste Abbildung zwischen Ein- und Ausgabe. Hierfür ist es erforderlich die Testdaten durch ein stochastisches Verfahren zu korrumpieren. Dem liegt die Annahme zu Grunde, dass die Eingabe relativ robust gegenüber Verzerrungen ist. \todo{Grafik, RBMS, mehr Denoising}
 
 \section{CUDA}
 
