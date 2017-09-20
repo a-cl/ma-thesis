@@ -79,31 +79,9 @@ $$
 g_{\sigma}(x)=\frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2}}{2\sigma^{2}}}, \quad g_{\sigma}(x, y) = \frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2} + y^{2}}{2\sigma^{2}}}
 $$
 
-Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind: $F_{G}(x, y) = g(x) * g(y)$.
+Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind: $F_{G}(x, y) = g(x) * g(y)$. Da im Standardfall eine Nachbarschaft von $3 \times 3$ um den Pixel vorhanden sein muss, ergeben sich bei einem Bilder der Größe $n \times m$ Gradienten-Bilder der Größe $(n-2) \times (m-2)$.
 
-\textbf{Sobel-Filter}
-Ein Sobel-Filter wird ebenfalls zur Konvolution mit einem Bild genutzt. Dieser dient als \todo{Filter für hochfrequente} Signale und eignet sich dadurch besonders zur Erkennung von Kanten. Häufig wird der Sobel-Filter genutzt um die Gradienten in horizontale und vertikale Richtung zu bestimmen. Für einen $3 \times 3$ großen Filterkern ergeben sich dann die Matritzen:
-
-$$ 
-F_{S_x} = \begin{bmatrix}
-  1 & 0 & -1 \\
-  2 & 0 & -2 \\
-  1 & 0 & -1
-\end{bmatrix} \quad
-F_{S_y} = \begin{bmatrix}
-   1 &  2 &  1 \\
-   0 &  0 &  0 \\
-  -1 & -2 & -1
-\end{bmatrix}
-$$
-
-Aus einem Originalbild $O$ werden so die Gradienten-Bilder $G_{x}$ und $G_{y}$ durch die \todo{Konvolution mit dem * Operator} mit den jeweiligen Filterkernen $S_{x}$ und $S_{y}$ erzeugt:  
-
-$$ G_{x} = S_{x} * O \quad G_{y} = S_{y} * O $$
-
-Da im Standardfall eine Nachbarschaft von $3 \times 3$ um den Pixel vorhanden sein muss, ergeben sich bei einem Bilder der Größe $n \times m$ Gradienten-Bilder der Größe $(n-2) \times (m-2)$.
-
-\subsubsection{Difference of Gaussians}
+\textbf{Difference of Gaussians}
 Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten hervorgehoben werden. Wie der Name andeutet wird hier die Differenz zwischen zwei Bildern gebildet, auf die jeweils ein Gauß-Filter angewandt wurde. Hier variieren die Standardabweichungen der Gauß-Funktionen um zwei unterschiedlich stark verzerrte Versionen des Originals zu erzeugen. Hierbei gilt, dass die Standardabweichung $\sigma_{2} > \sigma_{1}$ ist:
 
 $$ DoG(x, y, \sigma_{1}, \sigma_{2}) = I * G_{\sigma_2} - I * G_{\sigma_1}$$
