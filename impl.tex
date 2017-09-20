@@ -7,7 +7,7 @@ Die Implementierung behandelt in zwei Teilen die Umsetzung des Bag of Visual Wor
 
 \section{Extraktion der Patches}
 
-Zu Ermittlung der \textit{keypoints} durch den SIFT-Detektor wird auf die \textit{opencv}\footnote{https://github.com/TODO/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/TODO/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten.
+Zu Ermittlung der \textit{keypoints} durch den SIFT-Detektor wird auf die \textit{opencv}\footnote{https://github.com/opencv/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/opencv/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten.
 
 Da der Autoencoder in Python geschrieben ist, erfolgt die Gewinnung der Patches in der gleichen Sprache, um so eine einfache weitere Verarbeitung zu ermöglichen. Der Prozess lässt sich in drei Schritte untergliedern. Um alle Features eines Bildes zu erhalten, wird die Funktion \textit{extractFeatures} mit dem Pfad zu einer Bilddatei ausgerufen. Es wird das Bild eingelesen, konvertiert und durch den \textit{opencv} SIFT-Detektor die \textit{keypoints} ermittelt. Die Berechnung der Gradienten der Nachbarschaften um diese \textit{keypoints} erfolgt dann durch die Funktion \textit{computeDescriptors}:
 
@@ -133,13 +133,13 @@ Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die 
 \subsection{Verwendung und wesentliche Klassen}
 
 Zur Verwendung wird ein Objekt der BagOfVisualWords-Klasse durch Aufruf des Konstruktors angelegt. Hierbei muss die Anzahl der Cluster $k$ übergeben werden. Standardmäßig werden bei Erstellung und Nutzung eines Modells die CUDA Versionen des k-means und Histogramm Algorithmus aufgerufen. Zu Vergleichszwecken können aber auch die CPU-basierten Varianten durch \textit{setMode(1)} ($0 = GPU, 1 = CPU$) verwendet werden. Die Erstellung eines Modells kann dann durch Aufruf von \textit{createModel(Mat features)} oder \textit{createModel(string featurePath)} erfolgen. Letztere liest aus der Datei \textit{featurePath} zeilenweise die Pfade von Bilddateien ein und extrahiert die Features dieser durch die private Funktion \textit{extractFeatures}. Aus diesen wird die Matrix \textit{features} für das folgende Clustering erzeugt.
-Zur Erzeugung des \todo{Visual Words Histogramms} dient die Methode \textit{computeViusalWords(string imagePath)}. Auch hier werden wieder durch \textit{extractFeatures} die Features aus dem Bild \textit{imagePath} extahiert und anschließend, je nach Modus durch GPU oder CPU, dass Histogramm berechnet. 
+Zur Erzeugung des Histogramms der Visual Words dient die Methode \textit{computeViusalWords(string imagePath)}. Auch hier werden wieder durch \textit{extractFeatures} die Features aus dem Bild \textit{imagePath} extahiert und anschließend, je nach Modus durch GPU oder CPU, dass Histogramm berechnet. 
 
 \todo{move Kozept?} Damit ein Modell nicht immer erneut aufgebaut werden muss, wenn es öfter verwendet wird, kann es als Textdatei gespeichert werden. Dafür kann auf einem Objekt der BagOfVisualWords-Klasse \textit{writeModel(string modelPath)} aufgerufen werden. Die Schwerpunkte der Cluster werden zeilenweise in die Datei \textit{modelPath}/clusters geschrieben, sodass sich $k$ Zeilen mit 128 Elementen bei der Verwendung von SIFT ergeben. Die Mitgliedschaften der Features zu Cluster wird in der Datei \textit{modelPath}/membership gespeichert und enthält so viele Zeilen wie Features vorliegen. Jede Zeile enthält die $x$ und $y$ Koordinaten des \textit{keypoints} und den Index des zugehörigen Clusters. Der Index bezieht sich hierbei auf die Position des Clusters in der Datei \textit{modelPath}/clusters.
 
 \subsection{Paralleler k-means Algorithmus}
 
-Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von \todo{[REF]}. Durch \todo{Methodenname} wird ein k-means Clustering auf der GPU ausgeführt. Der Algorithmus erwartet dabei als Parameter:
+Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von Serban Giuroiu \footnote{https://github.com/serban/kmeans}. Der \textit{kernel} wurde adaptiert und leicht verändert, um gemeinsam genutzt Methoden auszulagern. Die Funktion \textit{kmeans} in der Datei kmeans.cuda kann genutzt werden, um Clustering auf der GPU auszuführen. Der Algorithmus erwartet dabei als Parameter:
 
 \begin{itemize}
 	\item \textbf{float *features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
@@ -156,7 +156,7 @@ Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwe
 \begin{itemize}
 	\item \textbf{Distanzberechnung} euclideanDistance(float *points, float *clusters) Die Distanz wird zwischen jedem Punkt und Cluster ermittelt. Es wird für jeden Punkt der Index des Clusters zurückgegeben, der am Nächsten ist.
 	\item \textbf{Cluster-Mitgliedschaft} findNearestCluster() agiert auf jeweils einem Feature. Der Index des Features ist somit von der $threadIdx$ abhängig und berechnet sich unter Berücksichtigung der Blockdimension als $blockDim.x * blockIdx.x + threaIdx.x$. Es wird der nächste Cluster zum Feature berechnet und auch bestimmt, ob sich die Zuordnung des Features verändert hat.
-	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die relative Veränderungen der Feature-Cluster Mitgliedschaft. Ist dieser Wert kleiner als ein vorgegebener \todo{PARAM, Schwellwert} oder wurde die maximale Anzahl an Iterationen \textit{iterations} erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
+	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die relative Veränderungen der Feature-Cluster Mitgliedschaft. Ist dieser Wert kleiner als der Schwellwert \textit{conv} oder wurde die maximale Anzahl an Iterationen \textit{iterations} erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
 \end{itemize}
 
 Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \textit{host} kopiert. Diese Zahl wird durch die Gesamtanzahl der Features dividiert, um so die relative Veränderung zu bestimmen. 
