@@ -1,9 +1,7 @@
 \chapter{Implementierung}
 
-Die Implementierung behandelt in zwei Teilen die Umsetzung des Bag of Visual Word Modells in CUDA und des Autoencoders in TensorFlow. In beiden Abschnitten wird zunächst wird die Extraktion der Features anhand von Quellcode beschrieben. Im Bag of Visual Word Teil folgt eine Betrachtung der \textit{kernels} des k-means Algorithmus sowie Unterschiede in der Implementierung zwischen \textit{global} und \textit{shared memory}. Im Teil zum Autoencoder folgt nach der Beschreibung der Feature-Aufbereitung das Modell in TensorFlow.
-
-\todo{Why CUDA C, TensorFlow Python}
-\todo{CUDA C ist eine sehr hardwarenahe Sprachen, Python ist eine interpretierte Hochsprache und TensorFlow generiert den entsprechenden Code für die Grafikkarte.}
+Die Implementierung behandelt in zwei Teilen die Umsetzung des Bag of Visual Word Modells in CUDA und des Autoencoders in TensorFlow. In beiden Abschnitten wird zunächst wird die Extraktion der Features anhand von Quellcode beschrieben. Im Bag of Visual Word Teil folgt eine Betrachtung der \textit{kernels} des k-means Algorithmus sowie Unterschiede in der Implementierung zwischen \textit{global} und \textit{shared memory}. Im Teil zum Autoencoder folgt nach der Beschreibung der Feature-Aufbereitung das Modell in TensorFlow.\newline
+Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht über den Rahmen der Arbeit hinaus. Stand Abgabe der Arbeit gibt es für CUDA keine Bibliothek um Autoencoder zu programmieren. Mit cuDNN hat Nvidia aber eine Bibliothek bereitgestellt, mit der sogenannte \textit{Convolutional Neural Networks (CNN)} erzeugt werden können. Diese Bibliothek wird insbesondere von Frameworks wie TensorFlow verwendet, um ein z.B. in Python definiertes Modell zu übersetzen und so unter CUDA auszuführen.
 
 \section{Extraktion der Patches}
 
@@ -151,7 +149,7 @@ Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt
 \end{itemize}
 
 Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{Float-Pointer-Pointer}), müssen diese in ein eindimensionales Arrays konvertiert werden, damit die Daten korrekt von \textit{host} zu \textit{device} kopiert werden können. 
-\todo{Übergang} Von diesen sind drei CUDA kernels, also Funktionen die durch die Grafikkarte ausgeführt werden. Diese Funktionen werden solange in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde.
+Der Clustering-Vorgang wird nun in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde. Dabei werden folgende Schritte ausgeführt:
 
 \begin{itemize}
 	\item \textbf{Distanzberechnung} euclideanDistance(float *points, float *clusters) Die Distanz wird zwischen jedem Punkt und Cluster ermittelt. Es wird für jeden Punkt der Index des Clusters zurückgegeben, der am Nächsten ist.
@@ -163,13 +161,27 @@ Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \tex
 
 \subsection{Shared memory}
 
-Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. \todo{Globaler C Switch.} Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Anzahl der Elemente eines Features:
+Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Um beide Implementierungen zu unterstützen, fragt eine Direktive für den Präprozessor den Wert der Variable \textit{BLOCK\textunderscore SHARED\textunderscore MEM\textunderscore OPTIMIZATION} ab. Falls der Wert der Variable \textit{true} ist, wird Code nur für die \textit{shared memory} Implementierung eingebunden, andernfalls für die \textit{global memory} Variante:
+
+\lstset{language=C}
+\begin{lstlisting}
+#if BLOCK_SHARED_MEM_OPTIMIZATION
+// shared memory Logik
+#else
+// global memory Logik
+\end{lstlisting}
+
+Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Anzahl der Elemente eines Features:
 
 \lstset{language=C}
 \begin{lstlisting}
 const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
 const unsigned int clusterDataSize = k * size * sizeof(float);
-const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
+
+#if BLOCK_SHARED_MEM_OPTIMIZATION
+    const unsigned int blockSharedDataSize = membershipDataSize) + clusterDataSize;
+#else
+	const unsigned int blockSharedDataSize = membershipDataSize;
 \end{lstlisting}
 
 In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Vor der Berechnung der Mitgliedschaft wird nun ein lokaler Pointer \textit{clusters} angelegt und alle notwendigen Cluster kopiert.

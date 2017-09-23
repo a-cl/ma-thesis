@@ -15,8 +15,14 @@ Der erste Schritt lässt sich wieder in zwei Phasen unterteilen, von denen die Z
 	\item \textbf{Komprimierung der Features} Um die Komponenten in einem Feature-Vektor auf die Wesentlichen zu reduzieren, erfolgt eine Komprimierung durch einen Autoencoder. Als Ergebnis wird wieder ein Feature-Vektor zurückgegeben, der weniger Komponenten enthält. Sollte der verwendete Feature-Vektor bereits kompakt genug sein, ist diese Phase nicht notwendig. 
 \end{itemize} 
 
-Viele Verfahren erzeugen bereits einen kompakten Deskriptor. Beispielsweise ist die Komprimierung eines SIFT-Deskriptors (128 Komponenten) wahrscheinlich wenig erfolgreich: Der Autoencoder müsste 128 Neuronen im \textit{input layer} besitzen. Zur Komprimierung bleibt dann wenig \glqq Platz\grqq  im Netz, es sei denn es werden mehrere \textit{hidden layer} verwendet, deren Neuronenanzahl zunächst ansteigt. Ziel soll es hier aber sein einen Deskriptor zu erzeugen der zu Anfang viele Komponenten aufweist, um so einen Stacked Autoencoder zu trainieren, der mit jeder Schicht einen kompakteren Deskriptor liefert. Auf diese Weise können auch zum Experimentieren mehrere Deskriptoren generiert werden, deren Form von Anzahl der \textit{hidden layer} und deren Neuronenanzahl abhängt.
-\todo{Überblick über das Ganze Modell: Prozess, Training, Grafik}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.85]{images/model.pdf}
+	\caption{Aufbau des Modells}
+	\label{img:model}
+\end{figure}
+
+In Abbildung \ref{img:model} ist das Modell im Ganzen dargestellt.  Jede \glqq Zeile \grqq  entspricht hier einer Phase der Verarbeitung. Diese Phasen werden im Folgenden detailliert dargestellt, hier soll jedoch zuerst ein Überblick über den Ablauf gegeben werden. Zu Beginn werden aus den Bilddaten \textit{Images} durch einen Feature-Extraktor die Feature-Vektoren \textit{Features A} erhoben. Die Phase des Autoencoders ist hierbei optional und daher gestrichelt dargestellt. Sollten die Features nicht durch den Autoencoder komprimiert werden, sind diese gleich der Menge \textit{Features B}, die sonst vom Autoencoder erzeugt wird. In der dritten Phase nimmt der Bag of Visual Words die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}.\newline
 
 \section{Feature Extraktion}
 
@@ -27,11 +33,14 @@ Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern
 	\item Es ist denkbar, dass der Schritt der Komprimierung nicht in allen Fällen notwendig bzw. sinnvoll ist, da der Deskriptor bereits kompakt genug ist.
 \end{itemize} 
 
-\todo{pick sift} Die meisten Feature-Deskriptoren sind bereits so kompakt, dass eine kompaktere Darstellung durch einen Autoencoder nicht sinnvoll erscheint, da die Konstruktion eines tiefen Netzes viele Neuronen im \textit{input layer} erfordert. Zhao \cite{aed2016} hat aus diesem Grund einen Feature-Vektor mit $3042$ erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Die \textit{keypoints} werden hier durch den SIFT-Detektor ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gauß- oder Sobelfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.
+Viele Verfahren erzeugen bereits einen kompakten Deskriptor. Beispielsweise ist die Komprimierung eines SIFT-Deskriptors (128 Komponenten) wahrscheinlich wenig erfolgreich: Der Autoencoder müsste 128 Neuronen im \textit{input layer} besitzen. Zur Komprimierung bleibt dann wenig \glqq Platz\grqq  im Netz, es sei denn es werden mehrere \textit{hidden layer} verwendet, deren Neuronenanzahl zunächst ansteigt. Ziel soll es hier aber sein einen Deskriptor zu erzeugen der zu Anfang viele Komponenten aufweist, um so einen Stacked Autoencoder zu trainieren, der mit jeder Schicht einen kompakteren Deskriptor liefert. Auf diese Weise können auch zum Experimentieren mehrere Deskriptoren generiert werden, deren Form von Anzahl der \textit{hidden layer} und deren Neuronenanzahl abhängt.\newline
+Zhao \cite{aed2016} hat aus diesem Grund einen Feature-Vektor mit $3042$ erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Die \textit{keypoints} werden hier durch den SIFT-Detektor ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gauß- oder Sobelfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.
+\todo{SIFT Alternative}
 
 \section{Autoencoder}
 
-In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Es wird zunächst auf den Aufbau des Netzes eingegangen: Anzahl der Schichten sowie der Neuronen, Aktivierungsfunktionen und weitere Parameter des Netzes. Abschließend werden der Trainings- und Testprozess beschrieben, so wie sie von Zhao ausgeführt wurden.
+In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. In einem Experiment wurde gezeigt, dass dieser Autoencoder \textit{state of the art} Ergebnisse erzielt: die Ergebnisse wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Aus diesem Grund soll Zhaos Autoencoder adaptiert werden. \newline
+Es wird zunächst auf den Aufbau des Netzes eingegangen: Anzahl der Schichten sowie der Neuronen, Aktivierungsfunktionen und weitere Parameter des Netzes. Abschließend werden der Trainings- und Testprozess beschrieben, so wie sie von Zhao ausgeführt wurden.
 
 \subsection{Modell und Parameter}
 
@@ -43,6 +52,17 @@ In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines 
 	\caption{Schichten des verwendeten Autoencoders \cite{aed2016}}
 	\label{img:ae_model}
 \end{figure}
+
+Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Zhao verwendete hier folgende Werte:
+
+\begin{itemize}
+	\item Lernrate: $l = 0.02$
+	\item Trainingsiterationen: $t_i =$ Iterationen der i-ten Schicht \newline
+	  $t_1$:       $1000$\newline
+	  $t_2$:       $ 700$\newline
+	  $t_{3,4,5}$: $ 500$
+	\item Batch size: $B = 128$
+\end{itemize}
 
 \subsection{TensorFlow}
 
@@ -69,8 +89,8 @@ sess.close()
 
 \section{Bag of Visual Words}
 
-\todo{Einleitung} In der Analyse wurde bereits sequentielle Varianten des Lloyd und Histogramm Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version für SPMD Prozessoren abgeleitet.
-In den beiden nachfolgenden Abschnitten Generierung des Modells und Labeling eines Bildes wird auf den Programmaufbau und -ablauf näher eingegangen. Es werden die wesentlichen Funktionen, ihre Parameter und Aufrufe skizziert.
+In der Analyse wurde bereits sequentielle Varianten des Lloyd und Histogramm Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version abgeleitet, welche sich für die Realisierung als CUDA Programm eignen.
+Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsaufrufe skizziert. Zur Interaktion stehen einem Anwender im Wesentlichen eine Funktion zu Generierung eines Modells und zur Berechnung der \textit{Visual Words} eines Bildes zur Verfügung.
 
 \subsection{Parellisierung von Llyods Algorithmus}
 
