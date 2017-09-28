@@ -1,18 +1,18 @@
 \chapter{Konzept}
 
 Die Konzeption beschäftigt sich zunächst mit einem Überblick des ganzen Prozesses, von der Feature-Extraktion über die Komprimierung bis hin zur Gruppierung. Anschließend folgt eine nähere Betrachtung dieser drei wesentlichen Bestandteile und wie sie ineinander greifen.\newline
-Im Kapitel Feature Extraktion werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich für den Einsatz der Komprimierung eignet.\newline
-Im folgenden Kapitel Autoencoder wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie sich solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.\newline
-Im letzten Kapitel wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. ein Bild zu bewerten.
+Im Kapitel Feature Extraktion werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich somit für den Einsatz der Komprimierung eignet.\newline
+Im folgenden Kapitel Autoencoder wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.\newline
+Im letzten Abschnitt wird das Bag of \textit{Visual Words} Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. die Ähnlichkeit zweier Bilder zu bewerten.
 
 \section{Modell}
 
-In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier zur Gruppierung von Bildern dienen sollen. Im ersten Schritt werden aus den Bildern Features extrahiert und komprimiert, sodass im zweiten Schritt eine Gruppierung der Features in $k$ Gruppen erfolgen kann.
-Der erste Schritt lässt sich wieder in zwei Phasen unterteilen, von denen die Zweite, je nach Feature-Detektor / -Deskriptor, optional ist:
+In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier zur Gruppierung von Bildern dienen sollen. Um dies zu erreichen wird ein dreistufiges Modell vorgeschlagen, dass in Abbildung \ref{img:model} skizziert ist. Jede \enquote{Zeile} entspricht hier einer Phase der Verarbeitung. Die Ein- bzw. Ausgaben sind mit durch die Farbe grün gekennzeichnet, die Schritte zur Datenverarbeitung durch Orange. Diese Phasen werden im Folgenden detailliert dargestellt, hier soll jedoch zuerst ein Überblick über den Ablauf gegeben werden. Die drei Phasen zum Erzeugen eines Modells laufen wie folgt ab:\newline 
 
 \begin{itemize}
-	\item \textbf{Extraktion der Features} Zuerst muss das Verfahren bestimmt werden, mit denen die Features gewonnen werden sollen. Je nach Anwendungsfall sollte dieses Verfahren austauschbar sein. Als Ergebnis wird ein Feature-Vektor zurückgegeben. Dieser Vektor enthält Komponenten normalisiert im Intervall zwischen 0 und 1, die abhängig vom Verfahren verschiedene Eigenschaften beschreiben.
-	\item \textbf{Komprimierung der Features} Um die Komponenten in einem Feature-Vektor auf die Wesentlichen zu reduzieren, erfolgt eine Komprimierung durch einen Autoencoder. Als Ergebnis wird wieder ein Feature-Vektor zurückgegeben, der weniger Komponenten enthält. Sollte der verwendete Feature-Vektor bereits kompakt genug sein, ist diese Phase nicht notwendig. 
+	\item \textbf{Extraktion} Zuerst muss das Verfahren bestimmt werden, mit denen die Features gewonnen werden sollen. Je nach Anwendungsfall sollte dieses Verfahren austauschbar sein. Zu Beginn werden aus den Bilddaten \textit{Images} durch einen Feature-Extraktor die Feature-Vektoren \textit{Features A} erhoben. Bei den Bilddaten handelt es sich um eine Liste von Matritzen, welche die Intensitätswerte von Bildpixeln kodiert. \textit{Features A} ist ein Vektor von Features, die abhängig vom Verfahren verschiedene Eigenschaften beschreiben.
+	\item \textbf{Komprimierung} Um die Komponenten in einem Feature-Vektor auf die Wesentlichen zu reduzieren, erfolgt eine Komprimierung durch einen Autoencoder. Die Phase des Autoencoders ist hierbei optional und daher gestrichelt dargestellt. Sollten die Features nicht durch den Autoencoder komprimiert werden, so ist der Vektor \textit{Features B} gleich dem Vektor \textit{Features A}. Andernfalls enthält \textit{Features B} die komprimierten Features.
+	\item \textbf{Gruppierung} In der dritten Phase nimmt der Bag of \textit{Visual Words} die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die \textit{Visual Words} des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie die Features in \textit{Features B}.
 \end{itemize} 
 
 \begin{figure}
@@ -22,20 +22,19 @@ Der erste Schritt lässt sich wieder in zwei Phasen unterteilen, von denen die Z
 	\label{img:model}
 \end{figure}
 
-In Abbildung \ref{img:model} ist das Modell im Ganzen dargestellt.  Jede \glqq Zeile \grqq  entspricht hier einer Phase der Verarbeitung. Die Ein- bzw. Ausgaben sind mit durch die Farbe grün gekennzeichnet, die Schritte zur Datenverarbeitung durch Orange. Diese Phasen werden im Folgenden detailliert dargestellt, hier soll jedoch zuerst ein Überblick über den Ablauf gegeben werden.\newline 
-Zu Beginn werden aus den Bilddaten \textit{Images} durch einen Feature-Extraktor die Feature-Vektoren \textit{Features A} erhoben. Bei den Bilddaten handelt es sich um eine Liste von Matritzen, welche die Intensitätswerte von Bildpixeln kodiert. Die Phase des Autoencoders ist hierbei optional und daher gestrichelt dargestellt. Sollten die Features nicht durch den Autoencoder komprimiert werden, sind diese gleich der Menge \textit{Features B}, die sonst vom Autoencoder erzeugt wird. Bei \textit{Features A} und \textit{B} handelt es sich jeweils um eine Liste der Feature-Vektoren, also Vektoren mit Gleitkommazahlen im Wertebereich zwischen 0 und 1 als Komponenten. In der dritten Phase nimmt der Bag of Visual Words die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die Visual Words des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie \textit{Features B}.
+\todo{Vergleich von Bilder, wie oben nur mit zwei Bildern}
 
 \section{Feature Extraktion}
 
-Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde bereits auch diskutiert, dass über die Daten der HsH keine Annahmen getroffen werden können. Gegenstand dieser Arbeit soll daher die Objekterkennung im Bildern sein. Für diesen Zweck sollen im Weiteren zwei Deskriptoren ausgewählt werden:
+Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde bereits auch aufgezeigt, dass über die Daten der HsH keine Annahmen getroffen werden können. Gegenstand dieser Arbeit soll daher die Objekterkennung im Bildern sein. Für diesen Zweck sollen im Weiteren zwei Deskriptoren ausgewählt werden:
 
 \begin{itemize}
 	\item Da die Schritte im Prozess aufeinander aufbauen, hängt die Qualität der Ergebnisse des Bag of Visual Word Verfahrens auch vom Autoencoder ab. Um den Bag of Visual Words an sich testen zu können, soll ein bereits kompakter, praktisch bewährter Deskriptor als Alternative dienen.
 	\item Es ist denkbar, dass der Schritt der Komprimierung nicht in allen Fällen notwendig bzw. sinnvoll ist, da der Deskriptor bereits kompakt genug ist.
 \end{itemize} 
 
-Viele Verfahren erzeugen bereits einen kompakten Deskriptor. Beispielsweise ist die Komprimierung eines SIFT-Deskriptors (128 Komponenten) wahrscheinlich wenig erfolgreich: Der Autoencoder müsste 128 Neuronen im \textit{input layer} besitzen. Zur Komprimierung bleibt dann wenig \glqq Platz\grqq  im Netz, es sei denn es werden mehrere \textit{hidden layer} verwendet, deren Neuronenanzahl zunächst ansteigt. Ziel soll es hier aber sein einen Deskriptor zu erzeugen der zu Anfang viele Komponenten aufweist, um so einen Stacked Autoencoder zu trainieren, der mit jeder Schicht einen kompakteren Deskriptor liefert. Auf diese Weise können auch zum Experimentieren mehrere Deskriptoren generiert werden, deren Form von Anzahl der \textit{hidden layer} und deren Neuronenanzahl abhängt.\newline
-Zhao \cite{aed2016} hat aus diesem Grund einen Feature-Vektor mit $3042$ erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Die \textit{keypoints} werden hier durch den SIFT-Detektor ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gauß- oder Sobelfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.\newline
+Viele Verfahren erzeugen bereits einen kompakten Deskriptor. Beispielsweise ist die Komprimierung eines SIFT-Deskriptors (128 Komponenten) wahrscheinlich wenig erfolgreich: Der Autoencoder müsste 128 Neuronen im \textit{Input Layer} besitzen. Zur Komprimierung bleibt dann wenig \enquote{Platz} im Netz, es sei denn es werden mehrere \textit{Hidden Layer} verwendet, deren Neuronenanzahl zunächst ansteigt. Ziel soll es hier aber sein einen Deskriptor zu erzeugen, der zu Anfang viele Komponenten aufweist, um so einen Stacked Denoising Autoencoder zu trainieren, der mit jeder Schicht einen kompakteren Deskriptor liefert. Auf diese Weise können auch zum Experimentieren mehrere Deskriptoren generiert werden, deren Form von Anzahl der \textit{Hidden Layer} und deren Neuronenanzahl abhängt.\newline
+Zhao \cite{aed2016} hat aus diesem Grund einen Feature-Vektor mit $3042$ erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Die \textit{keypoints} werden hier durch den SIFT-Detektor ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gaußfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.\newline
 Um das Clustering-Verfahren auch ohne einen Autoencoder anwenden zu können, bzw. sicherzustellen, dass andere Feature-Deskriptoren für Bilder direkt verwendet werden können, soll in einem Test auch SIFT Gegenstand sein. So kann nicht nur die Qualität der Ergebnisse der beiden Deskriptoren verglichen werden, sondern auch Auswirkungen auf die Laufzeit des Bag of Visual Words.
 
 \section{Autoencoder}
@@ -45,7 +44,7 @@ Es wird zunächst auf den Aufbau des Netzes eingegangen: Anzahl der Schichten so
 
 \subsection{Modell und Parameter}
 
-\todo{Lernrate etc.} Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
+Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
 
 \begin{figure}
 	\centering
@@ -54,21 +53,18 @@ Es wird zunächst auf den Aufbau des Netzes eingegangen: Anzahl der Schichten so
 	\label{img:ae_model}
 \end{figure}
 
-Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Zhao verwendete hier folgende Werte:
-
+Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Zhao verwendete hier für die Lernrate einen Wert von $2\%$, sodass $l = 0.02$. Für das Training der jeweiligen Autoencoderpaare werden verschieden viele Iterationen benutzt:
 \begin{itemize}
-	\item Lernrate: $l = 0.02$
-	\item Trainingsiterationen: $t_i =$ Iterationen der i-ten Schicht \newline
-	  $t_1$:       $1000$\newline
-	  $t_2$:       $ 700$\newline
-	  $t_{3,4,5}$: $ 500$
-	\item Batch size: $B = 128$
+	\item 1. Schicht: $1000$ Iterationen
+	\item 2. Schicht: $700$ Iterationen
+	\item 3. bis 5. Schicht: Je $500$ Iterationen
 \end{itemize}
+Als Größe für einen \textit{batch} wurde hier 128 gewählt, also sieht das Netz in einem \textit{foward} und \textit{backward pass} je 128 Trainingsexemplare. Da dies im Wesentlichen die Laufzeit durch eine Verwendung von mehr Speicher bewirkt, kann diese Zahl bei ungenügenden Ressourcen auch reduziert werden.
 
 \subsection{TensorFlow}
 
 TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \grqq fließen\grqq und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
-TensorFlow folgt dem sogenannten \glqq lazy\grqq  Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \glqq Session\grqq wird das Modell trainiert bzw. auf Testdaten ausgeführt.
+TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -148,22 +144,22 @@ void histogram_kernel (float *buffer, long size, int *histo, int bins) {
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
-Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern bzw. wieder einzulesen. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es möglich sein, dass Histogramm der \textit{Visual Words} weiterer Bilder zu bestimmen. Auf diese Weise können Ähnlichkeiten zwischen Bildern auf Basis ihrer Histogrammdarstellung gemessen werden. Dieser Prozess ist in Kapitel Labeling eines Bildes dargestellt.
+Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einzulesen. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es möglich sein, dass Histogramm der \textit{Visual Words} weiterer Bilder zu bestimmen. Auf diese Weise können Ähnlichkeiten zwischen Bildern auf Basis ihrer Histogrammdarstellung gemessen werden. Dieser Prozess ist im Abschnitt \enquote{Messung der Ähnlichkeit zwischen Bildern} dargestellt.
 
 \subsubsection{Generierung des Modells}
 
-Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}/membership. \todo{single extractFeature}
+Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}/membership.
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{images/concept_bovw_1.png}
-	\caption{Funktionen zur Generierung eines Modells}
+	\caption{Funktionen zur Generierung eines Modells \todo{auch überarbeiten}}
 	\label{img:concept_bovw_1}
 \end{figure}
 
-\subsubsection{Vergleich von Bildern}
+\subsubsection{Messung der Ähnlichkeit zwischen Bildern}
 
-Sofern ein Modell erstellt wurde, können auf dessen Basis Bilder, bzw. deren Features, verglichen werden. In Abbildung \ref{img:concept_bovw_2} sind schematisch die aufeinanderfolgenden Funktionsaufrufe dargestellt. Die Funktion \textit{compareImages} erwartet als Argumente die Pfade zu den Bildern. Es wird von beiden Bildern das Histogramm der Visual Words durch \textit{computeVisualWords} berechnet. Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 
+Sofern ein Modell erstellt wurde, kann auf dessen Basis die Ähnlichkeit von zwei Bilder verglichen werden. In Abbildung \ref{img:concept_bovw_2} sind schematisch die aufeinanderfolgenden Funktionsaufrufe dargestellt. Die Funktion \textit{compareImages} erwartet als Argumente die Pfade zu den Bildern. Es wird von beiden Bildern das Histogramm der \textit{Visual Words} durch \textit{computeVisualWords} berechnet. Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 
 
 \begin{figure}
 	\centering
