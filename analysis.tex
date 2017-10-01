@@ -70,10 +70,12 @@ Als erstes wird im folgenden Abschnitt der Aufbau und die Funktionsweise eines A
 
 \subsection{Aufbau und Funktionsweise}
 
-Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass eine komprimierte Kodierung der Eingabe lernt. Ein Autoencoder versucht die Daten zu rekonstruieren und kann daher unbeaufsichtigt lernen: Die rekonstruierten Daten können anhand einer Distanzmetrik mit den Originaldaten verglichen werden. Anschließend kann die Größe des Fehlers berechnet werden und durch \textit{Backpropagation} die Gewichtesmatrix aktualisiert werden.
+Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass eine komprimierte Kodierung der Eingabe lernt. Ein Autoencoder versucht die Daten zu rekonstruieren und kann daher unbeaufsichtigt lernen: Die rekonstruierten Daten können anhand einer Distanzmetrik mit den Originaldaten verglichen werden. Anschließend kann die Größe des Fehlers berechnet werden und durch \textit{Backpropagation} die Gewichtesmatrix aktualisiert werden \cite{ssn1997}.
 Um die Originaldaten als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Input Layers} der Anzahl der Neuronen im \textit{Output Layer} entsprechen. Die Anzahl der Neuronen im \textit{Hidden Layer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hidden Layer} verwendet, so nimmt die Neuronenanzahl von Schicht zu Schicht ab um die Anzahl der Komponenten weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus der komprimierten Repräsentation Schicht für Schicht zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten.\newline
-Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$  mit $p < n$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Diese Parameter werden durch den Autoencoder optimiert. Die Darstellung $y$ wird in diesm Kontext auch als \textit{code} bzw. latente Variablen bezeichnet. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion: $z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$ berechnet. \cite{ssn1997}.
-
+Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$, mit $p < n$, abgebildet: 
+$$y = encode_{W,b}(x) = s(Wx + b)$$
+$W$ ist die Gewichtsmatrix der Größe $n \times p$ und $b$ der Bias-Vektor. Diese Parameter werden durch den Autoencoder optimiert. Die Darstellung $y$ wird in diesm Kontext auch als \textit{code} bzw. latente Variablen bezeichnet. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion. Der Vektor $z \in [0, 1]^n$ berechnet sich durch: 
+$$z = decode_{W', b'}(y) = s(W'y + b')$$
 In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet der als Eingabe einen Vektor $x \in [0,1]^4$ entgegen nimmt. Dieser wird auf den Vektor $y$ mit drei Komponenten abbildet, da der \textit{Hidden Layer} drei Neuronen enthält. Die Rekonstruktion $z$ aus $y$ erfolgt dann durch die Berechnung der Dekodierungsfunktion.
 
 \begin{figure}
@@ -131,8 +133,9 @@ Von Hinton and Salakhutdinov wurde 2006 das Konzept des Stacked Autoencoders ein
 	\item Das Training wird mit dem neuen Autoencoder fortgeführt.
 \end{enumerate}
 
-Ein Denoising Autoencoder \cite{sda2010} dient dazu, eine korrumpierte Eingabe zu korrigieren. Die Korruption ist hier als Rauschen bzw. Verzerrung (\textit{noise}) aufzufassen. In vielen Arten von Features, z.B. Bildern oder Audiomaterial, sind Verzerrungen bereits in den Daten vorhanden, beeinflussen die Semantik des Ganzen aber kaum. Daher soll der Autoencoder dies bereits berücksichtigen, indem er nicht direkt mir der Eingabe $x$ arbeitet. Stattdessen wird $x$ auf die korrumpierte Eingabe $\widetilde{x}$ durch ein stochastisches Verfahren abgebildet. In der Enkodierungsfunktion wird dann $\widetilde{x}$ statt $x$ verwendet: $encode_{W,b}(\widetilde{x}) = s(W\widetilde{x} + b)$.\newline
-In der Praxis hat sich zur Korruption der Eingabe die \textit{masking corruption} Technik bewährt: Hierbei werden 20\% bis 50\% der Neuronen des \textit{Input Layers} zufällige ausgewählt und werden \enquote{genullt}. Auf diese Weise wird vermieden, dass der Autoencoder nur von bestimmten Teilmengen an Neuronen abhängt  \cite{pda2012}. \todo{Grafik, RBMS, mehr Denoising}
+Ein Denoising Autoencoder \cite{sda2010} dient dazu, eine korrumpierte Eingabe zu korrigieren. Die Korruption ist hier als Rauschen bzw. Verzerrung (\textit{noise}) aufzufassen. In vielen Arten von Features, z.B. Bildern oder Audiomaterial, sind Verzerrungen bereits in den Daten vorhanden, beeinflussen die Semantik des Ganzen aber kaum. Daher soll der Autoencoder dies bereits berücksichtigen, indem er nicht direkt mir der Eingabe $x$ arbeitet. Stattdessen wird $x$ auf die korrumpierte Eingabe $\widetilde{x}$ durch ein stochastisches Verfahren abgebildet. In der Enkodierungsfunktion wird dann $\widetilde{x}$ statt $x$ verwendet: 
+$$encode_{W,b}(\widetilde{x}) = s(W\widetilde{x} + b)$$
+In der Praxis hat sich zur Korruption der Eingabe die \textit{masking corruption} Technik bewährt: Hierbei werden 20\% bis 50\% der Neuronen des \textit{Input Layers} zufällige ausgewählt und werden \enquote{genullt}. Auf diese Weise wird vermieden, dass der Autoencoder nur von bestimmten Teilmengen an Neuronen abhängt  \cite{pda2012}.
 
 \subsection{Hyperparameter}
 
@@ -154,7 +157,7 @@ Ein populäres Beispiel für die Verwendung von Autoencodern ist das Klassifizie
 
 Das Bag of Visual Words lehnt sich an das Bag of Words Modell aus dem Bereich Information Retrival an. Daher soll zunächst die Funktionsweise des Bag of Word Modells erläutert werden, um darauf aufbauend den Bag of Visual Words einzuführen.\newline 
 Der Bag of Words wird zur Klassifizierung von Dokumenten genutzt. Beim Bag of Words wird das Auftreten jedes Wortes in einem Dokument gezählt und durch die Anzahl aller Wörter im Vokabular dividiert, um so einen normalisierten Wert zu erhalten, welcher die relative Häufigkeit eines Wortes angibt. Das Vokabular wird \textit{Codebook} genannt, die Wörter werden auch als \textit{Codewords} bezeichnet.\newline
-Dieses Modell wurde von der digitalen Bildverarbeitung adaptiert. Es wird anhand der Features von Trainingsbildern ein visuelles Vokabular gelernt, das zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. 
+Dieses Modell wurde von der digitalen Bildverarbeitung adaptiert \cite{bok2004}. Es wird anhand der Features von Trainingsbildern ein visuelles Vokabular gelernt, das zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. 
 Zunächst wird die Funktionsweise des Bag of Visual Words im folgenden Abschnitt näher betrachtet. Dem schließt eine Betrachtung des Kernstücks des Algorithms an: Das Clustering der Features. Hier wird ein k-means Algorithmus, Llyods heuristische Variante, verwendet. Es wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird. 
 Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
 
@@ -164,12 +167,10 @@ Auf Basis des \textit{Codebooks} können nun die \textit{Visual Words} von Bilde
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.45]{images/bovw.png}
+	\includegraphics[scale=0.65]{images/bovw_process.pdf}
 	\caption{Training und Test, bzw. Anwendung, des Bag of Visual Word Modells. \todo{ref}}
 	\label{img:bovw}
 \end{figure}
-
-\todo{Quelle}
 
 \subsection{Lloyds Algorithmus}
 

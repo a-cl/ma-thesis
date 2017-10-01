@@ -146,25 +146,17 @@ void histogram_kernel (float *buffer, long size, int *histo, int bins) {
 
 Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einzulesen. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es möglich sein, dass Histogramm der \textit{Visual Words} weiterer Bilder zu bestimmen. Auf diese Weise können Ähnlichkeiten zwischen Bildern auf Basis ihrer Histogrammdarstellung gemessen werden. Dieser Prozess ist im Abschnitt \enquote{Messung der Ähnlichkeit zwischen Bildern} dargestellt.
 
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.6]{images/bovw_class.pdf}
+	\caption{Klassendiagramm des Bag of Visual Words}
+	\label{img:bovw}
+\end{figure}
+
 \subsubsection{Generierung des Modells}
 
 Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}/membership.
 
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{images/concept_bovw_1.png}
-	\caption{Funktionen zur Generierung eines Modells \todo{auch überarbeiten}}
-	\label{img:concept_bovw_1}
-\end{figure}
-
 \subsubsection{Messung der Ähnlichkeit zwischen Bildern}
 
 Sofern ein Modell erstellt wurde, kann auf dessen Basis die Ähnlichkeit von zwei Bilder verglichen werden. In Abbildung \ref{img:concept_bovw_2} sind schematisch die aufeinanderfolgenden Funktionsaufrufe dargestellt. Die Funktion \textit{compareImages} erwartet als Argumente die Pfade zu den Bildern. Es wird von beiden Bildern das Histogramm der \textit{Visual Words} durch \textit{computeVisualWords} berechnet. Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{images/concept_bovw_2.png}
-	\caption{\todo{NEU}}
-	\label{img:concept_bovw_2}
-\end{figure}
-
