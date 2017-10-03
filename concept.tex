@@ -144,19 +144,31 @@ void histogram_kernel (float *buffer, long size, int *histo, int bins) {
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
-Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einzulesen. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es möglich sein, dass Histogramm der \textit{Visual Words} weiterer Bilder zu bestimmen. Auf diese Weise können Ähnlichkeiten zwischen Bildern auf Basis ihrer Histogrammdarstellung gemessen werden. Dieser Prozess ist im Abschnitt \enquote{Messung der Ähnlichkeit zwischen Bildern} dargestellt.
+Das Bag of Visual Words Modell ist ein drei Klassen eingeteilt, wie im Klassendiagramm in Abbildung \ref{img:bovw} dargestellt. Zur Verwendung muss zuerst ein Objekt der BagOfVisualWords-Klasse erzeugt werden. Hierbei muss die Anzahl der Cluster, \textit{k}, im Konstruktor angegeben werden. Die Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans und Histogramm Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
+Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern und Laden eines Modells} und \enquote{Berechnung der Visual Words} illustrieren die Kernfunktionalitäten der BagOfVisualWords-Klasse sowie den jeweiligen Prozessablauf anhand des Klassendiagramms.
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.6]{images/bovw_class.pdf}
+	\includegraphics[scale=0.57]{images/bovw_class.pdf}
 	\caption{Klassendiagramm des Bag of Visual Words}
 	\label{img:bovw}
 \end{figure}
-
+ 
 \subsubsection{Generierung des Modells}
 
-Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}/membership.
+Die Generierung eines Modells kann durch die Funktion \textit{createModel} gestartet werden. Die Funktion ist überladen und erwartet als Parameter entweder eine Liste der Features oder den Pfad zu einer Datei, in der die Features gespeichert sind. Der Ablauf der Methodenaufrufe ist dann wie folgt:
 
-\subsubsection{Messung der Ähnlichkeit zwischen Bildern}
+\begin{itemize}
+	\item Es werden bei Aufruf mit einem String die Features eingelesen und anschließend generateModel mit dieser Feature-Liste aufgerufen.
+	\item Der kmeans Algorithmus wird mit den Features und \textit{k} aufgerufen. Die Daten werden zum \textit{device} kopiert und der Prozess gestartet. 
+	\item Kmeans nutzt die ausgelagerte Funktion \textit{findNearestCluster} um den nächsten Cluster eines jeden Features zu bestimmen. Intern wird hier durch \textit{euclideanDistance} die Entfernung eines Cluster-Feature-Paares bestimmt.
+	\item Anschließend prüft \textit{computeDelta} ob sich die Zuordnung von Features zu Clustern nicht mehr wesentlich geändert hat, d.h. die relative Veränderung unter einem Schwellwert liegt.
+\end{itemize}
+ 
+\subsubsection{Speichern und Laden eines Modells}
 
-Sofern ein Modell erstellt wurde, kann auf dessen Basis die Ähnlichkeit von zwei Bilder verglichen werden. In Abbildung \ref{img:concept_bovw_2} sind schematisch die aufeinanderfolgenden Funktionsaufrufe dargestellt. Die Funktion \textit{compareImages} erwartet als Argumente die Pfade zu den Bildern. Es wird von beiden Bildern das Histogramm der \textit{Visual Words} durch \textit{computeVisualWords} berechnet. Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 
+Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einlesen zu können. Die Methode \textit{saveModel(modelPath: String)} der BagOfVisualWords-Klasse speichert die Anzahl der Cluster \textit{k}, die Liste der Cluster \textit{clusters} sowie die Zuordnung der Features \textit{members} unter dem Pfad \textit{modelPath}. Durch das Pendant \textit{readModel(modelPath: String)} kann ein so gespeichertes Modell, also \textit{k}, \textit{clusters} und \textit{members}, wieder eingelesen werden. So ergibt sich zum Beispiel für ein $k = 5$ und 100 Features mit je 128 Komponenten, eine Datei mit 106 Zeilen: Die erste Zeile enthält \textit{k}. Darauf folgen \textit{k} viele, also hier fünf, Zeilen mit den Zentren der Cluster und anschließend 100 Zeilen mit den Features. Die Zeilen mit den Clustern enthalten hier 128 Werte, durch Leerzeichen separiert. Die Features enthalten einen Wert am Ende der Zeile mehr: Diese Ganzzahl gibt den Index des Clusters an, zu der das Feature gehört.
+
+\subsubsection{Berechnung der Visual Words}
+
+Sofern ein Modell erstellt wurde, kann auf dessen Basis die Ähnlichkeit von zwei Bilder verglichen werden. Der Vergleich selbst liegt aber außerhalb des Fokus des Bag Of Visual Words. Um das Histogramm der \textit{Visual Words} zu erzeugen muss die Methode \textit{computeVisualWords} mit einer Liste der Features aufgerufen werden. \todo{Ablauf} Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 

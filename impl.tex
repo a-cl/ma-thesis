@@ -104,7 +104,7 @@ Anschließend wird der Autoencoder genutzt um die Testdaten einmal zu komprimier
 
 \section{Bag of Visual Words}
 
-Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual WordsKlasse Implementierung gegeben. Damit ein Modell über den Speicher hinaus verwendbar ist, wird ein einfacher Mechanismus zur Persistierung vorgestellt. Dem schließt die Betrachtung des k-means Clustering der Features an. Unterschiede sowie Limitierungen der \textit{global} und \textit{shared memory} Realisierung werden hier anhand des Codes aufgezeigt.
+Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual Words Implementierung gegeben. Neben der konkreten Klassenstruktur wird auf Abweichungen zum Konzept eingegangen. Dem schließt die Betrachtung des k-means Clustering der Features an. Unterschiede sowie Limitierungen der \textit{global} und \textit{shared memory} Realisierung werden hier anhand des Codes aufgezeigt.
 
 \subsection{Projektstruktur}
 
@@ -124,11 +124,13 @@ Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die 
 
 \subsection{Verwendung und wesentliche Klassen}
 
+Da CUDA C eine sehr hardwarenahe Sprache ist, obliegt die effiziente Verwendung des Speichers dem Programmierer. Insbesondere auf dem \textit{device} sollte mit dem Speicher genügsam umgegangen werden. Daher weicht die Implementierung von dem vorgestellten Konzept bei den verwendeten Datentypen ab: Statt Objekte für Cluster oder Features zu erzeugen, werden diese Typen einfach als \textit{pointer} von \textit{float}-Werten dargestellt. Dies ist für die Features problemlos möglich, doch die Information über die Mitgliedschaft seiner Features kann nicht länger in einem Cluster enthalten sein. Diese Informationen wird stattdessen global vom BagOfVisualWords in der privaten Variablen \textit{membership} gehalten und als \textit{pointer} zu Integer-Werten dargestellt. Diese Liste enthält für jedes Feature den Index des Clusters, dem es zugeordnet ist. Der Index eines Features an der Stelle \textit{i} in der \textit{features} Liste, ist dann an der Stelle $membership_i$ gespeichert.
+
 Zur Verwendung wird ein Objekt der BagOfVisualWords-Klasse durch Aufruf des Konstruktors angelegt. Hierbei muss die Anzahl der Cluster $k$ übergeben werden. Standardmäßig werden bei Erstellung und Nutzung eines Modells die CUDA Versionen des k-means und Histogramm Algorithmus aufgerufen. Zu Vergleichszwecken können aber auch die CPU-basierten Varianten durch \textit{setMode(1)} ($0 = GPU, 1 = CPU$) verwendet werden.\newline
 Die Erstellung eines Modells erfolgt dann durch Aufruf von \textit{createModel(Mat features)} oder \textit{createModel(string featurePath)} erfolgen. Letztere liest aus der Datei \textit{featurePath} die zu gruppierenden Features ein. Pro Zeile wird ein Feature erwartet, dessen Komponenten durch Leerzeichen voneinander getrennt sind.\newline
 Zur Erzeugung des Histogramms der \textit{Visual Words} dient die Methode \textit{computeViusalWords(Mat features)}. Auch hier gibt es eine überladene Funktion \textit{computeVisualWords(string featurePath)}, welche die Features aus der Datei \textit{featurePath} einließt und anschließend das Histogramm, bei entsprechendem Modus, durch die GPU berechnet. 
 
-Damit ein Modell nicht immer erneut aufgebaut werden muss, kann es als Textdatei gespeichert werden. Dafür kann auf einem Objekt der BagOfVisualWords-Klasse \textit{writeModel(string modelPath)} aufgerufen werden. Die Schwerpunkte der Cluster werden zeilenweise in die Datei \textit{modelPath}/clusters geschrieben, sodass sich $k$ Zeilen mit 128 Elementen bei der Verwendung von SIFT ergeben. Die Mitgliedschaften der Features zu Cluster wird in der Datei \textit{modelPath}/membership gespeichert und enthält so viele Zeilen wie Features vorliegen. Jede Zeile enthält die $x$ und $y$ Koordinaten des \textit{keypoints} und den Index des zugehörigen Clusters. Der Index bezieht sich hierbei auf die Position des Clusters in der Datei \textit{modelPath}/clusters.
+
 
 \subsection{Paralleler k-means Algorithmus}
 
