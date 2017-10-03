@@ -1,9 +1,9 @@
 \chapter{Konzept}
 
-Die Konzeption beschäftigt sich zunächst mit einem Überblick des ganzen Prozesses, von der Feature-Extraktion über die Komprimierung bis hin zur Gruppierung. Anschließend folgt eine nähere Betrachtung dieser drei wesentlichen Bestandteile und wie sie ineinander greifen.\newline
-Im Kapitel Feature Extraktion werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich somit für den Einsatz der Komprimierung eignet.\newline
-Im folgenden Kapitel Autoencoder wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.\newline
-Im letzten Abschnitt wird das Bag of \textit{Visual Words} Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. die Ähnlichkeit zweier Bilder zu bewerten.
+Die Konzeption beschäftigt sich zunächst mit einem Überblick des ganzen Prozesses, von der Feature-Extraktion über die Komprimierung bis hin zur Gruppierung. Anschließend folgt eine nähere Betrachtung dieser drei wesentlichen Bestandteile und wie sie ineinandergreifen.\newline
+Im Abschnitt \enquote{Feature Extraktion} werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich somit für den Einsatz der Komprimierung eignet.\newline
+Im folgenden Abschnitt \enquote{Autoencoder} wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.\newline
+Im letzten Abschnitt wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. die Ähnlichkeit zweier Bilder zu bewerten.
 
 \section{Modell}
 
@@ -22,7 +22,15 @@ In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier z
 	\label{img:model}
 \end{figure}
 
-\todo{Vergleich von Bilder, wie oben nur mit zwei Bildern}
+Das Erzeugen der \textit{Visual Words} aus einem Bild läuft in den ersten beiden Schritten analog ab, nur das die Menge \textit{Images} aus genau einem Bild, dem zu verarbeitenden, besteht. Die Features werden erst extrahiert und dann optional komprimiert. Für diese Schritte müssen auch exakt die gleichen Parameter verwendet werden, d.h.:
+
+\begin{itemize}
+	\item Der gleiche Feature-Detektor bzw. -Deskriptor muss gewählt werden.
+	\item Eine Komprimierung muss stattfinden, wenn dies im Training der Fall. Andernfalls darf sie nicht erfolgen.
+	\item Das gleiche Netzwerk zur Erzeugung der komprimierten Features muss gewählt werden.
+\end{itemize}
+
+In der dritten Phase verwendet der Bag of Visual Words das vorher generierte \textit{Codebook} und die Features aus der vorigen Phase um die \textit{Visual Words} zu ermitteln.
 
 \section{Feature Extraktion}
 
@@ -63,7 +71,7 @@ Als Größe für einen \textit{batch} wurde hier 128 gewählt, also sieht das Ne
 
 \subsection{TensorFlow}
 
-TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \grqq fließen\grqq und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
+TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \enquote{fließen} und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
 TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
 
 \lstset{language=Python}
@@ -144,7 +152,8 @@ void histogram_kernel (float *buffer, long size, int *histo, int bins) {
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
-Das Bag of Visual Words Modell ist ein drei Klassen eingeteilt, wie im Klassendiagramm in Abbildung \ref{img:bovw} dargestellt. Zur Verwendung muss zuerst ein Objekt der BagOfVisualWords-Klasse erzeugt werden. Hierbei muss die Anzahl der Cluster, \textit{k}, im Konstruktor angegeben werden. Die Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans und Histogramm Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
+Der Aufbau des Bag of Visual Words Modell ist als Klassendiagramm in Abbildung \ref{img:bovw} dargestellt. Cluster und Features werden hier als Punkte in einem $n$-dimensionalen Raum aufgefasst, deren Position durch eine Liste von $n$ \textit{float}-Werten definiert ist. Diese Gemeinsamkeit wird durch Point abstrahiert. Ein Objekt der Klasse Cluster enthält zusätzlich eine Liste \textit{members}, welche die Features enthält, die dem Cluster zugeordnet sind.
+Die BagOfVisualWords-Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans-, Histogramm- und Shared-Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
 Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern und Laden eines Modells} und \enquote{Berechnung der Visual Words} illustrieren die Kernfunktionalitäten der BagOfVisualWords-Klasse sowie den jeweiligen Prozessablauf anhand des Klassendiagramms.
 
 \begin{figure}
@@ -159,16 +168,23 @@ Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern u
 Die Generierung eines Modells kann durch die Funktion \textit{createModel} gestartet werden. Die Funktion ist überladen und erwartet als Parameter entweder eine Liste der Features oder den Pfad zu einer Datei, in der die Features gespeichert sind. Der Ablauf der Methodenaufrufe ist dann wie folgt:
 
 \begin{itemize}
-	\item Es werden bei Aufruf mit einem String die Features eingelesen und anschließend generateModel mit dieser Feature-Liste aufgerufen.
-	\item Der kmeans Algorithmus wird mit den Features und \textit{k} aufgerufen. Die Daten werden zum \textit{device} kopiert und der Prozess gestartet. 
+	\item Es werden bei Aufruf mit einem String die Features eingelesen und anschließend \textit{generateModel} mit dieser Feature-Liste aufgerufen. Der kmeans Algorithmus wird mit den Features und \textit{k} aufgerufen. Die Daten werden zum \textit{device} kopiert und der Prozess gestartet. 
 	\item Kmeans nutzt die ausgelagerte Funktion \textit{findNearestCluster} um den nächsten Cluster eines jeden Features zu bestimmen. Intern wird hier durch \textit{euclideanDistance} die Entfernung eines Cluster-Feature-Paares bestimmt.
-	\item Anschließend prüft \textit{computeDelta} ob sich die Zuordnung von Features zu Clustern nicht mehr wesentlich geändert hat, d.h. die relative Veränderung unter einem Schwellwert liegt.
+	\item Anschließend prüft \textit{computeDelta} ob sich die Zuordnung von Features zu Clustern nicht mehr wesentlich geändert hat, d.h. die relative Veränderung unter dem Schwellwert liegt.
+	\item Ist der Schwellwert oder eine maximale Anzahl an Iterationen erreicht, ist der Prozess abgeschlossen und die \textit{device} Cluster werden in die Cluster des aufrufenden BagOfVisualWords-Objektes kopiert.
 \end{itemize}
  
 \subsubsection{Speichern und Laden eines Modells}
 
-Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einlesen zu können. Die Methode \textit{saveModel(modelPath: String)} der BagOfVisualWords-Klasse speichert die Anzahl der Cluster \textit{k}, die Liste der Cluster \textit{clusters} sowie die Zuordnung der Features \textit{members} unter dem Pfad \textit{modelPath}. Durch das Pendant \textit{readModel(modelPath: String)} kann ein so gespeichertes Modell, also \textit{k}, \textit{clusters} und \textit{members}, wieder eingelesen werden. So ergibt sich zum Beispiel für ein $k = 5$ und 100 Features mit je 128 Komponenten, eine Datei mit 106 Zeilen: Die erste Zeile enthält \textit{k}. Darauf folgen \textit{k} viele, also hier fünf, Zeilen mit den Zentren der Cluster und anschließend 100 Zeilen mit den Features. Die Zeilen mit den Clustern enthalten hier 128 Werte, durch Leerzeichen separiert. Die Features enthalten einen Wert am Ende der Zeile mehr: Diese Ganzzahl gibt den Index des Clusters an, zu der das Feature gehört.
+Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einlesen zu können. Die Methode \textit{saveModel(modelPath: String)} der BagOfVisualWords-Klasse speichert die Anzahl der Cluster \textit{k}, die Liste der Cluster \textit{clusters} sowie die Zuordnung der Features \textit{members} unter dem Pfad \textit{modelPath}. Durch das Pendant \textit{readModel(modelPath: String)} kann ein so gespeichertes Modell, also \textit{k}, \textit{clusters} und \textit{members}, wieder eingelesen werden.\newline
+So ergibt sich zum Beispiel für ein $k = 5$ und 100 Features mit je 128 Komponenten, eine Datei mit 106 Zeilen: Die erste Zeile enthält \textit{k}. Darauf folgen \textit{k} viele, also hier fünf, Zeilen mit den Zentren der Cluster und anschließend 100 Zeilen mit den Features. Die Zeilen mit den Clustern enthalten hier 128 Werte, durch Leerzeichen separiert. Die Features enthalten einen Wert am Ende der Zeile mehr: Diese Ganzzahl gibt den Index des Clusters an, zu der das Feature gehört.
 
 \subsubsection{Berechnung der Visual Words}
 
-Sofern ein Modell erstellt wurde, kann auf dessen Basis die Ähnlichkeit von zwei Bilder verglichen werden. Der Vergleich selbst liegt aber außerhalb des Fokus des Bag Of Visual Words. Um das Histogramm der \textit{Visual Words} zu erzeugen muss die Methode \textit{computeVisualWords} mit einer Liste der Features aufgerufen werden. \todo{Ablauf} Hier wird auf der GPU die parallele Reduzierung der Histogramme durchgeführt. Anschließend wird der Fehler, hier als MSE gemessen, berechnet und die Ähnlichkeit als $1 - MSE$ zurückgegeben. Liegen nun zwei Bildern in der gleichen Kategorie, sollte sich ihre Histogrammdarstellung bei adäquatem $k$ ähneln. 
+Die Erzeugung der \textit{Visual Words} wird durch die BagOfVisualWords-Klasse angestoßen. Wie bei der Modellgenerierung wird intern ein CUDA-Programm, die Histogram-Klasse, verwendet. Für den Gebrauch muss die \textit{computeVisualWords} Methode aufgerufen werden. Der Ablauf ist dann wie folgt:
+
+\begin{itemize}
+	\item Wie beim kmeans Algorithmus kann \textit{computeVisualWords} der BagOfVisualWords-Klasse mit einer Liste der Features oder dem Pfad zu einer Feature-Datei aufgerufen werden. Letztere ließt die Features ein und ruft dann wiederum \textit{computeVisualWords} mit der Feature-Liste auf. Es wird geprüft, ob ein Modell vorhanden ist, also eine Liste von Clustern vorliegt. Ist dies nicht der Fall, wird abgebrochen.
+	\item Die \textit{run} Methode der Histogram-Klasse wird nun mit den \textit{clustern} der aufrufenden BagOfVisualWords-Instanz und den Features aus dem vorigen Schritt aufgerufen. Um das \textit{Visual Word} für ein Feature zu bestimmen, wird \textit{findNearestCluster} aus der Shared-Klasse genutzt. Da diese Funktion den Index des Clusters zurückgibt, kann dieser direkt für die zu inkrementierende Position im Histogramm verwendet werden.
+	\item Das Histogramm wird zum \textit{host kopiert} und an den Aufrufer zurückgegeben. Es kann nun gespeichert oder für weitere Analyse verwendet werden.
+\end{itemize}

@@ -1,9 +1,8 @@
 \chapter{Implementierung}
 
-Die Implementierung behandelt in zwei Teilen die Umsetzung des Bag of Visual Word Modells in CUDA und des Autoencoders in TensorFlow. In beiden Abschnitten wird zunächst wird die Extraktion der Features anhand von Quellcode beschrieben. Im Bag of Visual Word Teil folgt eine Betrachtung der \textit{kernels} des k-means Algorithmus sowie Unterschiede in der Implementierung zwischen \textit{global} und \textit{shared memory}. Im Teil zum Autoencoder folgt nach der Beschreibung der Feature-Aufbereitung das Modell in TensorFlow.\newline
-Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht über den Rahmen der Arbeit hinaus. Stand Abgabe der Arbeit gibt es für CUDA keine Bibliothek um Autoencoder zu programmieren. Mit cuDNN hat Nvidia aber eine Bibliothek bereitgestellt, mit der sogenannte \textit{Convolutional Neural Networks (CNN)} erzeugt werden können. Diese Bibliothek wird insbesondere von Frameworks wie TensorFlow verwendet, um ein z.B. in Python definiertes Modell zu übersetzen und so unter CUDA auszuführen.
+Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt wie mit Python und der \textit{opencv}-Biblitohek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht über den Rahmen der Arbeit hinaus. 
 
-\section{Extraktion der Patches}
+\section{Extraktion der Features}
 
 Zu Ermittlung der \textit{keypoints} durch den SIFT-Detektor wird auf die \textit{opencv}\footnote{https://github.com/opencv/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/opencv/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten.
 
@@ -48,7 +47,7 @@ Sollte im späteren eine Umsetzung des Autoencoders in CUDA C erfolgen, so läss
 
 \section{Autoencoder}
 
-In diesem Abschnitt wird behandelt wie der Autoencoder in Python und TensorFlow umgesetzt wurde. Zunächst wird auf die Erhebung der Feature-Vektoren unter Verwendung der \textit{opencv}-Bibliothek eingegangen. Anschließend erfolgt eine Übersicht des Python-Codes zur Definition des Autoencoders.
+In diesem Abschnitt wird behandelt wie der Autoencoder in Python und TensorFlow umgesetzt wurde. Hierfür wird zunächst eine Übersicht über die Projektstruktur gegeben und anschließend wird an Programmcode demonstriert, wie der vov Zhao entworfene Autoencoder abgebildet werden kann.
 
 \subsection{Projektstruktur} Das Python-Projekt für des Autoencoders besteht aus fünf Dateien. In autoencoder.py ist eine gleichnamige Klasse zur objektorientierten Verwendung enthalten. Die Funktionen zur Feature-Extraktion sind in der Datei feature\textunderscore extractor.py und werden im folgenden Abschnitt näher behandelt. Die Datei util.py stellt eine Sammlung allgemein verwendeter Funktionen bereit, z.B. zur Messung von Zeit oder Konvertierung von Datenstrukturen. Wie beim Bag of Visual Words liegt hier eine main-Datei bei, welche die Benutzung des Autoencoders durch die Kommandozeile erlaubt.
 
@@ -104,7 +103,7 @@ Anschließend wird der Autoencoder genutzt um die Testdaten einmal zu komprimier
 
 \section{Bag of Visual Words}
 
-Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual Words Implementierung gegeben. Neben der konkreten Klassenstruktur wird auf Abweichungen zum Konzept eingegangen. Dem schließt die Betrachtung des k-means Clustering der Features an. Unterschiede sowie Limitierungen der \textit{global} und \textit{shared memory} Realisierung werden hier anhand des Codes aufgezeigt.
+Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual Words Implementierung gegeben. Neben der konkreten Klassenstruktur wird auf Abweichungen zum Konzept eingegangen. Dem schließt die Betrachtung des k-means Clustering der Features an, sowie Unterschiede und Limitierungen der \textit{global} bzw. \textit{shared memory} Varianten.
 
 \subsection{Projektstruktur}
 
@@ -122,15 +121,17 @@ Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die 
 .1 makefile.
 }
 
-\subsection{Verwendung und wesentliche Klassen}
+\subsection{Abweichungen zum Konzept}
 
-Da CUDA C eine sehr hardwarenahe Sprache ist, obliegt die effiziente Verwendung des Speichers dem Programmierer. Insbesondere auf dem \textit{device} sollte mit dem Speicher genügsam umgegangen werden. Daher weicht die Implementierung von dem vorgestellten Konzept bei den verwendeten Datentypen ab: Statt Objekte für Cluster oder Features zu erzeugen, werden diese Typen einfach als \textit{pointer} von \textit{float}-Werten dargestellt. Dies ist für die Features problemlos möglich, doch die Information über die Mitgliedschaft seiner Features kann nicht länger in einem Cluster enthalten sein. Diese Informationen wird stattdessen global vom BagOfVisualWords in der privaten Variablen \textit{membership} gehalten und als \textit{pointer} zu Integer-Werten dargestellt. Diese Liste enthält für jedes Feature den Index des Clusters, dem es zugeordnet ist. Der Index eines Features an der Stelle \textit{i} in der \textit{features} Liste, ist dann an der Stelle $membership_i$ gespeichert.
+Da CUDA C eine sehr hardwarenahe Sprache ist, obliegt die effiziente Verwendung des Speichers dem Programmierer. Insbesondere auf dem \textit{device} sollte mit dem Speicher genügsam umgegangen werden. Daher weicht die Implementierung von dem vorgestellten Konzept bei den verwendeten Datentypen ab: Statt Objekte für Cluster oder Features zu erzeugen, werden diese Typen einfach als \textit{pointer} von \textit{float}-Werten dargestellt. Dies ist für die Features problemlos möglich, doch die Information über die Mitgliedschaft seiner Features kann nicht länger in einem Cluster enthalten sein. Diese Informationen wird stattdessen global vom BagOfVisualWords in der privaten Variablen \textit{membership} gehalten und als \textit{pointer} zu Integer-Werten dargestellt. Diese Liste enthält für jedes Feature den Index des Clusters, dem es zugeordnet ist. Der Index eines Features an der Stelle \textit{i} in der \textit{features} Liste, ist dann an der Stelle $membership_i$ gespeichert.\newline
+Dadurch dass \textit{pointer} verwendet werden, erfordern die meisten Funktionsaufrufe nun zusätzliche Parameter: 
 
-Zur Verwendung wird ein Objekt der BagOfVisualWords-Klasse durch Aufruf des Konstruktors angelegt. Hierbei muss die Anzahl der Cluster $k$ übergeben werden. Standardmäßig werden bei Erstellung und Nutzung eines Modells die CUDA Versionen des k-means und Histogramm Algorithmus aufgerufen. Zu Vergleichszwecken können aber auch die CPU-basierten Varianten durch \textit{setMode(1)} ($0 = GPU, 1 = CPU$) verwendet werden.\newline
-Die Erstellung eines Modells erfolgt dann durch Aufruf von \textit{createModel(Mat features)} oder \textit{createModel(string featurePath)} erfolgen. Letztere liest aus der Datei \textit{featurePath} die zu gruppierenden Features ein. Pro Zeile wird ein Feature erwartet, dessen Komponenten durch Leerzeichen voneinander getrennt sind.\newline
-Zur Erzeugung des Histogramms der \textit{Visual Words} dient die Methode \textit{computeViusalWords(Mat features)}. Auch hier gibt es eine überladene Funktion \textit{computeVisualWords(string featurePath)}, welche die Features aus der Datei \textit{featurePath} einließt und anschließend das Histogramm, bei entsprechendem Modus, durch die GPU berechnet. 
+\begin{itemize}
+	\item Die Anzahl der Features \textit{count} muss angegeben werden. In C ist es nicht auf einfachem Weg möglich zu bestimmen, auf wie viele Elemente ein \textit{pointer} zeigt.
+	\item Die Anzahl an Komponenten \textit{featureSize} in einem Feature bzw. Cluster muss angegeben werden. Auch hier handelt es sich wieder um einen \textit{pointer}, daher ist die Anzahl an Elementen nicht zu ermitteln.
+\end{itemize}
 
-
+Um auch Vergleich mit sequentiellen Varianten zu ermöglichen, kann durch den Aufruf \textit{setMode(mode: Int)} auf einem BagOfVisualWords-Objekt festgelegt werden, ob die GPU (0) oder CPU (1) verwendet werden soll.
 
 \subsection{Paralleler k-means Algorithmus}
 
@@ -139,7 +140,8 @@ Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt
 \begin{itemize}
 	\item \textbf{float *features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
 	\item \textbf{float *clusters} Eine Liste, welche mit den Clustern befüllt wird.
-	\item \textbf{int featureSize} Die Anzahl der Komponenten in einem Feature-Vektor.
+	\item \textbf{int featureSize} Die Anzahl der Komponenten in einem Feature-Vektor.	
+	\item \textbf{int count} Die Anzahl der Features.
 	\item \textbf{int k} Die Anzahl der zu bildenden Cluster $k$.
 	\item \textbf{int iterations} Die maximale Anzahl an Iterationen, die durchlaufen wird, falls bisher keine Konvergenz erreicht wurde.
 	\item \textbf{float conv} Ein Schwellwert, der in jeder Iteration mit der relativen Veränderung der Mitgliedschaft verglichen wird. Ist er größer, wird das Clustering beendet.
@@ -158,11 +160,11 @@ Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \tex
 
 \subsection{Shared memory}
 
-Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Um beide Implementierungen zu unterstützen, fragt eine Direktive für den Präprozessor den Wert der Variable \textit{BLOCK\textunderscore SHARED\textunderscore MEM\textunderscore OPTIMIZATION} ab. Falls der Wert der Variable \textit{true} ist, wird Code nur für die \textit{shared memory} Implementierung eingebunden, andernfalls für die \textit{global memory} Variante:
+Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Um beide Implementierungen zu unterstützen, fragt eine Direktive für den Präprozessor den Wert der Variable \textit{SHARED\textunderscore MEM} ab. Falls der Wert der Variable \textit{true} ist, wird Code nur für die \textit{shared memory} Implementierung eingebunden, andernfalls für die \textit{global memory} Variante:
 
 \lstset{language=C}
 \begin{lstlisting}
-#if BLOCK_SHARED_MEM_OPTIMIZATION
+#if SHARED_MEM
 // shared memory Logik
 #else
 // global memory Logik
@@ -175,7 +177,7 @@ Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{block
 const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
 const unsigned int clusterDataSize = k * size * sizeof(float);
 
-#if BLOCK_SHARED_MEM_OPTIMIZATION
+#if SHARED_MEM
     const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
 #else
 	const unsigned int blockSharedDataSize = membershipDataSize;
