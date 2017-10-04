@@ -3,17 +3,6 @@
 Die Qualität der Ergebnisse des in der Implementierung realisierten Modells wird in diesem Kapitel durch ein Testexperiment überprüft. Weiterhin werden Ausführungszeiten für beispielsweise verschieden große $k$ beim Bag of Visual Words betrachtet, um eine Einsicht in die Performance der Algorithmen zu gewinnen.
 Im Kapitel Experimentaufbau wird zunächst das Experiement sowie verwendete Metriken und Ergebnistypen behandelt. Nachfolgend wird erläutert, wie die großen Menge an benötigten Trainings- und Testdaten wiederholbar und automatisiert aufgebaut wird. Dieser Abschnitt illustriert auch, wie eine Durchführung des Experiments vonstattengeht. Im letzten Teil werden dann konkrete Testgruppen aus den Caltech101 \cite{cal2004} Bilddaten erzeugt. Diese Menge an Bilddaten hat große Verbreitung im Bereich der Objekterkennung gefunden. Auf diese Weise ist ein Vergleich mit Arbeiten Anderer prinzipiell möglich.
 
-\section{Experimentaufbau}
-
-Das Experiment soll zeigen, wie gut der jeweilige Algorithmus geeignet ist, um unüberwacht die Ähnlichkeit zwischen zwei Bildern zu beurteilen. \todo{Wie wird das Ergebnis bewertet? Distanzmetrik Histogramme}. Anhand einer Distanzmetrik kann dann die Ähnlichkeit der Histogramme bestimmt werden. Hier gibt es zwei Fälle zu unterscheiden:
-
-\begin{itemize}
-	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
-	\item \textbf{False Positives} Auch hier liegen die Testbilder in der gleichen oder einer verschiedenen Klasse, die Vorhersage durch das Modell ist jedoch nicht korrekt.
-\end{itemize}
-
-Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
-
 \section{Testdaten und Testgenerierung}
 
 Der Abschnitt Testdaten stellt die hier verwendete Menge von Bildern vor, die Caltech101, welche extra für den Test von Algorithmen bezüglich der Objekterkennung in Bildern entwickelt wurde.\newline
@@ -29,8 +18,7 @@ Als Testmenge wurden die Bilder der Caltech101 Menge verwendet. Bei Caltech101 h
 	\item Ähnlich viele Bilder, wie in den Arbeiten anderer, verwendet werden (1, 3, 5, 10, 15, 20 oder 30 Trainingsbilder; 20 oder 30 Testbilder).
 \end{itemize}
 
-Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. 
-Da der Bedarf nach bereits kategorisierten Testdaten unentwegt steigt, gibt es inzwischen eine Caltech250 Bildmenge, die für größere Experimente verwendet wird.
+Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch dies Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
 
 \begin{figure}
 	\centering
@@ -39,13 +27,63 @@ Da der Bedarf nach bereits kategorisierten Testdaten unentwegt steigt, gibt es i
 	\label{img:strawberries}
 \end{figure}
 
+Die Caltech101 Daten liegen nach Download kategorisiert im JPG-Format vor. Die Struktur wurde so beibehalten und ist noch für die Testgenerierung relevant. Direkt unter dem Caltech101-Ordner ist pro Kategorie ein Ordner vorhanden, der die jeweiligen Bilder immer im gleichen Namensschema enthält:\newline
+
+\dirtree{%src
+.1 Caltech101.
+.2 accordion.
+.3 image\textunderscore 0001.jpg.
+.3 image\textunderscore 0002.jpg.
+.3 ....
+.2 airplanes.
+.3 ....
+.2 ....
+}
+
 \subsection{Testgenerierung}
 
-Um durch die ROC-Kurve ein aussagekräftiges Ergebnis zu erhalten, muss eine große Anzahl an Bildern durch das Modell gegenübergestellt werden. Da hier mehr als 2000 Bildpaare verwendet werden sollen, wäre ein manueller Testaufbau mühsam und fehleranfällig. Aus diesem Grund wird dieser Prozess hier durch ein Programm automatisiert: Es werden zufällige Bildpaare ausgewählt und deren absolute Pfade, sowie die Information, ob die Bilder in der selben Klasse liegen gespeichert (\enquote{-} für verschiedene Klassen, \enquote{+} für dieselbe Klasse). Zwei Bilder liegen dabei in der selben Klasse, wenn sie im selben Ordner im Dateisystem enthalten sind. Die zu verwendenden Ordner (also Klassen), die Anzahl der zufällig zu generierenden Tests und das Verhältnis von gleichen zu verschiedenen Klassen muss bei der Erzeugung angegeben werden. Das Ergebnis wird dann als Datei \textit{test.txt} gespeichert, um wiederholt benutzbar zu sein.\newline
-Im nächsten Schritt werden aus den ausgewählten Bildern die Features extrahiert und ebenfalls in einer Datei pro Bild gespeichert. Dieser Schritt ist leider erforderlich, da die Implementierung des Autoencoders in Python erfolgt ist und der nächste Schritt, das Clustering, in CUDA C. Die Features werden dabei im gleichen Ordner wie die Datei train.txt gespeichert und die Assoziation zum jeweiligen Bild wird über den Namen der Feature-Dateien hergestellt. Im Falle der Caltech101 Daten gelingt dies durch das Schema \textit{<categoryName>\textunderscore <imageName>.txt}.
-Für jede werden nun die jeweiligen\textit{Visual Words} ermittelt und anhand der euklidischen Distanz verglichen. 
+Die Generierung von Testdaten bietet sich aus mehreren Gründen an. Zum einen sind enorm viele Trainingsdaten notwendig, um ein leistungsfähiges Modell zu generieren. Zum anderen sollen im Test ca. 2000 Bildpaare verwendet werden. Ein manueller Testaufbau wäre fehleranfällig und nicht sehr flexibel. Da ein praktisch taugliches Modell erst durch die Variation einiger Parameter gefunden werden kann, ist es wünschenswert, Testdaten mit verschiedenen Eigenschaften generieren zu können:
 
-Nach dem alle Bilderpaare bewertet wurden, werden die Ergebnisse wieder in die Excel-Tabelle geschrieben und die ROC-Kurve durch eine Formel berechnet und in Excel visualisiert. Durch diesen Aufbau kann des Experiment immer mit einer großen, zufällig ausgewählten Menge an Bildern wiederholt werden.
+\begin{itemize}
+	\item Die Anzahl der Kategorien sollte bestimmbar sein. Dies entspricht einer Kategorie der Caltech101 Daten. Somit sind hier theoretisch bis zu 101 Kategorien im Test denkbar.
+	\item Das Verhältnis bzw. Die Anzahl an Trainings- und Testbildern muss definierbar sein.
+\end{itemize}
+
+Letztendlich sollen die Histogramme der \textit{Visual Words} zweier Bilder miteinander verglichen und so die Ähnlichkeit gemessen werden. Ein Programm automatisiert daher die Generierung solcher Paare: Es werden zufällige Bildpaare aus ausgewählten Kategorien (\textit{airplanes}, \textit{anchor}, ...) selektiert. Diese Paare, sowie die Information, ob die Bilder in der selben oder einer verschiedenen Kategorie liegen, stellen einen Testkandidaten dar. Zwei Bilder liegen dabei in der selben Klasse, wenn sie im selben Ordner im Dateisystem, also hier im Caltech101-Ordner, enthalten sind. Das Ergebnis wird dann als Datei \textit{test \textunderscore time.txt} gespeichert. Die Pfade der Bilder werden hierbei relativ zum Caltech101-Ordner gespeichert, die Information über die Kategorie wird als \enquote{+} bzw. \enquote{-} kodiert. Eine Datei für die Kategorien \textit{airplanes} und \textit{anchor} könnte dann so beginnen:\newline
+
+\begin{lstlisting}
+airplanes/image_0023.jpg airplanes/image_0009.jpg +
+airplanes/image_0002.jpg anchor/image_0015.jpg -
+anchor/image_0013.jpg airplanes/image_0002.jpg -
+anchor/image_0001.jpg anchor/image_0005.jpg +
+airplanes/image_0006.jpg anchor/image_0006.jpg -
+...
+\end{lstlisting}
+
+Neben den zu verwendenden Kategorien muss bei Erzeugung die Anzahl der Testkandidaten, das Verhältnis von positiven zu negativen Kategorien sowie die Anzahl der Trainings- und Testbilder angegeben werden. \newline
+Die Bilder, welche durch das Programm für das Training ausgewählt wurden, werden separat als \textit{train\textunderscore time.txt} gespeichert. Pro Zeile ist hier der relative Pfad des Bildes innerhalb des Caltech101-Ordners enthalten.
+\todo{Neu Aufrufer erwähnen}
+
+\section{Experimentaufbau}
+
+Das Experiment soll sowohl die Feature-Kompression durch einen Autoencoder testen als auch die Kategorisierung bzw. den Vergleich der Bilder durch den Bag of Visual Words. Aus diesem Grund ist das Experiment zweigeteilt: 
+
+\begin{enumerate}[(a)]%
+	\item In dieser Variante findet ein reiner Test des Bag of Visual Words statt. Hierfür werden durch SIFT die Feature-Deskriptoren von Trainingsbildern extrahiert und direkt als Eingabe an den Bag of Visual Words gegeben. Anschließend folgt die Verarbeitung der Testbilder.
+	\item Hier wird nach Extraktion der \textit{keypoints} durch den SIFT-Detektor der Feature-Deskriptor durch den Autoencoder erzeugt. Die so erhaltenen Features werden dann wie in \textbf{(a)} durch den Bag of Visual Words gruppiert und anschließend die \textit{Visual Words} der Testbilder erzeugt.
+\end{enumerate}
+
+Wichtig ist, dass pro Durchführung des Experiments in beiden Varianten die gleichen Trainings- und Testbilder verwendet werden, damit die Deskriptoren miteinander vergleichbar sind. \newline
+\todo{Vergleich Bilder Distanzmetrik} Für jede werden nun die jeweiligen\textit{Visual Words} ermittelt und anhand der euklidischen Distanz verglichen. 
+
+Hier gibt es zwei Fälle zu unterscheiden:
+
+\begin{itemize}
+	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
+	\item \textbf{False Positives} Auch hier liegen die Testbilder in der gleichen oder einer verschiedenen Klasse, die Vorhersage durch das Modell ist jedoch nicht korrekt.
+\end{itemize}
+
+Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
 
 \section{Experimentdurchführung}
 
