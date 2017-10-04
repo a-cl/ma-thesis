@@ -86,7 +86,6 @@
     </node>
     <node id="n3">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.30000000000001" width="122.89999999999998" x="664.5" y="73.26020866259344"/>
@@ -108,7 +107,6 @@
     </node>
     <node id="n4">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.300000000000068" width="122.90000000000009" x="874.5999999999999" y="73.26020866259341"/>
@@ -130,7 +128,6 @@
     </node>
     <node id="n5">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="48.09999999999998" width="122.89999999999998" x="769.55" y="-22.8954173251868"/>
@@ -167,7 +164,7 @@
           <y:UML clipContent="true" constraint="" omitDetails="false" stereotype="" use3DEffect="true">
             <y:AttributeLabel/>
             <y:MethodLabel>+ findNearestCluster(clusters: List&lt;Cluster&gt;, features: List&lt;Feature&gt;): Int
-- euclideanDistance(cluster: Cluster, feature: Feature): Float</y:MethodLabel>
+- computeEuclideanDistance(cluster: Cluster, feature: Feature): Float</y:MethodLabel>
           </y:UML>
         </y:UMLClassNode>
       </data>
@@ -209,7 +206,6 @@
       </data>
     </edge>
     <edge id="e2" source="n0" target="n3">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-105.04999999999995" sy="34.17500000000004" tx="0.0" ty="-2.7217327622790926"/>
@@ -228,7 +224,6 @@
       </data>
     </edge>
     <edge id="e3" source="n3" target="n4">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -247,7 +242,6 @@
       </data>
     </edge>
     <edge id="e4" source="n3" target="n5">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -261,7 +255,6 @@
       </data>
     </edge>
     <edge id="e5" source="n4" target="n5">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -275,7 +268,6 @@
       </data>
     </edge>
     <edge id="e6" source="n1" target="n6">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="187.2499999999999" ty="0.0"/>
@@ -294,7 +286,6 @@
       </data>
     </edge>
     <edge id="e7" source="n2" target="n6">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-187.2499999999999" ty="0.0"/>
