@@ -1,6 +1,6 @@
 \chapter{Implementierung}
 
-Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt wie mit Python und der \textit{opencv}-Biblitohek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht über den Rahmen der Arbeit hinaus. 
+Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt wie mit Python und der \textit{opencv}-Biblitohek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht leider über den Rahmen dieser Arbeit hinaus. 
 
 \section{Extraktion der Features}
 
@@ -151,7 +151,7 @@ Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwe
 Der Clustering-Vorgang wird nun in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde. Dabei werden folgende Schritte ausgeführt:
 
 \begin{itemize}
-	\item \textbf{Distanzberechnung} euclideanDistance(float *points, float *clusters) Die Distanz wird zwischen jedem Punkt und Cluster ermittelt. Es wird für jeden Punkt der Index des Clusters zurückgegeben, der am Nächsten ist.
+	\item \textbf{Distanzberechnung} computeEuclideanDistance(float *points, float *clusters) Die Distanz wird zwischen jedem Punkt und Cluster ermittelt. Es wird für jeden Punkt der Index des Clusters zurückgegeben, der am Nächsten ist.
 	\item \textbf{Cluster-Mitgliedschaft} findNearestCluster() agiert auf jeweils einem Feature. Der Index des Features ist somit von der $threadIdx$ abhängig und berechnet sich unter Berücksichtigung der Blockdimension als $blockDim.x * blockIdx.x + threaIdx.x$. Es wird der nächste Cluster zum Feature berechnet und auch bestimmt, ob sich die Zuordnung des Features verändert hat.
 	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die relative Veränderungen der Feature-Cluster Mitgliedschaft. Ist dieser Wert kleiner als der Schwellwert \textit{conv} oder wurde die maximale Anzahl an Iterationen \textit{iterations} erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
 \end{itemize}

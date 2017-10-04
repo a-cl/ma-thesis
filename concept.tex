@@ -169,7 +169,7 @@ Die Generierung eines Modells kann durch die Funktion \textit{createModel} gesta
 
 \begin{itemize}
 	\item Es werden bei Aufruf mit einem String die Features eingelesen und anschließend \textit{generateModel} mit dieser Feature-Liste aufgerufen. Der kmeans Algorithmus wird mit den Features und \textit{k} aufgerufen. Die Daten werden zum \textit{device} kopiert und der Prozess gestartet. 
-	\item Kmeans nutzt die ausgelagerte Funktion \textit{findNearestCluster} um den nächsten Cluster eines jeden Features zu bestimmen. Intern wird hier durch \textit{euclideanDistance} die Entfernung eines Cluster-Feature-Paares bestimmt.
+	\item Kmeans nutzt die ausgelagerte Funktion \textit{findNearestCluster} um den nächsten Cluster eines jeden Features zu bestimmen. Intern wird hier durch \textit{computeEuclideanDistance} die Entfernung eines Cluster-Feature-Paares bestimmt.
 	\item Anschließend prüft \textit{computeDelta} ob sich die Zuordnung von Features zu Clustern nicht mehr wesentlich geändert hat, d.h. die relative Veränderung unter dem Schwellwert liegt.
 	\item Ist der Schwellwert oder eine maximale Anzahl an Iterationen erreicht, ist der Prozess abgeschlossen und die \textit{device} Cluster werden in die Cluster des aufrufenden BagOfVisualWords-Objektes kopiert.
 \end{itemize}
