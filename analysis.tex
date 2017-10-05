@@ -208,20 +208,31 @@ histogram ($P, C, H$)
 		$H_{i} = H_{i} / |H|$
 \end{lstlisting}
 
-\section{Feature Deskriptoren}
+\section{Feature Detektion und Deskription}
 \label{extraction}
 
 Für die weitere Verarbeitung der Features ist es erstrebenswert, dass ihre Darstellung möglichst kompakt ist. Deskriptoren werden als Vektoren von Zahlen kodiert, die abhängig vom Verfahren Informationen über einen Pixel und seine Nachbarschaft oder auch ein ganzes Bild enthalten. Je größer die Anzahl der Einträge eines Vektors, desto größer wird der Speicherbedarf und Rechenaufwand.
 Die erste Stufe des vorgestellten Modells sieht daher die Komprimierung der Feature-Vektoren durch einen Autoencoder vor. Auf diese Weise kann ein initial recht umfangreicher Feature-Vektor aufgebaut werden: Jede Stufe des Autoencoders lernt dann eine kompaktere Darstellung des Feature-Vektors bis zu einer gewünschten Untergrenze.\newline
 Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen werden können, ist nicht bekannt was für eine Art von Deskriptor gute Ergebnisse liefern kann. In der Literatur findet sich eine große Anzahl an Verfahren zur Detektion und Extraktion von Features für etliche Zwecke. Um einen Überblick zu geben, sollen einige Vertreter angeführt, um den Leser einzuführen.
-\newline 
 
-\textbf{Local Binary Patterns} Die Local Binary Patterns (LBP) haben sich im Bereich der Gesichtserkennung erfolgreich etabliert. Eine Region um einen \textit{keypoint} wird hier als ein acht stelliger Bitstring kodiert. Das Verfahren kodiert jeden Pixel einer $3 \times 3$ großen Nachbschaft, außer den Pixel im Fokus, als 0 oder 1, abhängig ob die Intensität größer oder kleiner einem Schwellwert ist.\newline 
+\subsection{Detektoren}
 
-\textbf{Spatial Envelope} Torralba und Olivia \cite{mts2001} haben mit dem  \textit{Spatial Envelope} ein Verfahren entwickelt um die z.B. die Natürlichkeit oder Offenheit einen Szene zu beurteilen. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.\newline
+\todo{Harris, SURF, SIFT?}
+
+\subsection{Deskriptoren}
+
+Hier werden einige ausgewählte Deskriptoren vorgestellt, die auf unterschiedliche Anwendungsfälle ausgelegt sind. Der \textit{Spatial Envelope} beurteilt beispielsweise die \enquote{Art} einer Szene, die Local Binary Patterns werden vorwiegend zur Gesichtserkennung verwendet. \newline
+
+\textbf{Local Binary Patterns} Die Local Binary Patterns (LBP) kodieren eine Nachbarschaft eines Pixels, also einen lokalen Teil eines Bildes, indem der Pixel mit seinem Nachbarn verglichen wird. Klassisch wird hier eines $3 \times 3$ Matrix verwendet, sodass sich acht Werte und somit 256 mögliche Kodierungen ergeben.
+Praktisch erzielt der Einsatz von LBP vor allem im Bereich der Gesichtserkennung und Erkennung von Nummernschildern gute Ergebnisse. Durch die kleine $3 \times 3$ Matrix werden gerade feine Details berücksichtigt, allerdings können dadurch keine makroskopischen Zusammenhänge berücksichtigt werden. Hierfür können auch größere Nachbarschaften gewählt werden, allerdings gehen dann die Details verloren.\newline 
+
+\textbf{Spatial Envelope} In diesem Ansatz wird davon ausgegangen, dass Menschen eine Szene auch einordnen können, wenn diese in geringer Auflösung vorliegt. Der \textit{Spatial Envelope} beschreibt daher das Bild durch globale Features. Torralba und Olivia \cite{mts2001} haben mit dem  \textit{Spatial Envelope} ein Verfahren entwickelt um die z.B. die Natürlichkeit oder Offenheit einen Szene zu beurteilen. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.\newline
 
 \todo{Noch einen}\newline
 
-\textbf{SIFT} \todo{Einleitung} Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt. Mikolajczyk und Schmid haben 2005 SIFT mit anderen Deskriptoren (u.a. shape context, komplexe Filter, gradient location and orientation histogram, moment invariants, ...) verglichen und kamen zu dem Ergebnis, dass SIFT sehr gut hinsichtlich Präzison abschneidet \cite{idp2005}. Die Konstruktion des Deskriptors ist allerdings sehr aufwendig und die Beschreibung erfordert einen Feature-Vektor mit 128 Komponenten.\newline
+\textbf{SIFT} Der 1999 von Lowe entwickelte SIFT-Deskriptor, ist der mitunter am häufigst genutzten für die Objekterkennung in Bildern. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt.
+Der mathematische Hintergrund von SIFT wurde wurde bereits im Grundlagen behandelt. Mikolajczyk und Schmid haben 2005 SIFT mit anderen Deskriptoren (u.a. shape context, komplexe Filter, gradient location and orientation histogram, moment invariants, ...) verglichen und kamen zu dem Ergebnis, dass SIFT sehr gut hinsichtlich der Präzison abschneidet \cite{idp2005}. Die Konstruktion des Deskriptors ist allerdings aufwendig und die Beschreibung erfordert einen Feature-Vektor mit 128 Komponenten.\newline
 
-In dieser Arbeit soll im weiteren eine Basis für das Gruppieren von Bildern durch Features bilden, in dem ein Anwendungsfall umgesetzt wird. \todo{SIFT toll für Objekterkennung, Coole keypoints aber deskriptor schon zu kompakt für AE, SIFT kps nehmen und daraus eigenen Deskriptor aufbauen, Dann gehts weiter im Konzept mit zusammenflanschen}
+\subsection{Auswahl des Detektors und Deskriptors}
+
+In dieser Arbeit soll im weiteren eine Basis für das Gruppieren von Bildern durch Features bilden, in dem ein Anwendungsfall umgesetzt wird. Von den möglichen Szenarien soll der Fokus auf der Objekterkennung liegen. Hiermit eignen sich vor allem lokale Deskriptoren, um entsprechende Details berücksichtigen zu können. Da im Fall der HsH-Daten nicht bekannt ist, was für mögliche Kategorien vorliegen, wird hier zur Detektion der \textit{keypoints} SIFT verwendet. Mit 128 Komponenten ist dieser Deskriptor aber wahrscheinlich zu kompakt, um durch einen Autoencoder komprimiert zu werden. Die Neuronenanzahl der Schichten eines Stacked Autoencoders nehmen strikt ab, um die Komprimierung zu erreichen. Dies führt dazu, dass zwischen \textit{Input} und dem folgenden \textit{Hidden Layer} maximal $128 \times 127 = $ Verbindungen existieren können. Für den Enkoder ist es daher von Vorteil, wenn der Vektor initial recht viele Komponenten umfasst, die das Feature beschreiben. Daher soll für die Komprimierung durch einen Autoencoder, auf Basis der vom SIFT-Detektor gefundenen \textit{keypoints}, ein alternativer Deskriptor verwendet werden. \todo{Zhao erwähnen.}
