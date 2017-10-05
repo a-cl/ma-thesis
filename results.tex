@@ -18,15 +18,6 @@ Als Testmenge wurden die Bilder der Caltech101 Menge verwendet. Bei Caltech101 h
 	\item Ähnlich viele Bilder, wie in den Arbeiten anderer, verwendet werden (1, 3, 5, 10, 15, 20 oder 30 Trainingsbilder; 20 oder 30 Testbilder).
 \end{itemize}
 
-Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch dies Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.5]{images/strawberry.png}
-	\caption{Verschiedene Bilder aus der Kategorie \enquote{Erdbeere} der Caltech101 Bilddaten.}
-	\label{img:strawberries}
-\end{figure}
-
 Die Caltech101 Daten liegen nach Download kategorisiert im JPG-Format vor. Die Struktur wurde so beibehalten und ist noch für die Testgenerierung relevant. Direkt unter dem Caltech101-Ordner ist pro Kategorie ein Ordner vorhanden, der die jeweiligen Bilder immer im gleichen Namensschema enthält:\newline
 
 \dirtree{%src
@@ -39,6 +30,15 @@ Die Caltech101 Daten liegen nach Download kategorisiert im JPG-Format vor. Die S
 .3 ....
 .2 ....
 }
+
+Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch dies Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/strawberry.png}
+	\caption{Verschiedene Bilder aus der Kategorie \enquote{Erdbeere} der Caltech101 Bilddaten.}
+	\label{img:strawberries}
+\end{figure}
 
 \subsection{Testgenerierung}
 

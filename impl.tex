@@ -138,25 +138,20 @@ Um auch Vergleich mit sequentiellen Varianten zu ermöglichen, kann durch den Au
 Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von Serban Giuroiu \footnote{https://github.com/serban/kmeans}. Der \textit{kernel} wurde adaptiert und leicht verändert, um gemeinsam genutzt Methoden auszulagern. Die Funktion \textit{kmeans} in der Datei kmeans.cuda kann genutzt werden, um Clustering auf der GPU auszuführen. Der Algorithmus erwartet dabei als Parameter:
 
 \begin{itemize}
-	\item \textbf{float *features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
-	\item \textbf{float *clusters} Eine Liste, welche mit den Clustern befüllt wird.
-	\item \textbf{int featureSize} Die Anzahl der Komponenten in einem Feature-Vektor.	
+	\item \textbf{float **features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
+	\item \textbf{float **clusters} Eine Liste, welche mit den Clustern befüllt wird.
+	\item \textbf{int *membership} Diese Liste wird die Cluster-Vektor-Zuordnung enthalten. An der Stelle $membership_i$  wird der Index des Clusters aus \textit{clusters} eingetragen, dem das Feature $features_i$ zugeordnet wird.
+	\item \textbf{int featureSize} Die Anzahl der Komponenten in einem Feature-Vektor, also die Anzahl der \textit{float}-Werte.	
 	\item \textbf{int count} Die Anzahl der Features.
 	\item \textbf{int k} Die Anzahl der zu bildenden Cluster $k$.
 	\item \textbf{int iterations} Die maximale Anzahl an Iterationen, die durchlaufen wird, falls bisher keine Konvergenz erreicht wurde.
 	\item \textbf{float conv} Ein Schwellwert, der in jeder Iteration mit der relativen Veränderung der Mitgliedschaft verglichen wird. Ist er größer, wird das Clustering beendet.
 \end{itemize}
 
-Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{Float-Pointer-Pointer}), müssen diese in ein eindimensionales Arrays konvertiert werden, damit die Daten korrekt von \textit{host} zu \textit{device} kopiert werden können. \todo{Alternativen aufzeigen}
-Der Clustering-Vorgang wird nun in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde. Dabei werden folgende Schritte ausgeführt:
-
-\begin{itemize}
-	\item \textbf{Distanzberechnung} computeEuclideanDistance(float *points, float *clusters) Die Distanz wird zwischen jedem Punkt und Cluster ermittelt. Es wird für jeden Punkt der Index des Clusters zurückgegeben, der am Nächsten ist.
-	\item \textbf{Cluster-Mitgliedschaft} findNearestCluster() agiert auf jeweils einem Feature. Der Index des Features ist somit von der $threadIdx$ abhängig und berechnet sich unter Berücksichtigung der Blockdimension als $blockDim.x * blockIdx.x + threaIdx.x$. Es wird der nächste Cluster zum Feature berechnet und auch bestimmt, ob sich die Zuordnung des Features verändert hat.
-	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die relative Veränderungen der Feature-Cluster Mitgliedschaft. Ist dieser Wert kleiner als der Schwellwert \textit{conv} oder wurde die maximale Anzahl an Iterationen \textit{iterations} erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
-\end{itemize}
-
-Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \textit{host} kopiert. Diese Zahl wird durch die Gesamtanzahl der Features dividiert, um so die relative Veränderung zu bestimmen. 
+Die Datenstruktur der Features und Cluster ist dabei spaltenorientiert, d.h. das \textit{features} und \textit{clusters} jeweils auf \textit{featureSize} viele Elemente zeigen. Dahinter liegen dann im Fall der Features \textit{count} viele \textit{pointer} zu den eigentlichen Koordinaten, im Fall der Cluster \textit{k} viele. An der Stelle \textit{features[0][0]} befindet sich dann die erste Koordinate des ersten Elements, an der Stelle \textit{features[0][1]} die erste Koordinate des zweiten Elements, etc.\newline
+Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{pointer-pointer} zu \textit{float}-Werten), werden diese in ein eindimensionales Arrays konvertiert werden, damit die Daten von \textit{host} zu \textit{device} kopiert werden können.\newline
+Der Clustering-Vorgang wird nun in einer Schleife durchgeführt. Dabei werden die in der Konzeption vorgestellten Funktionen \textit{computeEuclideanDistance}, \textit{findNearestCluster} und \textit{computeDelta} innerhalb der Schleife nacheinander aufgerufen. Abweichend zum Konzept, erfordern auch diese Funktionen \textit{count} und \textit{featuresSize} als zusätzliche Parameter, um korrekt über die \textit{pointer} iterieren zu können.
+Wenn das Konvergenzkriterium \textit{conv} oder die maximale Anzahl an Iterationen \textit{iterations} erreicht wurde, ist der Vorgang beendet und die das Ergebnis wird vom \textit{device} zum \textit{host} in \textit{clusters} respektive \textit{membership} kopiert.
 
 \subsection{Shared memory}
 
@@ -183,17 +178,24 @@ const unsigned int clusterDataSize = k * size * sizeof(float);
 	const unsigned int blockSharedDataSize = membershipDataSize;
 \end{lstlisting}
 
-In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Vor der Berechnung der Mitgliedschaft wird nun ein lokaler Pointer \textit{clusters} angelegt und alle notwendigen Cluster kopiert.
+In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Wenn die \textit{global memory} Variante genutzt wird, sind diese gleich den Clustern \textit{clusters}. Andernfalls werden die \textit{deviceCluster} in die \textit{clusters} im \textit{shared memory} kopiert.
 
 \lstset{language=C}
 \begin{lstlisting}
-float *clusters = (float *)(sharedMemory + blockDim.x);
-for (int i = threadIdx.x; i < k; i += blockDim.x) {
-  for (int j = 0; j < size; j++) {
-    clusters[k * j + i] = deviceClusters[k * j + i];
-  }
-}
-__syncthreads();
+extern __shared__ char sharedMemory[];
+unsigned int *membershipChanged = (unsigned int *)sharedMemory;
+    
+#if SHARED_MEM
+    float *clusters = (float *)(sharedMemory + blockDim.x);
+	for (int i = threadIdx.x; i < k; i += blockDim.x) {
+  		for (int j = 0; j < size; j++) {
+    		clusters[k * j + i] = deviceClusters[k * j + i];
+  		}
+	}
+	__syncthreads();
+#else
+    float *clusters = deviceClusters;
+#endif
 \end{lstlisting}
 
 Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Anzahl der Komponenten eines Features, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Für die hier verwendeten Deskriptoren kann somit eine Obergrenze für $k$ berechnet werden. Gängige Modelle Nvidias CUDA kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Threads pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Für SIFT sind dies bei 48 Kilobyte maximal 91, für 16 Kilobyte 29 Cluster. Der von Zhao entworfene Deskriptor ermöglicht bei 48 Kilobyte Speicher bis zu 326 Clustern, für 16 Kilobyte bis zu 104. Sind dennoch mehr Cluster notwendig, muss auf die \textit{global memory} Implementierung zurückgegriffen werden. Hier werden, je nach Anzahl der Cluster, erheblich höhere Berechnungszeiten erwartet, jedoch gibt es kein Limit für die Gesamtanzahl an Clustern.
