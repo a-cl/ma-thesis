@@ -121,38 +121,40 @@ kmeans_gpu
 
 \subsection{Parallele Reduzierung von Histogrammen}
 
-Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
+Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden. \todo{Listing kurz erklären.}
 
 \lstset{language=C}
 \begin{lstlisting}
 __global__
-void histogram_kernel (float *buffer, long size, int *histo, int bins) {
-	extern __shared__ int *copy[];
+void histogram_kernel (float *features, float *clusters, unsigned int *histo, int featureSize, int count, int k) {
+	extern __shared__ int *sharedMemory[];
+	unsigned int histo_private = (unsigned int*) sharedMemory;
 	
-	if (threadIdx.x < bins) {
-		copy[threadIdx.x] = 0;		
+	if (threadIdx.x < k) {
+		histo_private[threadIdx.x] = 0;		
 	}
 	__syncthreads();
 
 	int id = threadIdx.x + blockDim.x * gridDim.x;
 	int stride = blockDim.x * gridDim.x;
 	
-	while (i < stride) {
-		int bin = buffer[i] / bins; 
-		atomicAdd(&(copy[bin]), 1);
+	while (i < count) {
+		float *feature = &features[i * featureSize];
+		int bin = findNearestCluster(feature, clusters, featureSize, k)); 
+		atomicAdd(&(histo_private[bin]), 1);
 		i += stride;	
 	}
 	__syncthreads();
 	
-	if (threadIdx.x < bins) {
-		atomicAdd(&(histo[threadIdx.x]), copy[threadIdx.x]);		
+	if (threadIdx.x < k) {
+		atomicAdd(&(histo[threadIdx.x]), histo_private[threadIdx.x]);		
 	}
 }
 \end{lstlisting} 
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
-Der Aufbau des Bag of Visual Words Modell ist als Klassendiagramm in Abbildung \ref{img:bovw} dargestellt. Cluster und Features werden hier als Punkte in einem $n$-dimensionalen Raum aufgefasst, deren Position durch eine Liste von $n$ \textit{float}-Werten definiert ist. Diese Gemeinsamkeit wird durch Point abstrahiert. Ein Objekt der Klasse Cluster enthält zusätzlich eine Liste \textit{members}, welche die Features enthält, die dem Cluster zugeordnet sind.
+Der Aufbau des Bag of Visual Words Modell ist als Klassendiagramm in Abbildung \ref{img:bovw_class} dargestellt. Cluster und Features werden hier als Punkte in einem $n$-dimensionalen Raum aufgefasst, deren Position durch eine Liste von $n$ \textit{float}-Werten definiert ist. Diese Gemeinsamkeit wird durch Point abstrahiert. Ein Objekt der Klasse Cluster enthält zusätzlich eine Liste \textit{members}, welche die Features enthält, die dem Cluster zugeordnet sind.
 Die BagOfVisualWords-Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans-, Histogramm- und Shared-Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
 Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern und Laden eines Modells} und \enquote{Berechnung der Visual Words} illustrieren die Kernfunktionalitäten der BagOfVisualWords-Klasse sowie den jeweiligen Prozessablauf anhand des Klassendiagramms.
 
@@ -160,7 +162,7 @@ Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern u
 	\centering
 	\includegraphics[scale=0.57]{images/bovw_class.pdf}
 	\caption{Klassendiagramm des Bag of Visual Words}
-	\label{img:bovw}
+	\label{img:bovw_class}
 \end{figure}
  
 \subsubsection{Generierung des Modells}
