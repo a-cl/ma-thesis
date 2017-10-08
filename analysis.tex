@@ -146,11 +146,6 @@ Bisher wurde das Netzwerk und die Parameter die es optimiert, die Gewichte $w$ u
 	\item \textbf{Anzahl der Exemplare pro Trainingsiteration} (\textit{batch size)} Je größer die \textit{batch size}, desto mehr Trainingsexemplare werden pro Iteration verarbeitet. Durch einen größeren Wert kann die Berechnung beschleunigt werden, allerdings ist auch mehr Speicher erforderlich. In der Praxis liegt der Wert für diesen Parameter meist zwischen 16 und 128 (Zweierpotenzen). 
 \end{itemize}
 
-\subsection{Autoencoder für Bild Features}
-\label{AEFeatures}
-
-Ein populäres Beispiel für die Verwendung von Autoencodern ist das Klassifizieren von Ziffern in einem Bild. Solch ein Netzwerk arbeitet direkt mit den Pixeln des Bildes: Bei einem Bild mit $m \times n$ Pixeln, umfasst die erste Schicht ebenfalls $m \times n$ Neuronen, für jeden Pixel Eines. Wie üblich umfassen die folgenden Schichten weniger Neuronen. Durch eine abschließende Schicht zur Klassifizierung wird das Bild schließlich eingeordnet. Hier soll aber nicht direkt mit den Pixeln des Bildes gearbeitet werden, sondern mit Feature-Vektoren. Für die Extraktion geeigneter \textit{keypoints} hat sich der SIFT-Detektor bewährt, der Deskriptor hat jedoch bereits eine zu kompakte Darstellung um ein tiefes Netzwerk aufzubauen. Es muss daher ein Deskriptor ausgewählt oder konstruiert werden, der initial viele Komponenten umfasst, die durch den Autoencoder reduziert werden. Auf diese Weise ist auch die Entwicklung weiterer Deskriptoren denkbar, die explizit keine Rücksicht auf eine kompakte Darstellung nehmen, sondern möglichst viele Informationen kodieren. Anschließend kann nach Konstruktion eines entsprechenden Autoencoders getestet werden, inwieweit sich der Deskriptor komprimieren lässt.
-
 \section{Bag of Visual Words}
 
 Das Bag of Visual Words lehnt sich an das Bag of Words Modell aus dem Bereich Information Retrival an. Daher soll zunächst die Funktionsweise des Bag of Word Modells erläutert werden, um darauf aufbauend den Bag of Visual Words einzuführen.\newline 
