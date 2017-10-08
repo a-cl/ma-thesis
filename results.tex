@@ -42,10 +42,10 @@ Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Er
 
 \subsection{Testgenerierung}
 
-Die Generierung von Testdaten bietet sich aus mehreren Gründen an. Zum einen sind enorm viele Trainingsdaten notwendig, um ein leistungsfähiges Modell zu generieren. Zum anderen sollen im Test ca. 2000 Bildpaare verwendet werden. Ein manueller Testaufbau wäre fehleranfällig und nicht sehr flexibel. Da ein praktisch taugliches Modell erst durch die Variation einiger Parameter gefunden werden kann, ist es wünschenswert, Testdaten mit verschiedenen Eigenschaften generieren zu können:
+Die Generierung von Testdaten bietet sich aus mehreren Gründen an. Zum einen sind enorm viele Trainingsdaten notwendig, um ein leistungsfähiges Modell zu generieren, zum anderen sollen im Test ca. 2000 Bildpaare verwendet werden. Ein manueller Testaufbau wäre fehleranfällig und nicht sehr flexibel. Da ein praktisch taugliches Modell erst durch die Variation einiger Parameter gefunden werden kann, ist es wünschenswert, Testdaten mit verschiedenen Eigenschaften generieren zu können:
 
 \begin{itemize}
-	\item Die Anzahl der Kategorien sollte bestimmbar sein. Dies entspricht einer Kategorie der Caltech101 Daten. Somit sind hier theoretisch bis zu 101 Kategorien im Test denkbar.
+	\item Die Anzahl der Kategorien sollte bestimmbar sein. Dies entspricht einer Kategorie der Caltech101-Daten. Somit sind hier theoretisch bis zu 101 Kategorien im Test denkbar.
 	\item Das Verhältnis bzw. Die Anzahl an Trainings- und Testbildern muss definierbar sein.
 \end{itemize}
 
@@ -62,7 +62,6 @@ airplanes/image_0006.jpg anchor/image_0006.jpg -
 
 Neben den zu verwendenden Kategorien muss bei Erzeugung die Anzahl der Testkandidaten, das Verhältnis von positiven zu negativen Kategorien sowie die Anzahl der Trainings- und Testbilder angegeben werden. \newline
 Die Bilder, welche durch das Programm für das Training ausgewählt wurden, werden separat als \textit{train\textunderscore time.txt} gespeichert. Pro Zeile ist hier der relative Pfad des Bildes innerhalb des Caltech101-Ordners enthalten.
-\todo{Neu Aufrufer erwähnen}
 
 \section{Experimentaufbau}
 
@@ -70,17 +69,20 @@ Das Experiment soll sowohl die Feature-Kompression durch einen Autoencoder teste
 
 \begin{enumerate}[(a)]%
 	\item In dieser Variante findet ein reiner Test des Bag of Visual Words statt. Hierfür werden durch SIFT die Feature-Deskriptoren von Trainingsbildern extrahiert und direkt als Eingabe an den Bag of Visual Words gegeben. Anschließend folgt die Verarbeitung der Testbilder.
-	\item Hier wird nach Extraktion der \textit{keypoints} durch den SIFT-Detektor der Feature-Deskriptor durch den Autoencoder erzeugt. Die so erhaltenen Features werden dann wie in \textbf{(a)} durch den Bag of Visual Words gruppiert und anschließend die \textit{Visual Words} der Testbilder erzeugt.
+	\item Hier wird nach Extraktion der \textit{keypoints} durch den SIFT-Detektor der Feature-Deskriptor durch den Autoencoder erzeugt. Die so erhaltenen Features werden dann wie in (a) durch den Bag of Visual Words gruppiert und anschließend die \textit{Visual Words} der Testbilder erzeugt.
 \end{enumerate}
 
 Wichtig ist, dass pro Durchführung des Experiments in beiden Varianten die gleichen Trainings- und Testbilder verwendet werden, damit die Deskriptoren miteinander vergleichbar sind. \newline
-\todo{Vergleich Bilder Distanzmetrik} Für jede werden nun die jeweiligen\textit{Visual Words} ermittelt und anhand der euklidischen Distanz verglichen. 
+Nach Erzeugung des Modells mit den Trainingsbildern, werden nun die Features der Testkandidaten extrahiert und pro Bild dies \textit{Visual Words} berechnet. Die Ähnlichkeit \textit{s (similarity)} der resultierenden Histogramme $h_1$ und $h_2$ wird dann als $1 - $ \textit{MSE (mean squared error)} gemessen:
+
+$$s(h_1, h_2) = 1 - MSE(h_1, h_2)$$
+$$MSE(h_1, h_2) = \frac{1}{n}\sum_{i=0}^{n}(h_{1_i} - h_{2_i})^{2}$$
 
 Hier gibt es zwei Fälle zu unterscheiden:
 
 \begin{itemize}
 	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
-	\item \textbf{False Positives} Auch hier liegen die Testbilder in der gleichen oder einer verschiedenen Klasse, die Vorhersage durch das Modell ist jedoch nicht korrekt.
+	\item \textbf{False Positives} In diesem Fall ist die Klassifizierung durch das Modell nicht korrekt: Bei gleicher Klasse wurde eine geringe Ähnlichkeit erkannt, bei verschiedenen eine Hohe.
 \end{itemize}
 
 Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
