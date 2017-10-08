@@ -71,14 +71,6 @@ Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist 
 from deepautoencoder import StackedAutoEncoder
 import cv2
 import numpy
-import featureExtractor
-
-imagePaths = []
-
-features = featureExtractor.extractAll(imagePaths)
-index = numpy.random.rand(features.shape[0]) < 0.8
-train = features[index]
-test = features[~index]
 
 model = StackedAutoEncoder(
   dims=[3042, 1024, 512, 128, 36],
@@ -89,17 +81,37 @@ model = StackedAutoEncoder(
   batch_size=100
 )
 
-model.fit(train)
-result = model.transform(test)
+def train(features):
+  model.fit(features)
+
+def encode(features):
+  model.transform(data=features, mode='encode')
+  
+def decode(features):
+  model.transform(data=features, mode='decode')
 \end{lstlisting}
 
-In Zeile 8 wird die bereits eingeführte Funktion \textit{extractAll} genutzt, um alle Features der Bilder, die in \textit{imagePaths} enthalten sind, zu gewinnen. Diese werden in der Zeile 10 bzw. 11 in eine Test- und Trainingsmenge aufgeteilt, wobei erstere 80\% und letztere 20\% der Bilder enthält.
-In den Zeilen 12 bis 19 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
+
+In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
 Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt.
-Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 17 wird unter \textit{loss} die die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
+Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
 Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
-In Zeile 22 wird \textit{fit} aufgerufen um das Modell mit den \textit{train} Features zu trainieren. Hierbei kann optional durch \textit{print\textunderscore step} angegeben werden, nach wie vielen Iterationen im Training pro Autoencoderpaar die Fehlerrate ausgegeben werden soll.
-Anschließend wird der Autoencoder genutzt um die Testdaten einmal zu komprimieren und wieder zu rekonstruieren. Auf diese Weise kann \textit{result} zum Beispiel genutzt werden, um eine Beurteilung durch einen Menschen zu ermöglichen: Handelt es sich wie hier um Bilder von Gradienten, können so Original und Rekonstruktion nebeneinander gestellt als Bild gespeichert werden. Für praktische Anwendung ist es von Interesse, nur den Encoder-Teil anzuwenden, um auf Basis der komprimierten Darstellung eine Klassifikation oder Speicherung zu ermöglichen.  
+In Zeile 14, 17 und 20 werden die Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese stellen die im Entwurf vorgestellten Methoden vor und ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Konkret werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
+
+\todo{main.py} In Zeile 8 wird die bereits eingeführte Funktion \textit{extractAll} genutzt, um alle Features der Bilder, die in \textit{imagePaths} enthalten sind, zu gewinnen.
+
+\lstset{language=Python}
+\begin{lstlisting}
+import sys
+import featureExtractor
+import autoencoder
+
+trainPaths = sys.argv[1]
+testPaths = sys.argv[2]
+
+autoencoder.train(featureExtractor.extractAll(trainPaths))
+autoencoder.encode(featureExtractor.extractAll(testPaths))
+\end{lstlisting}
 
 \section{Bag of Visual Words}
 
