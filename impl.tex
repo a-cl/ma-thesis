@@ -98,19 +98,21 @@ Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Aut
 Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
 In Zeile 14, 17 und 20 werden die Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese stellen die im Entwurf vorgestellten Methoden vor und ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Konkret werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
 
-\todo{main.py} In Zeile 8 wird die bereits eingeführte Funktion \textit{extractAll} genutzt, um alle Features der Bilder, die in \textit{imagePaths} enthalten sind, zu gewinnen.
+Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
 
 \lstset{language=Python}
 \begin{lstlisting}
 import sys
+import util
 import featureExtractor
 import autoencoder
 
-trainPaths = sys.argv[1]
-testPaths = sys.argv[2]
+train = util.readImages(sys.argv[1])
+test = util.readImages(sys.argv[2])
 
-autoencoder.train(featureExtractor.extractAll(trainPaths))
-autoencoder.encode(featureExtractor.extractAll(testPaths))
+autoencoder.train(featureExtractor.extractAll(train))
+result = autoencoder.encode(featureExtractor.extractAll(test))
+util.writeFeatures(result)
 \end{lstlisting}
 
 \section{Bag of Visual Words}
