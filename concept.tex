@@ -51,19 +51,19 @@ In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines 
 
 \subsection{Modell}
 
-\todo{Allgemein, train} Durch \textit{encode} wird der Autoencoder genutzt um die Testdaten zu komprimieren. Für praktische Anwendung ist es von Interesse, nur den Encoder-Teil anzuwenden, um auf Basis der komprimierten Darstellung eine Klassifikation oder Speicherung zu ermöglichen. \newline
-Die Methode \textit{decode} kehrt den Prozess der Enkodierung wieder um. Auf diese Weise kann die erhaltene Rekonstruktion beispielsweise genutzt werden, um eine Beurteilung durch einen Menschen zu ermöglichen oder um mit dem Original verglichen zu werden.
+Im Klassendiagramm in Abbildung \ref{img:ae_class} sind die wesentlichen Bestandteile eines Autoencoders erfasst: Der Großteil der Parameter sind private Variablen, die bei Erzeugung, also im Konstruktor, übergeben werden müssen. Die Anzahl der Schichten ergibt sich durch die Anzahl der Elemente in \textit{layers}. Jede Ganzzahl steht hier für die Anzahl der Neuronen in einer Schicht. Die Gewichte zwischen zwei Schichten sind in \textit{weights} gespeichert. Ein  Gewicht $w_{ij}$ von Neuron $i$ zu Neuron $j$ zwischen zwei Schichten befindet sich an der Position \textit{weights[i][j]}. Da zwischen Schichten unterschiedliche Aktivierungsfunktionen verwendet werden können, wird eine Liste  mit einer Aktivierungsfunktion pro Schichtpaar erwartet. \newline
+Durch \textit{encode} wird der Autoencoder genutzt um die Testdaten zu komprimieren. Die Anzahl der Koordinaten eines Features muss hier gleich der Anzahl der Neuronen in der ersten Schicht des Autoencoders sein. Die Methode \textit{decode} kehrt den Prozess der Enkodierung wieder um. Hier werden entsprechend Features erwartet, die genauso viele Koordinaten wie die letzte Schicht des Netzwerks aufweisen.
   
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.6]{images/ae_class.pdf}
 	\caption{Klassendiagramm des Autoencoders}
-	\label{img:ae_model}
+	\label{img:ae_class}
 \end{figure}
 
 \subsection{Parameter}
 
-\todo{Ein, zwei Intro Sätze} In einem Experiment wurde gezeigt, dass dieser Autoencoder \textit{state of the art} Ergebnisse erzielt: die Ergebnisse wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Aus diesem Grund soll Zhaos Autoencoder adaptiert werden.\newline
+Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder definieren lassen, soll das von Zhao vorgeschlagene Netzwerk näher betrachtet werden. Die Leistung dieses Autoencoders wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Aus diesem Grund soll Zhaos Autoencoder adaptiert werden.\newline
 Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
 
 \begin{figure}
