@@ -57,7 +57,7 @@ Ein Clustering Algorithmus hat in dem Kontext dieser Arbeit das Ziel, eine groß
 \textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. In diesem Fall vertreten die Dimensionen semantische Merkmale. Methoden wie beispielsweise die Hauptkomponentenanalyse bilden die Feature-Vektoren auf einen Raum niederer Dimensionen ab. \newline
 Ein moderneren Ansatz für diesen Zweck ist die Verwendung neuronaler Netze. Ein Autoencoder ist ein spezielles neuronales Netzwerk, welches für das Lernen einer komprimierten Darstellung von Daten verwendet wird. Das Konzept des Autoencoders reicht zwar bis in 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton entwickelt worden.\newline
 
-Um einen kompakteren Feature-Deskriptor zu erzeugen soll ein Autoencoder verwendet werden. Ein Mehrstufiger Autoencoder kann mit jeder Schicht einen kompakteren Deskriptor erzeugen und kodiert die gelernten Informationen in den Gewichten. Der Autoencoder bringt darüber hinaus den Vorteil mit sich, das seine Architektur bereits auf eine parallele Verarbeitung ausgelegt ist und nicht \enquote{extra}berücksichtigt werden muss. Des Weiteren sind klassische Methoden wie die Hauptkomponentenanaylse bereits zahlreich betrachtet worden. Ein Autoencoder hingegen ist in diesem Bereich, im Vergleich, ein neuer Vertreter, dessen vielfältige Einsatzmöglichkeiten immer noch erforscht werden. \todo{Vorteile Autoencoder}. \newline  
+Um einen kompakteren Feature-Deskriptor zu erzeugen soll ein Autoencoder verwendet werden. Ein mehrstufiger Autoencoder kann mit jeder Schicht einen kompakteren Deskriptor erzeugen und kodiert die gelernten Informationen in den Gewichten. Der Autoencoder bringt darüber hinaus den Vorteil mit sich, das seine Architektur bereits auf eine parallele Verarbeitung ausgelegt ist und nicht \enquote{extra} berücksichtigt werden muss. Des Weiteren sind klassische Methoden wie die Hauptkomponentenanaylse bereits zahlreich betrachtet worden. Ein Autoencoder hingegen ist in diesem Bereich, im Vergleich, ein neuer Vertreter, dessen vielfältige Einsatzmöglichkeiten immer noch erforscht werden. \todo{Vorteile Autoencoder}. \newline  
 Um die Features zu Gruppieren soll ein k-means Clustering Verfahren verwendet werden. Anhand der durch k-means gewonnen Cluster kann eine Histogrammdarstellung für Features erzeugt werden. Die Kombination diese Verfahren wird Bag of Visual Words genannt und lehnt sich an das Bag of Words Modell an. Hinsichtlich der Berechnung durch eine GPU, sind diese Verfahren auch gut geeignet: Die Familie der k-means Algorithmen enthält viele Algorithmen die lange etabliert sind und bereits für die parallele Ausführung auf Grafikkarten adaptiert wurden. Das parallele Verarbeiten von Histogrammen ist ein Lehrbuchbeispiel für den Einsatz von Grafikkarten, da es durch parallelen Reduzierung, ein Muster für einige Probleme, erreicht werden kann.
 
 \section{Autoencoder}
@@ -217,7 +217,29 @@ Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen w
 
 \subsection{Detektoren}
 
-\todo{Harris, SURF, SIFT?}
+\todo{Intro Multiscale detectors / blob}
+
+\textbf{Laplacian-of-Gaussian} \todo{Laplacian-of-Gaussian (LoG), a linear combination of second derivatives, is a common blob detector. Given an input image I(x, y), the scale space representation of the image defined by L(x, y,delta) is obtained by convolving the image by a variable scale Gaussian kernel G(x, y,delta) where
+$$Formel$$
+For computing the Laplacian operator, the following formula is used
+$$Formel$$
+This results in strong positive responses for dark blobs and strong negative
+responses for bright blobs of size root2delta. However, the operator response is strongly dependent on the relationship between the size of the blob structures in the image domain and the size of the smoothing Gaussian kernel. The standard deviation of the Gaussian is used to control the scale by changing the amount of blurring. In order to automatically capture blobs of different size in the image domain, a multi-scale approach with automatic scale selection is proposed in [36] through searching for scale space extrema of the scale-normalized Laplacian operator.
+$$Formel$$
+Which can also detect points that are simultaneously local maxima/minima of delta
+normL(x, y, delta) with respect to both space and scale. The LoG operator is circularly symmetric; it is therefore naturally invariant to rotation. The LoG is well adapted to blob detection due to this circular symmetry property, but it also provides a good estimation of the characteristic scale for other local structures such as corners, edges, ridges and multi-junctions. In this context, the LoG can be applied for finding the characteristic scale for a given image location or for directly detecting scale-invariant regions by searching for 3D (location + scale) extrema of the LoG function as illustrated in Fig. 6. The scale selection properties of the Laplacian operator are studied in detail in [46].}
+
+\textbf{Difference of Gaussians}
+
+\todo{In fact, the computation of LoG operators is time consuming. To accelerate the computation, Lowe [31] proposed an efficient algorithm based on local 3D extrema in the scale-space pyramid built with Difference-of-Gaussian(DoG) filters. This approach is used in the scale-invariant feature transform (SIFT) algorithm. In this context, the DoG gives a close approximation to the Laplacian-of-Gaussian (LoG) and it is used to efficiently detect stable features from scale-space extrema. The DoG function D(x, y, delta) can be computed without convolution by subtracting adjacent scale levels of a Gaussian pyramid separated by a factor k.
+$$FORMEL$$
+Feature types extracted by DoG can be classified in the same way as for the
+LoG operator. Also, the DoG region detector searches for 3D scale space extrema
+of the DoG function as shown in Fig. 7. The computation of LoG operators is time
+consuming. The common drawback of both the LoG and DoG representations is that
+the local maxima can also be detected in neighboring contours of straight edges,
+where the signal change is only in one direction, which make them less stable and
+more sensitive to noise or small changes [45].}
 
 \subsection{Deskriptoren}
 
@@ -227,8 +249,6 @@ Hier werden einige ausgewählte Deskriptoren vorgestellt, die auf unterschiedlic
 Praktisch erzielt der Einsatz von LBP vor allem im Bereich der Gesichtserkennung und Erkennung von Nummernschildern gute Ergebnisse. Durch die kleine $3 \times 3$ Matrix werden gerade feine Details berücksichtigt, allerdings können dadurch keine makroskopischen Zusammenhänge berücksichtigt werden. Hierfür können auch größere Nachbarschaften gewählt werden, allerdings gehen dann die Details verloren.\newline 
 
 \textbf{Spatial Envelope} In diesem Ansatz wird davon ausgegangen, dass Menschen eine Szene auch einordnen können, wenn diese in geringer Auflösung vorliegt. Der \textit{Spatial Envelope} beschreibt daher das Bild durch globale Features. Torralba und Olivia \cite{mts2001} haben mit dem  \textit{Spatial Envelope} ein Verfahren entwickelt um die z.B. die Natürlichkeit oder Offenheit einen Szene zu beurteilen. Eine hohe Natürlichkeit weist zum Beispiel auf das Bild einer Landschaft hin: Hier kommen in der Regel kaum gerade vertikale und horizontale Linien vor, im Gegensatz zu Bildern, die von Menschen angefertigt wurden.\newline
-
-\todo{Noch einen}\newline
 
 \textbf{SIFT} Der 1999 von Lowe entwickelte SIFT-Deskriptor, ist der mitunter am häufigst genutzten für die Objekterkennung in Bildern. Der Deskriptor besitzt zwar keine affine Invarianz, in praktischen Anwendungen werden jedoch auch mit skalierten, rotierten und verschobenen Objekten gute Ergebnisse erzielt.
 Der mathematische Hintergrund von SIFT wurde wurde bereits im Grundlagen behandelt. Mikolajczyk und Schmid haben 2005 SIFT mit anderen Deskriptoren (u.a. shape context, komplexe Filter, gradient location and orientation histogram, moment invariants, ...) verglichen und kamen zu dem Ergebnis, dass SIFT sehr gut hinsichtlich der Präzison abschneidet \cite{idp2005}. Die Konstruktion des Deskriptors ist allerdings aufwendig und die Beschreibung erfordert einen Feature-Vektor mit 128 Komponenten.\newline
