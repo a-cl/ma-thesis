@@ -72,21 +72,21 @@ Das Experiment soll sowohl die Feature-Kompression durch einen Autoencoder teste
 	\item Hier wird nach Extraktion der \textit{keypoints} durch den SIFT-Detektor der Feature-Deskriptor durch den Autoencoder erzeugt. Die so erhaltenen Features werden dann wie in (a) durch den Bag of Visual Words gruppiert und anschließend die \textit{Visual Words} der Testbilder erzeugt.
 \end{enumerate}
 
-Wichtig ist, dass pro Durchführung des Experiments in beiden Varianten die gleichen Trainings- und Testbilder verwendet werden, damit die Deskriptoren miteinander vergleichbar sind. \newline
-Nach Erzeugung des Modells mit den Trainingsbildern, werden nun die Features der Testkandidaten extrahiert und pro Bild dies \textit{Visual Words} berechnet. Die Ähnlichkeit \textit{s (similarity)} der resultierenden Histogramme $h_1$ und $h_2$ wird dann als $1 - $ \textit{MSE (mean squared error)} gemessen:
+Wichtig ist, dass pro Durchführung des Experiments in beiden Varianten die gleichen Trainings- und Testbilder verwendet werden, damit die Ergebnisse beider Deskriptoren miteinander vergleichbar sind. \newline
+Nach Erzeugung des Modells mit den Trainingsbildern, werden nun die Features der Testkandidaten extrahiert und pro Bild dies \textit{Visual Words} berechnet. Die Ähnlichkeit \textit{sim (similarity)} der resultierenden Histogramme $h_1$ und $h_2$ wird dann als 1 $-$ \textit{MSE (mean squared error)} gemessen:
 
-$$s(h_1, h_2) = 1 - MSE(h_1, h_2)$$
+$$sim(h_1, h_2) = 1 - MSE(h_1, h_2)$$
 $$MSE(h_1, h_2) = \frac{1}{n}\sum_{i=0}^{n}(h_{1_i} - h_{2_i})^{2}$$
 
-Hier gibt es zwei Fälle zu unterscheiden:
+\todo{Ergebnisse für alle Kandidaten nach sim sortieren. \enquote{Hohe Werte} (nah 1?) sollten die gleiche Kategorie haben, geringe eine verschiedene} Hier gibt es zwei Fälle zu unterscheiden:
 
 \begin{itemize}
 	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
 	\item \textbf{False Positives} In diesem Fall ist die Klassifizierung durch das Modell nicht korrekt: Bei gleicher Klasse wurde eine geringe Ähnlichkeit erkannt, bei verschiedenen eine Hohe.
 \end{itemize}
 
-Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt für verschiedene Parameter die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass der optimale Parameter anhand der resultierenden Kurve abgelesen werden kann.
+Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar, sodass \todo{der optimale Parameter} anhand der resultierenden Kurve abgelesen werden kann.
 
 \section{Experimentdurchführung}
 
-\todo{LALALA}
+\todo{Been there. Done that. Got the T-Shirt.}

@@ -200,5 +200,5 @@ Die Erzeugung der \textit{Visual Words} wird durch die BagOfVisualWords-Klasse a
 \begin{itemize}
 	\item Wie beim kmeans Algorithmus kann \textit{computeVisualWords} der BagOfVisualWords-Klasse mit einer Liste der Features oder dem Pfad zu einer Feature-Datei aufgerufen werden. Letztere ließt die Features ein und ruft dann wiederum \textit{computeVisualWords} mit der Feature-Liste auf. Es wird geprüft, ob ein Modell vorhanden ist, also eine Liste von Clustern vorliegt. Ist dies nicht der Fall, wird abgebrochen.
 	\item Die \textit{run} Methode der Histogram-Klasse wird nun mit den \textit{clustern} der aufrufenden BagOfVisualWords-Instanz und den Features aus dem vorigen Schritt aufgerufen. Um das \textit{Visual Word} für ein Feature zu bestimmen, wird \textit{findNearestCluster} aus der Shared-Klasse genutzt. Da diese Funktion den Index des Clusters zurückgibt, kann dieser direkt für die zu inkrementierende Position im Histogramm verwendet werden.
-	\item Das Histogramm wird zum \textit{host kopiert} und an den Aufrufer zurückgegeben. Es kann nun gespeichert oder für weitere Analyse verwendet werden.
+	\item Das Histogramm wird zum \textit{host} kopiert und an den Aufrufer zurückgegeben. Es kann nun gespeichert oder für weitere Analyse verwendet werden.
 \end{itemize}
