@@ -60,8 +60,6 @@ In diesem Abschnitt wird behandelt wie der Autoencoder in Python und TensorFlow 
 .2 util.py.
 }
 
-Öffentlich kann auf einem erstellten Autoencoder aus der autoencoder.py Datei die Funktion \textit{fit(train\textunderscore data)} sowie \textit{transform(test\textunderscore data)} aufgerufen werden. Erstere verwendet dabei das Argument \textit{train\textunderscore data} um die Gewichte anhand der Daten zu initialisieren.  Durch \textit{transform} wird dann der Enkodierungsprozess auf \textit{test\textunderscore data} angewendet und liefert pro Feature einen 36-elementigen Feature-Vektor. Entsprechend des Entwurfs muss es sich bei \textit{train\textunderscore data} und \textit{test\textunderscore data} um eine Liste von Feature-Vektoren mit je 3042 Elementen pro Vektor handeln.
-
 \subsection{Modell in TensorFlow}
 
 Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch NVIDIAs CUDA unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajarshee Mitra genutzt. Unter Berücksichtigung der bekannten Parameter aus dem Konzept, ergibt sich die folgende Definition eines Modells.
@@ -131,6 +129,8 @@ Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die 
 .2 kmeans.h.
 .2 kmeans.cpp.
 .2 main.cpp.
+.2 shared.h.
+.2 shared.cu.
 .2 util.cpp.
 .1 makefile.
 }
@@ -142,10 +142,10 @@ Dadurch dass \textit{pointer} verwendet werden, erfordern die meisten Funktionsa
 
 \begin{itemize}
 	\item Die Anzahl der Features \textit{count} muss angegeben werden. In C ist es nicht auf einfachem Weg möglich zu bestimmen, auf wie viele Elemente ein \textit{pointer} zeigt.
-	\item Die Anzahl an Komponenten \textit{featureSize} in einem Feature bzw. Cluster muss angegeben werden. Auch hier handelt es sich wieder um einen \textit{pointer}, daher ist die Anzahl an Elementen nicht zu ermitteln.
+	\item Die Anzahl an Komponenten \textit{featureSize} in einem Feature bzw. Cluster muss angegeben werden. Auch hier handelt es sich wieder um einen \textit{pointer}, daher ist es nicht möglich, die Anzahl der Elemente zu ermitteln.
 \end{itemize}
 
-Um auch Vergleich mit sequentiellen Varianten zu ermöglichen, kann durch den Aufruf \textit{setMode(mode: Int)} auf einem BagOfVisualWords-Objekt festgelegt werden, ob die GPU (0) oder CPU (1) verwendet werden soll.
+Um Vergleiche mit sequentiellen Varianten zu ermöglichen, kann durch den Aufruf \textit{setMode(mode: Int)} auf einem BagOfVisualWords-Objekt festgelegt werden, ob die GPU (0) oder CPU (1) verwendet werden soll.
 
 \subsection{Paralleler k-means Algorithmus}
 
@@ -163,7 +163,7 @@ Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt
 \end{itemize}
 
 Die Datenstruktur der Features und Cluster ist dabei spaltenorientiert, d.h. das \textit{features} und \textit{clusters} jeweils auf \textit{featureSize} viele Elemente zeigen. Dahinter liegen dann im Fall der Features \textit{count} viele \textit{pointer} zu den eigentlichen Koordinaten, im Fall der Cluster \textit{k} viele. An der Stelle \textit{features[0][0]} befindet sich dann die erste Koordinate des ersten Elements, an der Stelle \textit{features[0][1]} die erste Koordinate des zweiten Elements, etc.\newline
-Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{pointer-pointer} zu \textit{float}-Werten), werden diese in ein eindimensionales Arrays konvertiert werden, damit die Daten von \textit{host} zu \textit{device} kopiert werden können.\newline
+Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde, belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{pointer-pointer} zu \textit{float}-Werten), werden diese in ein eindimensionales Arrays konvertiert werden, damit die Daten von \textit{host} zu \textit{device} kopiert werden können.\newline
 Der Clustering-Vorgang wird nun in einer Schleife durchgeführt. Dabei werden die in der Konzeption vorgestellten Funktionen \textit{computeEuclideanDistance}, \textit{findNearestCluster} und \textit{computeDelta} innerhalb der Schleife nacheinander aufgerufen. Abweichend zum Konzept, erfordern auch diese Funktionen \textit{count} und \textit{featuresSize} als zusätzliche Parameter, um korrekt über die \textit{pointer} iterieren zu können.
 Wenn das Konvergenzkriterium \textit{conv} oder die maximale Anzahl an Iterationen \textit{iterations} erreicht wurde, ist der Vorgang beendet und die das Ergebnis wird vom \textit{device} zum \textit{host} in \textit{clusters} respektive \textit{membership} kopiert.
 
@@ -184,7 +184,7 @@ Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{block
 \lstset{language=C}
 \begin{lstlisting}
 const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
-const unsigned int clusterDataSize = k * size * sizeof(float);
+const unsigned int clusterDataSize = k * featureSize * sizeof(float);
 
 #if SHARED_MEM
     const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
@@ -212,4 +212,4 @@ unsigned int *membershipChanged = (unsigned int *)sharedMemory;
 #endif
 \end{lstlisting}
 
-Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Anzahl der Komponenten eines Features, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Für die hier verwendeten Deskriptoren kann somit eine Obergrenze für $k$ berechnet werden. Gängige Modelle Nvidias CUDA kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Threads pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Für SIFT sind dies bei 48 Kilobyte maximal 91, für 16 Kilobyte 29 Cluster. Der von Zhao entworfene Deskriptor ermöglicht bei 48 Kilobyte Speicher bis zu 326 Clustern, für 16 Kilobyte bis zu 104. Sind dennoch mehr Cluster notwendig, muss auf die \textit{global memory} Implementierung zurückgegriffen werden. Hier werden, je nach Anzahl der Cluster, erheblich höhere Berechnungszeiten erwartet, jedoch gibt es kein Limit für die Gesamtanzahl an Clustern.
+Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Anzahl der Komponenten eines Features, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Für die hier verwendeten Deskriptoren kann somit eine Obergrenze für $k$ berechnet werden. Gängige Modelle Nvidias CUDA kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Threads pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Für SIFT sind dies bei 48 Kilobyte maximal 91, für 16 Kilobyte 29 Cluster. Der von Zhao entworfene Deskriptor ermöglicht bei 48 Kilobyte Speicher 326 Clustern, für 16 Kilobyte bis zu 104. Sind dennoch mehr Cluster notwendig, muss auf die \textit{global memory} Implementierung zurückgegriffen werden. Hier werden, je nach Anzahl der Cluster, erheblich höhere Berechnungszeiten erwartet, jedoch gibt es kein Limit für die Gesamtanzahl an Clustern.
