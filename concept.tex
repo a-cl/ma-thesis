@@ -2,7 +2,7 @@
 
 Die Konzeption beschäftigt sich zunächst mit einem Überblick des ganzen Prozesses, von der Feature-Extraktion über die Komprimierung bis hin zur Gruppierung. Anschließend folgt eine nähere Betrachtung dieser drei wesentlichen Bestandteile und wie sie ineinandergreifen.\newline
 Im Abschnitt \enquote{Feature Extraktion} werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich somit für den Einsatz der Komprimierung eignet.\newline
-Im folgenden Abschnitt \enquote{Autoencoder} wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt. Es wird aufgezeigt, wie solch ein neuronales Netzwerk mit dem Deep-Learning Framework TensorFlow realisiert werden kann.\newline
+Im folgenden Abschnitt \enquote{Autoencoder} wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt.\newline
 Im letzten Abschnitt wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. die Ähnlichkeit zweier Bilder zu bewerten.
 
 \section{Modell}
@@ -34,20 +34,19 @@ In der dritten Phase verwendet der Bag of Visual Words das vorher generierte \te
 
 \section{Feature Extraktion}
 
-Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde bereits auch aufgezeigt, dass über die Daten der HsH keine Annahmen getroffen werden können. Gegenstand dieser Arbeit soll daher die Objekterkennung im Bildern sein. Für diesen Zweck sollen im Weiteren zwei Deskriptoren ausgewählt werden:
+Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde daher beschlossen, zunächst ein Clustering der Bilder anhand einer Objekterkennung zu realisieren. Um den Prozess des Clusterings zu beschleunigen, soll der Feature-Vektor kompakt sein. Eine solche Kompression kann durch einen Autoencoder erreicht werden. Die Effektivität hängt hierbei stark von den verwendeten Daten ab. Die Vektoren sollten initial möglichst viele Komponenten umfassen, um ein tiefes Netz konstruieren zu können. Ein solcher Deskriptor muss aber eigens für den Autoencoder trainiert werden: Die meisten etablierten Deskriptoren ermöglichen eben nicht die Konstruktion eines tiefen Netzes. Die Verwendung eines Alternativen Deskriptors scheint daher aus zwei Gründen plausibel:
 
 \begin{itemize}
 	\item Da die Schritte im Prozess aufeinander aufbauen, hängt die Qualität der Ergebnisse des Bag of Visual Word Verfahrens auch vom Autoencoder ab. Um den Bag of Visual Words an sich testen zu können, soll ein bereits kompakter, praktisch bewährter Deskriptor als Alternative dienen.
 	\item Es ist denkbar, dass der Schritt der Komprimierung nicht in allen Fällen notwendig bzw. sinnvoll ist, da der Deskriptor bereits kompakt genug ist.
 \end{itemize} 
 
-Viele Verfahren erzeugen bereits einen kompakten Deskriptor. Beispielsweise ist die Komprimierung eines SIFT-Deskriptors (128 Komponenten) wahrscheinlich wenig erfolgreich: Der Autoencoder müsste 128 Neuronen im \textit{Input Layer} besitzen. Zur Komprimierung bleibt dann wenig \enquote{Platz} im Netz, es sei denn es werden mehrere \textit{Hidden Layer} verwendet, deren Neuronenanzahl zunächst ansteigt. Ziel soll es hier aber sein einen Deskriptor zu erzeugen, der zu Anfang viele Komponenten aufweist, um so einen Stacked Denoising Autoencoder zu trainieren, der mit jeder Schicht einen kompakteren Deskriptor liefert. Auf diese Weise können auch zum Experimentieren mehrere Deskriptoren generiert werden, deren Form von Anzahl der \textit{Hidden Layer} und deren Neuronenanzahl abhängt.\newline
-Zhao \cite{aed2016} hat aus diesem Grund einen Feature-Vektor mit $3042$ erzeugt, der dann anschließend durch einen Autoencoder komprimiert wird. Die \textit{keypoints} werden hier durch den SIFT-Detektor ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gaußfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.\newline
+Der von Zhao \cite{aed2016} entwickelte Autoencoder nimmt daher einen eigens kreierten Feature-Vektor als Eingabe entgegen. Die \textit{keypoints} werden hier durch den Difference of Gaussians ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gaußfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.\newline
 Um das Clustering-Verfahren auch ohne einen Autoencoder anwenden zu können, bzw. sicherzustellen, dass andere Feature-Deskriptoren für Bilder direkt verwendet werden können, soll in einem Test auch SIFT Gegenstand sein. So kann nicht nur die Qualität der Ergebnisse der beiden Deskriptoren verglichen werden, sondern auch Auswirkungen auf die Laufzeit des Bag of Visual Words.
 
 \section{Autoencoder}
 
-In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Hierfür wird zunächst im Abschnitt\enquote{Modell} ein objektorientiertes Modell entworfen, dass den Autoencoder, wie er in der Analyse beschrieben wurde, abbildet. Durch dieses Klassenstruktur lassen sich nun beliebige Autoencoder definieren, daher wird Im folgenden Teil \enquote{Parameter} auf den konkreten Autoencoder eingegangen, den Zhao entworfen hat.
+In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Hierfür wird zunächst im Abschnitt\enquote{Modell} ein objektorientiertes Modell entworfen, dass den Autoencoder, wie er in der Analyse beschrieben wurde, abbildet. Durch dieses Klassenstruktur lassen sich nun beliebige Autoencoder definieren. Im Teil \enquote{Parameter} wird dann auf den konkreten Autoencoder eingegangen, den Zhao entworfen hat.
 
 \subsection{Modell}
 
@@ -63,8 +62,7 @@ Durch \textit{encode} wird der Autoencoder genutzt um die Testdaten zu komprimie
 
 \subsection{Parameter}
 
-Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder definieren lassen, soll das von Zhao vorgeschlagene Netzwerk näher betrachtet werden. Die Leistung dieses Autoencoders wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Aus diesem Grund soll Zhaos Autoencoder adaptiert werden.\newline
-Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
+Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder definieren lassen, soll das von Zhao vorgeschlagene Netzwerk näher betrachtet werden. Die Leistung dieses Autoencoders wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
 
 \begin{figure}
 	\centering
@@ -80,29 +78,6 @@ Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentier
 	\item 3. bis 5. Schicht: Je $500$ Iterationen
 \end{itemize}
 Als Größe für einen \textit{batch} wurde hier 128 gewählt, also sieht das Netz in einem \textit{foward} und \textit{backward pass} je 128 Trainingsexemplare. Da dies im Wesentlichen die Laufzeit durch eine Verwendung von mehr Speicher bewirkt, kann diese Zahl bei ungenügenden Ressourcen auch reduziert werden.
-
-\subsection{TensorFlow}
-
-TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \enquote{fließen} und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
-TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
-
-\lstset{language=Python}
-\begin{lstlisting}
-import tensorflow as tf
-
-a = tf.placeholder(tf.int16)
-b = tf.placeholder(tf.int16)
-
-addOp = tf.add(a, b)
-
-init = tf.initialize_all_variables()
-
-with tf.Session() as sess:
-    sess.run(init)
-    print "Addition: %i" % sess.run(addOp, feed_dict={a: 2, b: 3})
-
-sess.close()
-\end{lstlisting}
 
 \section{Bag of Visual Words}
 

@@ -60,9 +60,32 @@ In diesem Abschnitt wird behandelt wie der Autoencoder in Python und TensorFlow 
 .2 util.py.
 }
 
+\subsection{TensorFlow}
+
+TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \enquote{fließen} und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Für die Ausführung auf Nvidia Hardware ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
+TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
+
+\lstset{language=Python}
+\begin{lstlisting}
+import tensorflow as tf
+
+a = tf.placeholder(tf.int16)
+b = tf.placeholder(tf.int16)
+
+addOp = tf.add(a, b)
+
+init = tf.initialize_all_variables()
+
+with tf.Session() as sess:
+    sess.run(init)
+    print "Addition: %i" % sess.run(addOp, feed_dict={a: 2, b: 3})
+
+sess.close()
+\end{lstlisting}
+
 \subsection{Modell in TensorFlow}
 
-Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch NVIDIAs CUDA unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajarshee Mitra genutzt. Unter Berücksichtigung der bekannten Parameter aus dem Konzept, ergibt sich die folgende Definition eines Modells.
+Diese Umsetzung des Autoencoders ist in TensorFlow unter Verwendung der Bibliothek \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajarshee Mitra erfolgt. Der in der Konzeption vorgestellte Stacked Autoencoder von Zhao kann so wie folgt definiert werden:
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -89,12 +112,13 @@ def decode(features):
   model.transform(data=features, mode='decode')
 \end{lstlisting}
 
-
 In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
 Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt.
 Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
 Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
-In Zeile 14, 17 und 20 werden die Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese stellen die im Entwurf vorgestellten Methoden vor und ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Konkret werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
+In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Als Eingabe werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
+
+\todo{Etwas erläutern, wie das Modell mit TensorFlow zusammenhängt!}
 
 Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
 
