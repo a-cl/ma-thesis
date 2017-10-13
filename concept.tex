@@ -34,7 +34,7 @@ In der dritten Phase verwendet der Bag of Visual Words das vorher generierte \te
 
 \section{Feature Extraktion}
 
-Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde daher beschlossen, zunächst ein Clustering der Bilder anhand einer Objekterkennung zu realisieren. Um den Prozess des Clusterings zu beschleunigen, soll der Feature-Vektor kompakt sein. Eine solche Kompression kann durch einen Autoencoder erreicht werden. Die Effektivität hängt hierbei stark von den verwendeten Daten ab. Die Vektoren sollten initial möglichst viele Komponenten umfassen, um ein tiefes Netz konstruieren zu können. Ein solcher Deskriptor muss aber eigens für den Autoencoder trainiert werden: Die meisten etablierten Deskriptoren ermöglichen eben nicht die Konstruktion eines tiefen Netzes. Die Verwendung eines Alternativen Deskriptors scheint daher aus zwei Gründen plausibel:
+Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde daher beschlossen, zunächst ein Clustering der Bilder anhand einer Objekterkennung zu realisieren. Um den Prozess des Clusterings zu beschleunigen, soll der Feature-Vektor kompakt sein. Eine solche Kompression kann durch einen Autoencoder erreicht werden. Die Effektivität hängt hierbei stark von den verwendeten Daten ab. Die Vektoren sollten initial möglichst viele Komponenten umfassen, um ein tiefes Netz konstruieren zu können. Ein solcher Deskriptor muss aber eigens für den Autoencoder trainiert werden: Die meisten etablierten Deskriptoren ermöglichen eben nicht die Konstruktion eines tiefen Netzes. Die Verwendung eines Alternativen Deskriptors ist daher aus zwei Gründen plausibel:
 
 \begin{itemize}
 	\item Da die Schritte im Prozess aufeinander aufbauen, hängt die Qualität der Ergebnisse des Bag of Visual Word Verfahrens auch vom Autoencoder ab. Um den Bag of Visual Words an sich testen zu können, soll ein bereits kompakter, praktisch bewährter Deskriptor als Alternative dienen.
@@ -86,21 +86,21 @@ Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsauf
 
 \subsection{Parellisierung von Llyods Algorithmus}
 
-Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $v$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern nimmt $\Theta(nk)$ Zeit in Anspruch, wobei $n$ die Anzahl Vektoren und $k$ die Anzahl der Cluster ist. Diese Phase kann parallelisiert werden, in dem pro Feature Vektor ein Thread verwendet wird: Jeder Thread berechnet für seinen Feature Vektor die Distanz zu allen Clusterschwerpunkten und bestimmt den Index des Clusters, der am Nächsten ist. Dieser Prozess ist in Pseudocode in Zeile 6 bis 8 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist.
+Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. In nachfolgendem Listing dieser Ablauf in Pseudocode ausgedrückt. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern nimmt $\Theta(nk)$ Zeit in Anspruch, wobei $n$ die Anzahl Vektoren und $k$ die Anzahl der Cluster ist. Diese Phase kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seinen Feature-Vektor die Distanz zu allen Clusterschwerpunkten und bestimmt den Index des Clusters, der am Nächsten ist. Dieser Prozess ist in Pseudocode in Zeile 6 bis 8 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist.
 
 \lstset{language=C}
 \begin{lstlisting}[mathescape=true]
-kmeans_gpu
+lloyd_gpu(V, C, k)
 	if threadId == 0
-		$c_{j} = rand(p_{i}) \in P, \: j = 1,...,k, \: c_{j} \neq c_{i} \: \forall i \neq j$
+		$c_{j} = rand(v_{i}) \in V, \: j = 1,...,k, \: c_{j} \neq c_{i} \: \forall i \neq j$
 	synchronize threads
 	until convergence
-		for each $x_{i} \in P_{threadId}$
-			$l_{i} = argminD(c_{j}, p_{i})$
+		for each $v_{i} \in V_{threadId}$
+			$l_{i} = argminD(c_{j}, v_{i})$
 		synchronize threads
 		if threadId == 0
-			for each $p_{i} \in P$
-				$c_{l_{i}} = c_{l_{i}} + p_{i}$
+			for each $v_{i} \in V$
+				$c_{l_{i}} = c_{l_{i}} + v_{i}$
 				$m_{l_{i}} = m_{l_{i}} + 1$
 			for each $c_{j} \in C$
 				$c_{j} = \frac{1}{m_{j}} c_{i}$
@@ -108,7 +108,8 @@ kmeans_gpu
 
 \subsection{Parallele Reduzierung von Histogrammen}
 
-Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden. \todo{Listing kurz erklären.}
+Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.\newline
+In nachfolgendem Listing ist solch ein Histogrammalgorithmus unter CUDA aufgeführt. Als Parameter werden hier die Features \textit{features}, die Cluster \textit{clusters}, das zu beschreibende Histogramm \textit{hitso}, die Anzahl an Komponenten in einem Feature \textit{featureSize}, die Anzahl der Features \textit{count} sowie die Anzahl der Cluster \textit{k} erwartet. Zunächst wird in Zeile 3 und 4 der nötige \textit{shared memory} allokiert. Das Schlüsselwort \textit{extern} gibt an, dass die Größe des \textit{shared memory} bei Aufruf des \textit{kernels} mitgegeben wird (in den dreifachen, spitzen Klammern). Die Klassen des privaten Histogramms werden alle mit 0 initialisiert und die Threads synchronisiert. In Zeile 11 wird der Index des ersten Features berechnet, dessen Cluster dieser Thread berechnen soll. Die Anzahl der Features die der Block insgesamt berechnet ergibt sich dann aus der Block- und Griddimension. Die \textit{while}-Schleife in Zeile 14 wird dann für all diese Features durchlaufen. Hier wird der Index des nächsten Clusters berechnet und die entsprechende Klasse des privaten Histogramms inkrementiert. Da nicht jeder Block unbedingt gleich viele Features bearbeitet, also wenn die Anzahl der Features nicht ein Vielfaches der Blockdimension ist, müssen die Threads nach der Schleife wieder synchronisiert werden. Abschließend werden die Werte des privaten Histogramms eines Blocks in das globale kopiert.
 
 \lstset{language=C}
 \begin{lstlisting}
@@ -122,7 +123,7 @@ void histogram_kernel (float *features, float *clusters, unsigned int *histo, in
 	}
 	__syncthreads();
 
-	int id = threadIdx.x + blockDim.x * gridDim.x;
+	int i = threadIdx.x + blockDim.x * gridDim.x;
 	int stride = blockDim.x * gridDim.x;
 	
 	while (i < count) {
