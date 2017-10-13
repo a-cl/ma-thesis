@@ -29,6 +29,7 @@ Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hie
 \lstset{language=Python,label={lst:compGrad}}
 \begin{lstlisting}
 def computeGradients(image):
+  \todo{Hier hatte ich erst Sobel benutzt, muss den Code noch aktualisieren.}
   grad_x = cv2.Sobel(image, cv2.CV16S, 1, 0)
   grad_y = cv2.Sobel(image, cv2.CV16S, 0, 1)
   return [grad_x, grad_y]

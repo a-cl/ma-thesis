@@ -5,6 +5,8 @@ Im zweiten Teil sollen Möglichkeiten untersucht werden, aus Bildern Features zu
 
 \section{Verwendung der GPU}
 
+\todo{Ich glaube ich entferne diesen Abschnitt, habe hier kaum was Wesentliches zu sagen. Oder seht ihr hier noch etwas, dass zu erwähnen wäre?}
+
 Zum Aufbauen eines Modells werden mehrere Zehn- bis Hunderttausend Features verarbeitet werden. Viele der Verfahren, die der Erzeugung solcher Modellen zu Grunde liegen, wurden in den vergangenen Jahren durch die Verwendung der GPU statt der CPU beschleunigt. Bei der Betrachtung geeigneter Ansätze wird daher auch berücksichtigt, ob und wie eine Beschleunigung durch parallele Verarbeitung erzielt werden kann. Gerade bei großen Datenmengen und einer enormen Datenparallelität können Probleme durch GPUs um ein vielfaches schneller gelöst werden als durch CPUs. Da Nvidias CUDA an der Hochschule Hannover sowohl gelehrt als auch zu Forschungszwecken genutzt wird und sich CUDA auch international in Forschung und Wirtschaft etabliert hat, soll die Plattform als technische Basis dienen. 
 
 \section{Machine Learning}
@@ -55,7 +57,8 @@ Das Gruppieren von Vektoren, hier den Bild-Features, kann also durch ein \textit
 Ein Clustering Algorithmus hat in dem Kontext dieser Arbeit das Ziel, eine großen Menge Feature-Deskriptoren auf die Wesentlichen zu reduzieren. Durch diese Quantisierung in $n$ Gruppen müssen, bei einer Bewertung eines neuen Deskriptors, nur $n$ Deskriptoren betrachtet werden, statt jedes Deskriptors der Ursprungsmenge.\newline
 Um die Features zu Gruppieren soll ein k-means Clustering Verfahren verwendet werden. Anhand der durch k-means gewonnen Cluster kann eine Histogrammdarstellung für Features erzeugt werden. Die Kombination diese Verfahren wird Bag of Visual Words genannt und lehnt sich an das Bag of Words Modell an. K-means ist einer der einfachsten Vertreter der Clustering Algorithmen, doch die Adaptierung zur Ausführung auf Grafikkarten bringt eine hohe technische Komplexität mit (Speicherverwaltung auf \textit{host} und \textit{device}, Wahl der Blockdimension, Threadanzahl etc.). Bevor also ein anspruchsvollerer Clustering-Algorithmus in Betracht gezogen wird, soll zunächst die Realisierung des k-means Algorithmus gelingen. Das parallele Verarbeiten von Histogrammen ist ein Lehrbuchbeispiel für den Einsatz von Grafikkarten, da es durch parallelen Reduzierung, ein Muster für einige Probleme, erreicht werden kann.
 
-\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. Eine Vektor aus einem $n$-dimensionalen Raum wird auf einen $m$-dimensionalen Raum mit $m < n$ abgebildet. Also einfaches Beispiel soll hier ein zweidimensionaler Datensatz dienen, der auf einen eindimensionalen Raum abgebildet wird:  
+\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. Eine Vektor aus einem $n$-dimensionalen Raum wird auf einen $m$-dimensionalen Raum mit $m < n$ abgebildet. Um die Grundidee zu vermitteln, soll ein einfaches Beispiel dienen: Die roten Punkte in Abbildung \ref{img:compress2} stellen Messwerte dar. Durch die eingezeichnete Linie wird deutlich, dass die Funktion $f(x)=2y$ die Verteilung sehr gut annähert. Würden diese Werte beispielsweise über ein Netzwerk übertragen, so reicht es $x$ zu senden. Der Empfänger kann dann $y$ anhand der Funktion bestimmen. Dadurch könnte 50\% der Daten bei der Übertragung eingespart werden und nur wenig Information geht verloren.\newline
+Ein moderner Ansatz für diesen Zweck ist die Verwendung neuronaler Netze. Ein Autoencoder ist ein spezielles neuronales Netzwerk, welches für das Lernen einer komprimierten Darstellung von Daten verwendet wird. Das Konzept des Autoencoders reicht zwar bis in die 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton entwickelt worden. Um solche einen kompakteren Feature-Deskriptor zu erzeugen soll ein Autoencoder verwendet werden. Ein mehrstufiger Autoencoder kann mit jeder Schicht einen kompakteren Deskriptor erzeugen und kodiert die gelernten Informationen in den Gewichten. Der Autoencoder bringt darüber hinaus den Vorteil mit sich, das seine Architektur bereits auf eine parallele Verarbeitung ausgelegt ist und nicht \enquote{extra} berücksichtigt werden muss.
 
 \begin{figure}
 	\centering
@@ -63,9 +66,6 @@ Um die Features zu Gruppieren soll ein k-means Clustering Verfahren verwendet we
 	\caption{Beispielhafte Verteilung von Messwerten.}
 	\label{img:compress2}
 \end{figure}
-
-Die roten Punkte in Abbildung \ref{img:compress2} stellen Messwerte dar. Durch die eingezeichnete Linie wird deutlich, dass die Funktion $f(x)=2y$ die Verteilung sehr gut annähert. Würden diese Werte beispielsweise über ein Netzwerk übertragen, so reicht es $x$ zu senden. Der Empfänger kann dann $y$ anhand der Funktion bestimmen. Dadurch könnte 50\% der Daten bei der Übertragung eingespart werden und nur wenig Information geht verloren.\newline
-Ein moderner Ansatz für diesen Zweck ist die Verwendung neuronaler Netze. Ein Autoencoder ist ein spezielles neuronales Netzwerk, welches für das Lernen einer komprimierten Darstellung von Daten verwendet wird. Das Konzept des Autoencoders reicht zwar bis in die 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton entwickelt worden. Um solche einen kompakteren Feature-Deskriptor zu erzeugen soll ein Autoencoder verwendet werden. Ein mehrstufiger Autoencoder kann mit jeder Schicht einen kompakteren Deskriptor erzeugen und kodiert die gelernten Informationen in den Gewichten. Der Autoencoder bringt darüber hinaus den Vorteil mit sich, das seine Architektur bereits auf eine parallele Verarbeitung ausgelegt ist und nicht \enquote{extra} berücksichtigt werden muss.
 
 \section{Autoencoder}
 
@@ -184,11 +184,11 @@ kmeans_lloyd ($P, C, k$)
 	initialisierung
 	until convergence
 		$C_{j} = 0, j = 1, ..., k$
-		for each $p_{i} \in P$
-			for each $c_{j} \in C$
+		for each $p \in P$
+			for each $c \in C$
 				$c_{j} = argminD(c_{j}, p_{i})$		
 		for each $c_{j} \in  C$
-			$c_{j} = \frac{1}{|c_{j}|} \sum_{n_{i} \in c_{j}} n_{i}$
+			$c = \frac{1}{|c|} \sum_{n \in c} n$
 \end{lstlisting}
 
 Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die Anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
@@ -221,7 +221,7 @@ Da für die vorliegenden Bilddaten der HsH keine speziellen Annahmen getroffen w
 
 Feature-Detektoren für Bilder sind in die Kategorien \textit{single-scale},\textit{multi-scale} und \textit{affine invariant} eingeteilt. Detektoren berücksichtigen im Allgemeinen Transformationen wie Rotationen oder Verschiebungen sowie Variationen in der Beleuchtung. Die \textit{multi-scale} Detektoren berücksichtigen zusätzlich Änderungen im Maßstab. Liegen also zwei Bilder vor, die das gleiche Objekt in unterschiedlicher Größe zeigen, werden die gleichen \textit{keypoints} gefunden. Da nicht die Annahme getroffen werden kann, dass die Objekte in den Daten der HsH im gleichen Maßstab vorliegen, liegt hier der Fokus auf \textit{multi-scale} Detektoren. Einige populäre Vertreter, die hierfür in Frage kommen, werden im folgenden vorgestellt.
 
-\textbf{Laplacian-of-Gaussian} Der Laplacian of Gaussians ist ein Detektor für Regionen. %\todo{Laplacian-of-Gaussian (LoG), a linear combination of second derivatives, is a common blob detector. Given an input image I(x, y), the scale space representation of the image defined by L(x, y,delta) is obtained by convolving the image by a variable scale Gaussian kernel G(x, y,delta) where FORMEL 
+\textbf{Laplacian-of-Gaussian} \todo{Under Construction. Hier oder Grundlagenkapitel? Dann auch Difference of Gaussians und HOG / SIFT zu den Deskriptoren} %Der Laplacian of Gaussians ist ein Detektor für Regionen. %\todo{Laplacian-of-Gaussian (LoG), a linear combination of second derivatives, is a common blob detector. Given an input image I(x, y), the scale space representation of the image defined by L(x, y,delta) is obtained by convolving the image by a variable scale Gaussian kernel G(x, y,delta) where FORMEL 
 
 %For computing the Laplacian operator, the following formula is used FORMEL 
 
@@ -240,6 +240,8 @@ Feature-Detektoren für Bilder sind in die Kategorien \textit{single-scale},\tex
 
 \subsection{Deskriptoren}
 
+\todo{Das ist der aktuelle Stand. Hierher komplett HOG und SIFT verschieben (dadurch auch weniger Wiederholung..)? Dafür LBP und Spatial Envelope raus (Spatial Envelope scheidet ja im Grunde schon durch den Fokus auf die Objekterkennung aus, ist noch \enquote{über}).}
+
 Hier werden einige ausgewählte Deskriptoren vorgestellt, die auf unterschiedliche Anwendungsfälle ausgelegt sind. Der \textit{Spatial Envelope} beurteilt beispielsweise die \enquote{Art} einer Szene, die Local Binary Patterns werden vorwiegend zur Gesichtserkennung verwendet. \newline
 
 \textbf{Local Binary Patterns} Die Local Binary Patterns (LBP) kodieren eine Nachbarschaft eines Pixels, also einen lokalen Teil eines Bildes, indem der Pixel mit seinem Nachbarn verglichen wird. Klassisch wird hier eines $3 \times 3$ Matrix verwendet, sodass sich acht Werte und somit 256 mögliche Kodierungen ergeben.
@@ -252,5 +254,5 @@ Der mathematische Hintergrund von SIFT wurde wurde bereits im Grundlagen behande
 
 \subsection{Features in dieser Arbeit}
 
-In dieser Arbeit wird das Gruppieren der Bilder durch eine Objekterkennung realisiert. Hiermit eignen sich vor allem \textit{multi-scale} Detektoren. Bei der Auswahl des Deskriptors scheint SIFT, aufgrund der praktischen Erfolge, naheliegend. Die Frage ist ob bei der Verwendung von SIFT eine weitere Komprimierung noch sinnhaft ist. Die Neuronenanzahl der Schichten eines Stacked Autoencoders nehmen strikt ab, um die Komprimierung zu erreichen. Dies führt dazu, dass zwischen \textit{Input} und dem folgenden \textit{Hidden Layer} maximal $128 \times 127 = 16256$ Verbindungen existieren können. Zhao \todo{cite} hat aus diesem Grund einen anderen Ansatz gewählt: Die \textit{keypoints} werden zunächst, wie bei SIFT, durch den DoG-Operator ermittelt. Anschließend wird ein großer Deskriptor aus den Gradienten der Nachbarschaften um die \textit{keypoints} erzeugt, der dann als Eingabe für den Autoencoder dient. Dieser komprimiert den Vektor auf 36 Komponenten. Gegenüber SIFT ist diese Darstellung ca. $3,5$ mal kleiner, was einen nicht unerheblichen Teil, gerade wegen der großen Menge an Features, ausmacht.\newline
+In dieser Arbeit wird das Gruppieren der Bilder durch eine Objekterkennung realisiert. Hiermit eignen sich vor allem \textit{multi-scale} Detektoren. Bei der Auswahl des Deskriptors scheint SIFT, aufgrund der praktischen Erfolge, naheliegend. Die Frage ist ob bei der Verwendung von SIFT eine weitere Komprimierung noch sinnhaft ist. Die Neuronenanzahl der Schichten eines Stacked Autoencoders nehmen strikt ab, um die Komprimierung zu erreichen. Dies führt dazu, dass zwischen \textit{Input} und dem folgenden \textit{Hidden Layer} maximal $128 \times 127 = 16256$ Verbindungen existieren können. Zhao \cite{aed2016} hat aus diesem Grund einen anderen Ansatz gewählt: Die \textit{keypoints} werden zunächst, wie bei SIFT, durch den DoG-Operator ermittelt. Anschließend wird ein großer Deskriptor aus den Gradienten der Nachbarschaften um die \textit{keypoints} erzeugt, der dann als Eingabe für den Autoencoder dient. Dieser komprimiert den Vektor auf 36 Komponenten. Gegenüber SIFT ist diese Darstellung ca. $3,5$ mal kleiner, was einen nicht unerheblichen Teil, gerade wegen der großen Menge an Features, ausmacht.\newline
 Aus diesem Grund sollen zwei Varianten in der Konzeption verfolgt werden: Zum einen die Verwendung von SIFT-Features und zum anderen das Erzeugen des Deskriptors nach Zhao durch einen Autoencoder. Durch die Kompaktheit des Letzteren ist zu erwarten, dass der Clustering-Vorgang bei diesem um ein vielfaches schneller abgeschlossen ist. Dabei war die Qualität der Ergebnisse von Bildervergleichen in Zhaos Test sehr ähnlich. Ob dies auch für den Bag of Visual Words der Fall ist, soll ein Experiment zeigen.
