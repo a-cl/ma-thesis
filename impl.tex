@@ -1,6 +1,6 @@
 \chapter{Implementierung}
 
-Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt wie mit Python und der \textit{opencv}-Biblitohek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht leider über den Rahmen dieser Arbeit hinaus. 
+Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt, wie mit Python und der \textit{opencv}-Bibliothek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht leider über den Rahmen dieser Arbeit hinaus. 
 
 \section{Extraktion der Features}
 
@@ -44,11 +44,11 @@ In Abbildung \ref{img:gradients} sind auf der rechten Seite sind, in zwei Reihen
 	\label{img:gradients}
 \end{figure}
 
-Sollte im späteren eine Umsetzung des Autoencoders in CUDA C erfolgen, so lässt sich die Gewinnung der Patches leicht portieren. Die Verwendung von SIFT erfolgt in C analog (in entsprechender Syntax).
+Sollte im Späteren eine Umsetzung des Autoencoders in CUDA C erfolgen, so lässt sich die Gewinnung der Patches leicht portieren. Die Verwendung von SIFT erfolgt in C analog (in entsprechender Syntax).
 
 \section{Autoencoder}
 
-In diesem Abschnitt wird behandelt wie der Autoencoder in Python und TensorFlow umgesetzt wurde. Hierfür wird zunächst eine Übersicht über die Projektstruktur gegeben und anschließend wird an Programmcode demonstriert, wie der vov Zhao entworfene Autoencoder abgebildet werden kann.
+In diesem Abschnitt wird behandelt wie, der Autoencoder in Python und TensorFlow umgesetzt wurde. Hierfür wird zunächst eine Übersicht über die Projektstruktur gegeben und anschließend wird an Programmcode demonstriert, wie der von Zhao entworfene Autoencoder abgebildet werden kann.
 
 \subsection{Projektstruktur} Das Python-Projekt für des Autoencoders besteht aus fünf Dateien. In autoencoder.py ist eine gleichnamige Klasse zur objektorientierten Verwendung enthalten. Die Funktionen zur Feature-Extraktion sind in der Datei feature\textunderscore extractor.py und werden im folgenden Abschnitt näher behandelt. Die Datei util.py stellt eine Sammlung allgemein verwendeter Funktionen bereit, z.B. zur Messung von Zeit oder Konvertierung von Datenstrukturen. Wie beim Bag of Visual Words liegt hier eine main-Datei bei, welche die Benutzung des Autoencoders durch die Kommandozeile erlaubt.
 
@@ -114,8 +114,8 @@ def decode(features):
 \end{lstlisting}
 
 In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
-Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt.
-Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
+Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt \todo{Grund}.
+Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
 Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
 In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Als Eingabe werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
 
@@ -144,7 +144,7 @@ Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual Words
 
 \subsection{Projektstruktur}
 
-Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die öffentliche API des Programms. Der k-means und Histogramm Algorithmus sind CUDA C Programme und tragen somit die Endung .cu. Neben den CUDA Programmen sind hier aber auch Varianten in C zur Ausführung auf CPUs enthalten. In der util.cpp Datei sind Funktionen zur Messung von Ausführungszeiten, Lesen / Schreiben von Dateien und und Formatierung von Zeichenketten enthalten. Zur direkten Ausführung im Projekt ist eine main.cpp Datei enthalten. Hier werden Argumente der Kommandozeile geparst, um einen entsprechenden Bag of Visual Words zu generieren bzw. auszuführen. Inklusive header-Dateien ergibt sich somit folgender Aufbau des src-Ordners:
+Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die öffentliche API des Programms. Der k-means- und Histogramm-Algorithmus sind CUDA C-Programme und tragen somit die Endung .cu. Neben den CUDA Programmen sind hier aber auch Varianten in C zur Ausführung auf CPUs enthalten. In der util.cpp Datei sind Funktionen zur Messung von Ausführungszeiten, Lesen / Schreiben von Dateien und und Formatierung von Zeichenketten enthalten. Zur direkten Ausführung im Projekt ist eine main.cpp Datei enthalten. Hier werden Argumente der Kommandozeile geparst, um einen entsprechenden Bag of Visual Words zu generieren bzw. auszuführen. Inklusive header-Dateien ergibt sich somit folgender Aufbau des src-Ordners:
 \dirtree{%src
 .1 src.
 .2 BagOfVisualWords.h.
@@ -172,9 +172,9 @@ Dadurch dass \textit{pointer} verwendet werden, erfordern die meisten Funktionsa
 
 Um Vergleiche mit sequentiellen Varianten zu ermöglichen, kann durch den Aufruf \textit{setMode(mode: Int)} auf einem BagOfVisualWords-Objekt festgelegt werden, ob die GPU (0) oder CPU (1) verwendet werden soll.
 
-\subsection{Paralleler k-means Algorithmus}
+\subsection{Paralleler k-means-Algorithmus}
 
-Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von Serban Giuroiu \footnote{https://github.com/serban/kmeans}. Der \textit{kernel} wurde adaptiert und leicht verändert, um gemeinsam genutzt Methoden auszulagern. Die Funktion \textit{kmeans} in der Datei kmeans.cuda kann genutzt werden, um Clustering auf der GPU auszuführen. Der Algorithmus erwartet dabei als Parameter:
+Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von Serban Giuroiu \footnote{https://github.com/serban/kmeans}. Der \textit{kernel} wurde adaptiert und leicht verändert, um gemeinsam genutzte Methoden auszulagern. Die Funktion \textit{kmeans} in der Datei kmeans.cuda kann genutzt werden, um Clustering auf der GPU auszuführen. Der Algorithmus erwartet dabei als Parameter:
 
 \begin{itemize}
 	\item \textbf{float **features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
@@ -187,7 +187,7 @@ Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt
 	\item \textbf{float conv} Ein Schwellwert, der in jeder Iteration mit der relativen Veränderung der Mitgliedschaft verglichen wird. Ist er größer, wird das Clustering beendet.
 \end{itemize}
 
-Die Datenstruktur der Features und Cluster ist dabei spaltenorientiert, d.h. das \textit{features} und \textit{clusters} jeweils auf \textit{featureSize} viele Elemente zeigen. Dahinter liegen dann im Fall der Features \textit{count} viele \textit{pointer} zu den eigentlichen Koordinaten, im Fall der Cluster \textit{k} viele. An der Stelle \textit{features[0][0]} befindet sich dann die erste Koordinate des ersten Elements, an der Stelle \textit{features[0][1]} die erste Koordinate des zweiten Elements, etc.\newline
+Die Datenstruktur der Features und Cluster ist dabei spaltenorientiert, d.h. dass \textit{features} und \textit{clusters} jeweils auf \textit{featureSize} viele Elemente zeigen. Dahinter liegen dann im Fall der Features \textit{count} viele \textit{pointer} zu den eigentlichen Koordinaten, im Fall der Cluster \textit{k} viele. An der Stelle \textit{features[0][0]} befindet sich dann die erste Koordinate des ersten Elements, an der Stelle \textit{features[0][1]} die erste Koordinate des zweiten Elements, etc.\newline
 Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde, belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{pointer-pointer} zu \textit{float}-Werten), werden diese in ein eindimensionales Arrays konvertiert werden, damit die Daten von \textit{host} zu \textit{device} kopiert werden können.\newline
 Der Clustering-Vorgang wird nun in einer Schleife durchgeführt. Dabei werden die in der Konzeption vorgestellten Funktionen \textit{computeEuclideanDistance}, \textit{findNearestCluster} und \textit{computeDelta} innerhalb der Schleife nacheinander aufgerufen. Abweichend zum Konzept, erfordern auch diese Funktionen \textit{count} und \textit{featuresSize} als zusätzliche Parameter, um korrekt über die \textit{pointer} iterieren zu können.
 Wenn das Konvergenzkriterium \textit{conv} oder die maximale Anzahl an Iterationen \textit{iterations} erreicht wurde, ist der Vorgang beendet und die das Ergebnis wird vom \textit{device} zum \textit{host} in \textit{clusters} respektive \textit{membership} kopiert.

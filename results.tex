@@ -1,16 +1,16 @@
 \chapter{Evaluierung}
 
 Die Qualität der Ergebnisse des in der Implementierung realisierten Modells wird in diesem Kapitel durch ein Testexperiment überprüft. Weiterhin werden Ausführungszeiten für beispielsweise verschieden große $k$ beim Bag of Visual Words betrachtet, um eine Einsicht in die Performance der Algorithmen zu gewinnen.
-Im Kapitel Experimentaufbau wird zunächst das Experiement sowie verwendete Metriken und Ergebnistypen behandelt. Nachfolgend wird erläutert, wie die großen Menge an benötigten Trainings- und Testdaten wiederholbar und automatisiert aufgebaut wird. Dieser Abschnitt illustriert auch, wie eine Durchführung des Experiments vonstattengeht. Im letzten Teil werden dann konkrete Testgruppen aus den Caltech101 \cite{cal2004} Bilddaten erzeugt. Diese Menge an Bilddaten hat große Verbreitung im Bereich der Objekterkennung gefunden. Auf diese Weise ist ein Vergleich mit Arbeiten Anderer prinzipiell möglich.
+Im Kapitel Experimentaufbau wird zunächst das Experiement sowie verwendete Metriken und Ergebnistypen behandelt. Nachfolgend wird erläutert, wie die großen Menge an benötigten Trainings- und Testdaten wiederholbar und automatisiert aufgebaut wird. Dieser Abschnitt illustriert auch, wie eine Durchführung des Experiments vonstatten geht. Im letzten Teil werden dann konkrete Testgruppen aus den Caltech101 \cite{cal2004} Bilddaten erzeugt. Diese Menge an Bilddaten hat große Verbreitung im Bereich der Objekterkennung gefunden. Auf diese Weise ist ein Vergleich mit Arbeiten Anderer prinzipiell möglich.
 
 \section{Testdaten und Testgenerierung}
 
 Der Abschnitt Testdaten stellt die hier verwendete Menge von Bildern vor, die Caltech101, welche extra für den Test von Algorithmen bezüglich der Objekterkennung in Bildern entwickelt wurde.\newline
-Im Folgenden Abschnitt zur Testgenerierung wird ein Verfahren zur zufälligen Auswahl von Trainings- und Testbildern unter Berücksichtigung verschiedener Restriktionen, wie z.B. dem Verhältnis der Anzahl von Trainings- zu Testbildern vorgestellt.
+Im folgenden Abschnitt zur Testgenerierung wird ein Verfahren zur zufälligen Auswahl von Trainings- und Testbildern unter Berücksichtigung verschiedener Restriktionen, wie z.B. dem Verhältnis der Anzahl von Trainings- zu Testbildern vorgestellt.
 
 \subsection{Testdaten}
 
-Als Testmenge wurden die Bilder der Caltech101 Menge verwendet. Bei Caltech101 handelt es sich um eine weit verbreitete Menge von Bilddaten, die vorwiegend zum Test von Algorithmen bezüglich der Objekterkennung in Bildern dient. Insgesamt liegen, wie der Name sagt, 101 Kategorien vor, die jeweils zwischen 40 und 800 Bildern enthalten. Auf der offiziellen Webseite \footnote{http://www.vision.caltech.edu/Image\textunderscore Datasets/Caltech101/} und im Artikel der Autoren wir empfohlen, die eigene Arbeit mit derer anderen vergleichbar zu halten, indem:
+Als Testmenge wurden die Bilder der Caltech101-Menge verwendet. Bei Caltech101 handelt es sich um eine weit verbreitete Menge von Bilddaten, die vorwiegend zum Test von Algorithmen bezüglich der Objekterkennung in Bildern dient. Insgesamt liegen, wie der Name sagt, 101 Kategorien vor, die jeweils zwischen 40 und 800 Bildern enthalten. Auf der offiziellen Webseite \footnote{http://www.vision.caltech.edu/Image\textunderscore Datasets/Caltech101/} und im Artikel der Autoren wird empfohlen, die eigene Arbeit mit derer anderen vergleichbar zu halten, indem:
 
 \begin{itemize}
 	\item Eine feste Anzahl an Trainings- und Testbildern verwendet wird.
@@ -31,7 +31,7 @@ Die Caltech101 Daten liegen nach Download kategorisiert im JPG-Format vor. Die S
 .2 ....
 }
 
-Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch dies Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
+Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch diese Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
 
 \begin{figure}
 	\centering
@@ -46,7 +46,7 @@ Die Generierung von Testdaten bietet sich aus mehreren Gründen an. Zum einen si
 
 \begin{itemize}
 	\item Die Anzahl der Kategorien sollte bestimmbar sein. Dies entspricht einer Kategorie der Caltech101-Daten. Somit sind hier theoretisch bis zu 101 Kategorien im Test denkbar.
-	\item Das Verhältnis bzw. Die Anzahl an Trainings- und Testbildern muss definierbar sein.
+	\item Das Verhältnis bzw. die Anzahl an Trainings- und Testbildern muss definierbar sein.
 \end{itemize}
 
 Letztendlich sollen die Histogramme der \textit{Visual Words} zweier Bilder miteinander verglichen und so die Ähnlichkeit gemessen werden. Ein Programm automatisiert daher die Generierung solcher Paare: Es werden zufällige Bildpaare aus ausgewählten Kategorien (\textit{airplanes}, \textit{anchor}, ...) selektiert. Diese Paare, sowie die Information, ob die Bilder in der selben oder einer verschiedenen Kategorie liegen, stellen einen Testkandidaten dar. Zwei Bilder liegen dabei in der selben Klasse, wenn sie im selben Ordner im Dateisystem, also hier im Caltech101-Ordner, enthalten sind. Das Ergebnis wird dann als Datei \textit{test \textunderscore time.txt} gespeichert. Die Pfade der Bilder werden hierbei relativ zum Caltech101-Ordner gespeichert, die Information über die Kategorie wird als \enquote{+} bzw. \enquote{-} kodiert. Eine Datei für die Kategorien \textit{airplanes} und \textit{anchor} könnte dann so beginnen:\newline
