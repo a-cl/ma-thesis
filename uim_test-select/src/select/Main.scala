@@ -25,7 +25,6 @@ object Main {
     val testPerSet = args(4).toInt
     val testCount = args(5).toInt
 
-    print("train " + trainPerSet)
     val db = new Database(sourcePath)
     val data = db.createDataSet(setCount, trainPerSet, testPerSet, testCount)
 
