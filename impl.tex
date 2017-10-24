@@ -1,84 +1,12 @@
 \chapter{Implementierung}
 
-Die Implementierung ist in drei Teile gegliedert. Zunächst wird die Extraktion und Speicherung der Features näher beschrieben. Im Anschluss wird der Aufbau der Modelle behandelt. Im zweiten Teil wird die Umsetzung des Bag of Visual Word Modells in CUDA C betrachtet. Im Wesentlichen werden hier die \textit{kernels} für den k-means Algorithmus angeführt sowie Unterschiede in der Implementierung zwischen \textit{global} und \textit{shared memory} behandelt. Der dritte Abschnitt illustriert eine Autoencoder Implementierung in TensorFlow. 
+Die Implementierung ist in drei Teile gegliedert. Zu Beginn wird gezeigt, wie mit Python und der \textit{opencv}-Bibliothek Gradienten von Bildern erzeugt wurden. Diese stellen die Basis für den zweiten Schritt, der Komprimierung durch einen Autoencoder dar. Die Verarbeitung kann an dieser Stelle ohne technischen Bruch fortfahren, da der Autoencoder in TensorFlow und somit ebenfalls in Python umgesetzt wurde. Die so erzeugten komprimierten Features werden zunächst zwischengespeichert, da sie nicht direkt weiterverarbeitet werden können: Der Bag of Visual Words wurde direkt in CUDA C umgesetzt und muss daher die Features wieder einlesen. Ursprünglich war die Implementierung des gesamten Projektes in CUDA geplant. Der Aufwand für die Implementierung des gesamten Modells, insbesondere den Autoencoder, bzw. neuronale Netze im Allgemeinen, geht leider über den Rahmen dieser Arbeit hinaus. 
 
-\section{Feature Extraktion}
+\section{Extraktion der Features}
 
-Da es sich bei der Feature Extraktion für beide Modelle um einen Schritt zur Vorverarbeitung handelt, würde eine Umsetzung genügen. Die beiden Umgebungen der Umsetzung unterschieden sich jedoch sehr voneinander: CUDA C ist eine sehr hardwarenahe Sprachen, Python ist eine interpretierte Hochsprache und TensorFlow generiert den entsprechenden Code für die Grafikkarte automatisch aus einem Modell. Aus diesem Grund wird eine Funktion zur Extraktion in beiden Sprachen bereitgestellt. Intern wird aber bei beiden auf die \textit{opencv}\footnote{https://github.com/TODO/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/TODO/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten. 
+Zu Ermittlung der \textit{keypoints} durch den SIFT-Detektor wird auf die \textit{opencv}\footnote{https://github.com/opencv/opencv} Implementierung von SIFT zurückgegriffen. Zur Verwendung des SIFT Algorithmus ist es erforderlich das \textit{opencv} Projekt zusammen mit dem \textit{opencv-contrib}\footnote{https://github.com/opencv/opencv-contrib} Projekt selbst zu kompilieren. Bei SIFT handelt es sich um einen patentierten Algorithmus, daher ist er seit Version 3.0 nicht mehr standardmäßig im \textit{opencv} Projekt enthalten.
 
-In C wird zur Gewinnung der Feature-Vektoren eines Bildes \textit{extractFeatures} mit dem Pfad des Bildes aufgerufen. Die vollständige Funktion kann nachfolgendem Codelisting entnommen werden. Um die Übersicht zu wahren, wurde hier auf die Importe verzichtet. Neben den \textit{opencv} Standardimporten ist es jedoch zusätzlich notwendig \textit{opencv/nonfree/features2d} einzubinden. Zunächst wird das Bild durch \textit{opencvs} \textit{imread} Methode eingelesen und liegt im Speicher als Matrix vor. Da SIFT mit monochromatischen Bildern arbeitet, wird vor der Detektion das eingelesen Bild konvertiert. Um hieraus die Deskriptoren zu berechnen, bietet \textit{opencv} eine \textit{SiftFeatureDetector} Klasse an. Via \textit{detect} werden im ersten Schritt die \textit{keypoints} ermittelt (Zeile 8) und in Zeile 9 aus dem Bild und den \textit{keypoints} die Deskriptoren berechnet. Die Deskriptoren werden dann als \textit{opencv} Matrix zurückgegeben.
-
-\lstset{language=C}
-\begin{lstlisting}
-using namespace cv;
-
-Mat extractFeatures (String imagePath) {
-	const Mat image;
-	const Mat source = imread(imagePath, 0);
-	cvtColor(source, image, CV_RGB2GRAY);
-	SiftFeatureDetector detector;
-	vector<KeyPoint> keypoints;
-	Mat descriptors;
-	
-	detector.detect(input, keypoints);
-	detector.compute(input, keypoints, descriptors);
-	return descriptors;
-}
-\end{lstlisting}
-
-\section{Ansatz 1: Bag of Visual Words}
-
-Das Bag of Visual Words Modell wurde direkt in CUDA C umgesetzt. Sofern die Deskriptoren aus den Trainingsbildern extrahiert wurden, kann durch \textit{generateModel} die Generierung eines Modells gestartet werden. Hier werden die Features, die Anzahl der Cluster und eine Referenz auf eine Liste von Mitgliedschaften erwartet. Neben den Schwerpunkten der Cluster werden die Mitgliedschaften berechnet: Pro Cluster liegt eine Liste vor, die alle \textit{keypoints}, die zu dem Cluster gehören, enthält. Sowohl die Schwerpunkte der Cluster als auch die Mitgliedschaften werden nach der Verarbeitung auf die Festplatte in verschiedene Dateien geschrieben. Die Schwerpunkte der Cluster werden zeilenweise in die Datei \textit{modelPath}/clusters geschrieben, sodass sich $k$ Zeilen mit 128 Elementen bei der Verwendung von SIFT ergeben. Die Mitgliedschaften der Features zu Cluster wird in der Datei \textit{modelPath}/membership gespeichert und enthält so viele Zeilen wie Features vorliegen. Jede Zeile enthält die $x$ und $y$ Koordinaten des \textit{keypoints} und den Index des zugehörigen Clusters. Der Index bezieht sich hierbei auf die Position des Clusters in der Datei \textit{modelPath}/clusters.
-
-\subsection{Paralleler k-means Algorithmus}
-
-Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von \todo{[REF]}. Der Algorithmus erwartet einen Feature-Vektor, die Feature-Dimension und die Anzahl der zu bildenden Cluster als Eingabe. Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt, sodass ein SIFT Feature-Vektor bzw. der Schwerpunkt eines Clusters $128 \times 4$ Byte $= 512$ Byte belegt. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{Float-Pointer-Pointer}), müssen diese in ein eindimensionales Arrays konvertiert werden, damit die Daten korrekt von \textit{host} zu \textit{device} kopiert werden können. 
-
-\subsubsection{Global memory}
-
-Die in der Konzeption vorgestellten Funktionen sind als Funktion in C umgesetzt worden. Von diesen sind drei CUDA kernels, also Funktionen die durch die Grafikkarte ausgeführt werden. Diese Funktionen werden solange in einer Schleife durchlaufen, bis das Konvergenzkriterium erfüllt wurde.
-
-\begin{itemize}
-	\item \textbf{Distanzberechnung} euclideanDistance(float *points, float *clusters)
-	\item \textbf{Cluster-Mitgliedschaft} findNearestCluster() agiert auf jeweils einem Feature. Der Index des Features ist somit von der $threadIdx$ abhängig und berechnet sich unter Berücksichtigung der Blockdimension als $blockDim.x * blockIdx.x + threaIdx.x$. Es wird der nächste Cluster zum Feature bestimmt und auch berechnet, ob sich die Zuordnung des Features verändert hat. \todo{Parallel reduction}
-	\item \textbf{Konvergenzkriterium} computeDelta() ermittelt die Anzahl der Veränderungen der Feature-Cluster Mitgliedschaft. Im wesentlichen werden durch eine  parallele Reduktion die Veränderungen die in \textit{intermediates} festgehalten wurden aufsummiert.
-\end{itemize}
-
-Die Anzahl der veränderten Mitgliedschaften wird anschließend zurück zum \textit{host} kopiert. Diese Zahl wird durch die Gesamtanzahl der Features dividiert, um so die relative Veränderung zu bestimmen. Ist diese kleiner als ein vorgegebener Schwellwert oder wurde eine maximale Anzahl an Iterationen erreicht, ist das Clustering abgeschlossen, andernfalls wird fortgefahren.
-
-\subsubsection{Shared memory}
-
-Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Anzahl der Elemente eines Features:
-
-\lstset{language=C}
-\begin{lstlisting}
-const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
-const unsigned int clusterDataSize = k * size * sizeof(float);
-const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
-\end{lstlisting}
-
-In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Vor der Berechnung der Mitgliedschaft wird nun ein lokaler Pointer \textit{clusters} angelegt und alle notwendigen Cluster kopiert.
-
-\lstset{language=C}
-\begin{lstlisting}
-float *clusters = (float *)(sharedMemory + blockDim.x);
-for (int i = threadIdx.x; i < k; i += blockDim.x) {
-  for (int j = 0; j < size; j++) {
-    clusters[k * j + i] = deviceClusters[k * j + i];
-  }
-}
-__syncthreads();
-\end{lstlisting}
-
-Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Anzahl der Komponenten eines Features, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Durch die Verwendung von SIFT ist die Anzahl der Komponenten von Features auf 128 festgelegt, sodass letztendlich eine Obergrenze für $k$ berechnet werden kann. Gängige Modelle CUDA kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Thread pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Dies sind bei 48 Kilobyte maximal 91, für 16 Kilobyte 29 Cluster. Für viele praktische Anwendungsfälle ist dies bereits ausreichend. Sind dennoch mehr Cluster notwendig, muss auf die \textit{global memory} Implementierung zurückgegriffen werden. Hier werden, je nach Anzahl der Cluster, erheblich höhere Berechnungszeiten erwartet, jedoch gibt es kein Limit für die Gesamtanzahl an Clustern.
-
-\section{Ansatz 2: Autoencoder}
-
-In diesem Kapitel wird behandelt wie der Autoencoder in Python und TensorFlow umgesetzt wurde. Zunächst wird auf die Erhebung der Feature-Vektoren unter Verwendung der \textit{opencv}-Bibliothek eingegangen. Anschließend erfolgt eine Übersicht des Python-Codes zur Definition des Autoencoders.
-
-\subsection{Erhebung der Feature-Vektoren}
-
-Um die 3042-elementigen Feature-Vektoren zu extrahieren, wurde hier ebenfalls die \textit{opencv}-Bibliothek genutzt. Der Prozess lässt sich in drei Schritte untergliedern. Um alle Features eines Bildes zu erhalten, wird die Funktion \textit{extractFeatures} mit dem Pfad zu einer Bilddatei ausgerufen. Es wird das Bild eingelesen, konvertiert und durch den \textit{opencv} SIFT-Detektor die \textit{keypoints} ermittelt. Die Berechnung der Gradienten der Nachbarschaften um diese \textit{keypoints} erfolgt dann durch die Funktion \textit{computeDescriptors}:
+Da der Autoencoder in Python geschrieben ist, erfolgt die Gewinnung der Patches in der gleichen Sprache, um so eine einfache weitere Verarbeitung zu ermöglichen. Der Prozess lässt sich in drei Schritte untergliedern. Um alle Features eines Bildes zu erhalten, wird die Funktion \textit{extractFeatures} mit dem Pfad zu einer Bilddatei ausgerufen. Es wird das Bild eingelesen, konvertiert und durch den \textit{opencv} SIFT-Detektor die \textit{keypoints} ermittelt. Die Berechnung der Gradienten der Nachbarschaften um diese \textit{keypoints} erfolgt dann durch die Funktion \textit{computeDescriptors}:
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -96,11 +24,12 @@ def getPatch (image, keypoint):
   return image[y-20:y+21, x-20:x+21]
 \end{lstlisting}
 
-Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hierbei handelt es sich um die Nachbarschaften der Größe $41 \times 41$. Die Gradienten in vertikale und horizontale Richtung eines solchen \textit{Patches} werden durch \textit{computeGradients} bestimmt. In Zeile 2 und 3 in Abbildung \ref{lst:compGrad} findet die Konvolution des Patches mit dem Sobel-Operator statt, den \textit{opencv} anbietet.
+Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hierbei handelt es sich um die Nachbarschaften der Größe $41 \times 41$. Die Gradienten in vertikale und horizontale Richtung eines solchen \textit{Patches} werden durch \textit{computeGradients} bestimmt. In Zeile 2 und 3 in Abbildung \ref{lst:compGrad} findet die Konvolution des Patches mit einem Sobel-Operator statt, den \textit{opencv} anbietet.
 
 \lstset{language=Python,label={lst:compGrad}}
 \begin{lstlisting}
 def computeGradients(image):
+  \todo{Hier hatte ich erst Sobel benutzt, muss den Code noch aktualisieren.}
   grad_x = cv2.Sobel(image, cv2.CV16S, 1, 0)
   grad_y = cv2.Sobel(image, cv2.CV16S, 0, 1)
   return [grad_x, grad_y]
@@ -115,9 +44,49 @@ In Abbildung \ref{img:gradients} sind auf der rechten Seite sind, in zwei Reihen
 	\label{img:gradients}
 \end{figure}
 
-\subsection{Autoencoder Modell in TensorFlow}
+Sollte im Späteren eine Umsetzung des Autoencoders in CUDA C erfolgen, so lässt sich die Gewinnung der Patches leicht portieren. Die Verwendung von SIFT erfolgt in C analog (in entsprechender Syntax).
 
-Zur Implementierung des Autoencoders wurde TensorFlow verwendet. TensorFlow ist ein DeepLearning Framework und bietet Schnittstellen in diversen Sprachen an. Neben OpenCL wird auch NVIDIAs CUDA unterstützt, sodass TensorFlow Programme automatisch von Grafikkarten profitieren können, ohne das der Entwickler diese explizit berücksichtigen muss. Für diese Umsetzung eines Autoencoders wurde Python und das Projekt \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajar Sheem genutzt. Ein simpler Autoencoder mit einem HiddenLayer lässt sich wie folgt definieren:
+\section{Autoencoder}
+
+In diesem Abschnitt wird behandelt wie, der Autoencoder in Python und TensorFlow umgesetzt wurde. Hierfür wird zunächst eine Übersicht über die Projektstruktur gegeben und anschließend wird an Programmcode demonstriert, wie der von Zhao entworfene Autoencoder abgebildet werden kann.
+
+\subsection{Projektstruktur} Das Python-Projekt für des Autoencoders besteht aus fünf Dateien. In autoencoder.py ist eine gleichnamige Klasse zur objektorientierten Verwendung enthalten. Die Funktionen zur Feature-Extraktion sind in der Datei feature\textunderscore extractor.py und werden im folgenden Abschnitt näher behandelt. Die Datei util.py stellt eine Sammlung allgemein verwendeter Funktionen bereit, z.B. zur Messung von Zeit oder Konvertierung von Datenstrukturen. Wie beim Bag of Visual Words liegt hier eine main-Datei bei, welche die Benutzung des Autoencoders durch die Kommandozeile erlaubt.
+
+\dirtree{%src
+.1 src.
+.2 autoencoder.py.
+.2 feature\textunderscore extractor.py.
+.2 main.py.
+.2 test.cpp.
+.2 util.py.
+}
+
+\subsection{TensorFlow}
+
+TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \enquote{fließen} und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Für die Ausführung auf Nvidia Hardware ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
+TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
+
+\lstset{language=Python}
+\begin{lstlisting}
+import tensorflow as tf
+
+a = tf.placeholder(tf.int16)
+b = tf.placeholder(tf.int16)
+
+addOp = tf.add(a, b)
+
+init = tf.initialize_all_variables()
+
+with tf.Session() as sess:
+    sess.run(init)
+    print "Addition: %i" % sess.run(addOp, feed_dict={a: 2, b: 3})
+
+sess.close()
+\end{lstlisting}
+
+\subsection{Modell in TensorFlow}
+
+Diese Umsetzung des Autoencoders ist in TensorFlow unter Verwendung der Bibliothek \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajarshee Mitra erfolgt. Der in der Konzeption vorgestellte Stacked Autoencoder von Zhao kann so wie folgt definiert werden:
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -125,28 +94,147 @@ from deepautoencoder import StackedAutoEncoder
 import cv2
 import numpy
 
-features = extractAllFeatures(imagePaths)
-index = numpy.random.rand(features.shape[0]) < 0.8
-train = features[index]
-test = features[~index]
-
 model = StackedAutoEncoder(
   dims=[3042, 1024, 512, 128, 36],
   activations=['relu', 'relu', 'relu', 'relu', 'relu'], 
-  epoch=[3000, 3000, 3000, 2000, 1000], 
+  epoch=[1000, 1000, 700, 700, 500], 
   loss='rmse', 
-  lr=0.007, 
+  lr=0.02, 
   batch_size=100
 )
 
-model.fit(train)
-result = model.transform(test)
+def train(features):
+  model.fit(features)
+
+def encode(features):
+  model.transform(data=features, mode='encode')
+  
+def decode(features):
+  model.transform(data=features, mode='decode')
 \end{lstlisting}
 
-\begin{enumerate}
-	\item TODO: erklären, tatsächliches Netz
-	\item Referenzlayout
-	\item Einlesen der Feature Vektoren etc.
-	\item Speichern / Laden eines Netzes?
-	\item Training
-\end{enumerate}
+In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
+Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt \todo{Grund}.
+Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
+Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
+In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Als Eingabe werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
+
+\todo{Etwas erläutern, wie das Modell mit TensorFlow zusammenhängt!}
+
+Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
+
+\lstset{language=Python}
+\begin{lstlisting}
+import sys
+import util
+import featureExtractor
+import autoencoder
+
+train = util.readImages(sys.argv[1])
+test = util.readImages(sys.argv[2])
+
+autoencoder.train(featureExtractor.extractAll(train))
+result = autoencoder.encode(featureExtractor.extractAll(test))
+util.writeFeatures(result)
+\end{lstlisting}
+
+\section{Bag of Visual Words}
+
+Zunächst wird eine Übersicht über die Projektstruktur der Bag of Visual Words Implementierung gegeben. Neben der konkreten Klassenstruktur wird auf Abweichungen zum Konzept eingegangen. Dem schließt die Betrachtung des k-means Clustering der Features an, sowie Unterschiede und Limitierungen der \textit{global} bzw. \textit{shared memory} Varianten.
+
+\subsection{Projektstruktur}
+
+Der Bag of Visual Words ist als Klasse in C++ umgesetzt worden und ist auch die öffentliche API des Programms. Der k-means- und Histogramm-Algorithmus sind CUDA C-Programme und tragen somit die Endung .cu. Neben den CUDA Programmen sind hier aber auch Varianten in C zur Ausführung auf CPUs enthalten. In der util.cpp Datei sind Funktionen zur Messung von Ausführungszeiten, Lesen / Schreiben von Dateien und und Formatierung von Zeichenketten enthalten. Zur direkten Ausführung im Projekt ist eine main.cpp Datei enthalten. Hier werden Argumente der Kommandozeile geparst, um einen entsprechenden Bag of Visual Words zu generieren bzw. auszuführen. Inklusive header-Dateien ergibt sich somit folgender Aufbau des src-Ordners:
+\dirtree{%src
+.1 src.
+.2 BagOfVisualWords.h.
+.2 BagOfVisualWords.cpp.
+.2 histogram.h.
+.2 histogram.cu.
+.2 kmeans.h.
+.2 kmeans.cpp.
+.2 main.cpp.
+.2 shared.h.
+.2 shared.cu.
+.2 util.cpp.
+.1 makefile.
+}
+
+\subsection{Abweichungen zum Konzept}
+
+Da CUDA C eine sehr hardwarenahe Sprache ist, obliegt die effiziente Verwendung des Speichers dem Programmierer. Insbesondere auf dem \textit{device} sollte mit dem Speicher genügsam umgegangen werden. Daher weicht die Implementierung von dem vorgestellten Konzept bei den verwendeten Datentypen ab: Statt Objekte für Cluster oder Features zu erzeugen, werden diese Typen einfach als \textit{pointer} von \textit{float}-Werten dargestellt. Dies ist für die Features problemlos möglich, doch die Information über die Mitgliedschaft seiner Features kann nicht länger in einem Cluster enthalten sein. Diese Informationen wird stattdessen global vom BagOfVisualWords in der privaten Variablen \textit{membership} gehalten und als \textit{pointer} zu Integer-Werten dargestellt. Diese Liste enthält für jedes Feature den Index des Clusters, dem es zugeordnet ist. Der Index eines Features an der Stelle \textit{i} in der \textit{features} Liste, ist dann an der Stelle $membership_i$ gespeichert.\newline
+Dadurch dass \textit{pointer} verwendet werden, erfordern die meisten Funktionsaufrufe nun zusätzliche Parameter: 
+
+\begin{itemize}
+	\item Die Anzahl der Features \textit{count} muss angegeben werden. In C ist es nicht auf einfachem Weg möglich zu bestimmen, auf wie viele Elemente ein \textit{pointer} zeigt.
+	\item Die Anzahl an Komponenten \textit{featureSize} in einem Feature bzw. Cluster muss angegeben werden. Auch hier handelt es sich wieder um einen \textit{pointer}, daher ist es nicht möglich, die Anzahl der Elemente zu ermitteln.
+\end{itemize}
+
+Um Vergleiche mit sequentiellen Varianten zu ermöglichen, kann durch den Aufruf \textit{setMode(mode: Int)} auf einem BagOfVisualWords-Objekt festgelegt werden, ob die GPU (0) oder CPU (1) verwendet werden soll.
+
+\subsection{Paralleler k-means-Algorithmus}
+
+Als Referenzimplementierung für die Umsetzung in CUDA C diente hier das Projekt von Serban Giuroiu \footnote{https://github.com/serban/kmeans}. Der \textit{kernel} wurde adaptiert und leicht verändert, um gemeinsam genutzte Methoden auszulagern. Die Funktion \textit{kmeans} in der Datei kmeans.cuda kann genutzt werden, um Clustering auf der GPU auszuführen. Der Algorithmus erwartet dabei als Parameter:
+
+\begin{itemize}
+	\item \textbf{float **features} Eine Liste von Feature-Vektoren, die zu gruppieren sind.	
+	\item \textbf{float **clusters} Eine Liste, welche mit den Clustern befüllt wird.
+	\item \textbf{int *membership} Diese Liste wird die Cluster-Vektor-Zuordnung enthalten. An der Stelle $membership_i$  wird der Index des Clusters aus \textit{clusters} eingetragen, dem das Feature $features_i$ zugeordnet wird.
+	\item \textbf{int featureSize} Die Anzahl der Komponenten in einem Feature-Vektor, also die Anzahl der \textit{float}-Werte.	
+	\item \textbf{int count} Die Anzahl der Features.
+	\item \textbf{int k} Die Anzahl der zu bildenden Cluster $k$.
+	\item \textbf{int iterations} Die maximale Anzahl an Iterationen, die durchlaufen wird, falls bisher keine Konvergenz erreicht wurde.
+	\item \textbf{float conv} Ein Schwellwert, der in jeder Iteration mit der relativen Veränderung der Mitgliedschaft verglichen wird. Ist er größer, wird das Clustering beendet.
+\end{itemize}
+
+Die Datenstruktur der Features und Cluster ist dabei spaltenorientiert, d.h. dass \textit{features} und \textit{clusters} jeweils auf \textit{featureSize} viele Elemente zeigen. Dahinter liegen dann im Fall der Features \textit{count} viele \textit{pointer} zu den eigentlichen Koordinaten, im Fall der Cluster \textit{k} viele. An der Stelle \textit{features[0][0]} befindet sich dann die erste Koordinate des ersten Elements, an der Stelle \textit{features[0][1]} die erste Koordinate des zweiten Elements, etc.\newline
+Vor dem Aufruf des \textit{kernels} wird für die Features und Cluster der notwendige Speicher allokiert und die Daten zum \textit{device} kopiert. Die Dimensionen der Features sowie der Cluster werden durch \textit{Float}-Werte dargestellt. Ein SIFT Feature-Vektor belegt so $128 \times 4 = 512$ Byte. Der Deskriptor, der durch den Autoencoder erzeugt wurde, belegt $36 \times 4 = 144$ Byte. Da die Features ursprünglich als zweidimensionales Array vorliegen (\textit{pointer-pointer} zu \textit{float}-Werten), werden diese in ein eindimensionales Arrays konvertiert werden, damit die Daten von \textit{host} zu \textit{device} kopiert werden können.\newline
+Der Clustering-Vorgang wird nun in einer Schleife durchgeführt. Dabei werden die in der Konzeption vorgestellten Funktionen \textit{computeEuclideanDistance}, \textit{findNearestCluster} und \textit{computeDelta} innerhalb der Schleife nacheinander aufgerufen. Abweichend zum Konzept, erfordern auch diese Funktionen \textit{count} und \textit{featuresSize} als zusätzliche Parameter, um korrekt über die \textit{pointer} iterieren zu können.
+Wenn das Konvergenzkriterium \textit{conv} oder die maximale Anzahl an Iterationen \textit{iterations} erreicht wurde, ist der Vorgang beendet und die das Ergebnis wird vom \textit{device} zum \textit{host} in \textit{clusters} respektive \textit{membership} kopiert.
+
+\subsection{Shared memory}
+
+Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Um beide Implementierungen zu unterstützen, fragt eine Direktive für den Präprozessor den Wert der Variable \textit{SHARED\textunderscore MEM} ab. Falls der Wert der Variable \textit{true} ist, wird Code nur für die \textit{shared memory} Implementierung eingebunden, andernfalls für die \textit{global memory} Variante:
+
+\lstset{language=C}
+\begin{lstlisting}
+#if SHARED_MEM
+// shared memory Logik
+#else
+// global memory Logik
+\end{lstlisting}
+
+Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Anzahl der Elemente eines Features:
+
+\lstset{language=C}
+\begin{lstlisting}
+const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
+const unsigned int clusterDataSize = k * featureSize * sizeof(float);
+
+#if SHARED_MEM
+    const unsigned int blockSharedDataSize = membershipDataSize + clusterDataSize;
+#else
+	const unsigned int blockSharedDataSize = membershipDataSize;
+\end{lstlisting}
+
+In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Wenn die \textit{global memory} Variante genutzt wird, sind diese gleich den Clustern \textit{clusters}. Andernfalls werden die \textit{deviceCluster} in die \textit{clusters} im \textit{shared memory} kopiert.
+
+\lstset{language=C}
+\begin{lstlisting}
+extern __shared__ char sharedMemory[];
+unsigned int *membershipChanged = (unsigned int *)sharedMemory;
+    
+#if SHARED_MEM
+    float *clusters = (float *)(sharedMemory + blockDim.x);
+	for (int i = threadIdx.x; i < k; i += blockDim.x) {
+  		for (int j = 0; j < size; j++) {
+    		clusters[k * j + i] = deviceClusters[k * j + i];
+  		}
+	}
+	__syncthreads();
+#else
+    float *clusters = deviceClusters;
+#endif
+\end{lstlisting}
+
+Da die Größe von \textit{clusterDataSize} hier von $k$ und $size$ abhängt, also der Anzahl der Cluster und der Anzahl der Komponenten eines Features, ist diese Implementierung nur einsetzbar, wenn $k$ und $size$ in Hinsicht auf den verfügbaren \textit{shared memory} nicht zu groß gewählt werden. Die Größe von \textit{membershipDataSize} ist nur abhängig von der Anzahl der Threads. Werden beispielsweise 256 Threads pro Block gewählt, benötigt dies konstant, unabhängig von $k$ und $size$, 1024 Byte \textit{shared memory}. Für die hier verwendeten Deskriptoren kann somit eine Obergrenze für $k$ berechnet werden. Gängige Modelle Nvidias CUDA kompatibler Grafikkarten sind mit 16 oder 48 Kilobyte \textit{shared memory} ausgestattet. Von 256 Threads pro Block ausgehend ergibt dies ein maximales $k$ von $(memory - 1024) / 512$. Für SIFT sind dies bei 48 Kilobyte maximal 91, für 16 Kilobyte 29 Cluster. Der von Zhao entworfene Deskriptor ermöglicht bei 48 Kilobyte Speicher 326 Clustern, für 16 Kilobyte bis zu 104. Sind dennoch mehr Cluster notwendig, muss auf die \textit{global memory} Implementierung zurückgegriffen werden. Hier werden, je nach Anzahl der Cluster, erheblich höhere Berechnungszeiten erwartet, jedoch gibt es kein Limit für die Gesamtanzahl an Clustern.

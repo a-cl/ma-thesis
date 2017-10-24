@@ -1,16 +1,16 @@
 \chapter{Grundlagen}
 
-Das Grundlagenkapitel gibt eine Einführung und Übersicht über die verwendeten Begriffe und Konzepte, auf die im Weiteren der Arbeit zurückgegriffen wird. Zunächst wird die Darstellung von Bildern behandelt und anschließend die Erhebung von charakteristischen Merkmalen aus Bildern, den Features. Zur Detektion und Extraktion von Features aus Bildern haben sich zahlreiche verschiedene Verfahren etabliert.
-Es werden anschließend zwei Modelle vorgestellt, die eine Klassifikation von Bildern auf Basis von Features ermöglichen. Das Bag of Visual Words Modell wurde aus dem Bereich Information Retrival adaptiert. Es wird anhand der Features von Trainingsbildern ein visuelles Vokabular gelernt, das zur Klassifizierung von Bildern dient. Alternativ zu diesem Ansatz wird der Autoencoder vorgestellt. Ein Autoencoder ist ein spezielles neuronales Netzwerk, das selbständig eine komprimierte Darstellung der Eingabe, in diesem Fall der Features, lernt. 
-Im letzten Teil wird auf die Berechnung allgemein mathematischer Probleme auf Grafikkarten, dass GPU Computing, eingegangen. Durch den Einsatz von Grafikkarten können Berechnungen gerade bei großen Datenmengen stark beschleunigt werden, da diese massiv parallel auf den Daten arbeiten. Mit Nvidias CUDA wird ein Ausführungsmodell eingeführt, mit der sich Modelle wie der Bag of Visual Words und Autoencoder auf Nvidia Grafikkarten ausführen lassen.
+Das Grundlagenkapitel gibt eine Einführung und Übersicht über die verwendeten Begriffe und Konzepte, die im Weiteren dieser Arbeit von Bedeutung sind. Zunächst wird die Darstellung von Bildern behandelt und anschließend die Erhebung von charakteristischen Merkmalen aus Bildern, den Features. Hier genutzte Operationen auf Bildern bzw. Verfahren zur Detektion und Extraktion von Features aus diesen, werden im Anschluss erläutert.\newline
+In den folgenden Kapiteln wird ein Modell konzipiert und realisiert, dass eine Gruppierung von Bildern durch einen Autoencoder und Bag of Visual Words ermöglicht. Diese Verfahren werden tiefer in der Analyse betrachtet, hier soll jedoch der mathematische Hintergrund betrachtet werden. Aus diesem Grund wird für den Bag of Visual Words die Familie der k-means-Algorithmen eingeführt. Da es sich bei einem Autoencoder um ein spezielles neuronales Netzwerk handelt, werden in diesem anschließenden Abschnitt die Grundlagen neuronaler Netze vorgestellt.\newline
+Im letzten Teil des Kapitels wird auf die Berechnung numerischer Probleme, das \textit{GPU Computing}, unter Verwendung von CUDA, eingegangen.
 
 \section{Bilder und Features}
 
-Zunächst wird definiert wie ein Bild mathematisch aufgefasst wird, um eine effiziente Verarbeitung zu ermöglichen. Jedes Verfahren erwartet ein Bild als Eingabe. Verändern Algorithmen ein Bild, so geben sie die bearbeite Version wieder aus. Bei Analysen hingegen wird ein Bild nicht verändert, es wird auf Muster untersucht und die gefundenen Eigenschaften zurückgegeben. Diese Eigenschaften werden Features genannt. Der Prozess der Featuregewinnung ist in Detektion und Extraktion unterteilt und wird im Anschluss behandelt.
+Der erste Abschnitt definiert wie ein Bild mathematisch aufgefasst wird, um eine effiziente Verarbeitung zu ermöglichen. Verfahren der computergestützten Bildverarbeitung erwarten logischerweise ein Bild als Eingabe. Verändern Algorithmen ein Bild, so geben sie die bearbeite Version wieder aus. Bei Analysen hingegen wird ein Bild nicht verändert, es wird auf Muster untersucht und die gefundenen Eigenschaften zurückgegeben. Diese Eigenschaften werden Features genannt. Der Prozess der Featuregewinnung ist in Detektion und Extraktion unterteilt und wird im Anschluss behandelt.
 
 \subsection{Bilder}
 
-Bei einem digitalen Bild handelt es sich um eine Matrix $I(x, y)$, welche Intensitätswerte enthält. Die Anzahl der Spalten $m$ und Zeilen $n$ entspricht dabei den Dimensionen des Bildes in Pixeln. Hier bezeichnen $(x, y)$ Indizes der Matrix und somit die einzelnen Pixel des Bildes. Die Darstellung in Matrixform eignet sich  sehr gut für Transformationen und Analysen des Bildes. Solche Verfahren betrachten oft jeden Pixel und oft eine Nachbarschaft dessen. Bei einer Nachbarschaft handelt es sich um die umliegenden Pixel zu einem ausgewählten Pixel. Die Größe der Nachbarschaft ist abhängig von dem Analyseverfahren: Beispielsweise umfasst die kleinstmögliche Nachbarschaft eines Pixels nur die direkt angrenzenden Pixel und ist somit eine $3 \times 3$ Matrix (mit dem Pixel als Zentrum). Formal werden diese Matrizen wie folgt dargestellt, wobei $n$ und $m$ wieder der Anzahl der Zeilen bzw. Spalten entsprechen:
+Bei einem digitalen Bild handelt es sich um eine Matrix $I(x, y)$, welche Intensitätswerte enthält. Die Anzahl der Spalten $m$ und Zeilen $n$ entspricht dabei den Dimensionen des Bildes in Pixeln. Hier bezeichnen $(x, y)$ die Indizes der Matrix und somit die Pixel des Bildes. Die Darstellung in Matrixform eignet sich  sehr gut für Transformationen und Analysen des Bildes. Solche Verfahren betrachten meist jeden Pixel und eine Nachbarschaft dessen. Bei einer Nachbarschaft handelt es sich um die umliegenden Pixel zu einem ausgewählten Pixel. Die Größe der Nachbarschaft ist abhängig von dem Analyseverfahren: Beispielsweise umfasst die 8-er Nachbarschaft eines Pixels nur die direkt angrenzenden Pixel und ist somit eine $3 \times 3$ Matrix (mit dem Pixel als Zentrum). Formal werden diese Matrizen wie folgt dargestellt, wobei $n$ und $m$ wieder der Anzahl der Zeilen bzw. Spalten entsprechen:
 
 $$
 I(x, y) = \begin{bmatrix}
@@ -22,15 +22,17 @@ i_{m-1, 0} & i_{m-1, 1} & \dots	 & i_{m-1, n-1}
 $$ 
 
 Abhängig vom Typ des Bildes, besitzen die Pixel eine andere Struktur. In der Bilderverarbeitung und im Weiteren dieser Arbeit werden meist folgenden Arten von Bildern verwendet:
+
 \begin{itemize}
-	\item \textbf{Monochromatische Bilder} Diese Bilder werden nur in Graustufe dargestellt, daher besitzt ein Pixel genau einen Intensitätswert.
-	\item \textbf{Multispektrale Bilder} Jeder Pixel besitzt einen Vektor an Werten. Im Falle eines Farbbildes enthält der Vektor drei Intensitätswerte für rot, grün und blau.
+	\item \textbf{Monochromatische Bilder} Diese Bilder werden in Graustufen dargestellt, daher besitzt ein Pixel genau einen Intensitätswert.
+	\item \textbf{Multispektrale Bilder} Jeder Pixel besitzt einen Vektor an Werten. Der Pixel eines RGB-Bildes ist somit ein Vektor, der drei Komponenten für  rot, grün und blau enthält.
 \end{itemize}
-Die Intensität eines Pixels bzw. die Intensität seiner Vektoren wird mit in den meisten Programmen mit acht Bit dargestellt und umfasst daher 256 mögliche Werte. Dies ist für die meisten Anwendungen ausreichend und praktisch, da acht Bit genau einem Byte entsprechen und dies eine einfache computergestützt Darstellung und Verarbeitung ermöglicht. Die Werte für die Intensität werden im Folgenden normalisiert als Gleitkommazahlen im Intervall $[0, 1]$ verwendet, um unabhängig von dem Datentyp zu sein. 
+
+Die Intensität eines Pixels bzw. die Intensität seiner Vektoren wird mit in den meisten Programmen mit acht Bit dargestellt und umfasst daher 256 mögliche Werte. Dies ist für die meisten Anwendungen ausreichend und praktisch, da acht Bit genau einem Byte entsprechen und dies eine einfache computergestützte Darstellung und Verarbeitung ermöglicht. Die Werte für die Intensität werden im Folgenden normalisiert als Gleitkommazahlen im Intervall $[0, 1]$ verwendet.
 
 \subsection{Feature Detektion und Extraktion}
 
-Um Bilder zu vergleichen werden charakteristische Merkmale dieser betrachtet, die sogenannten Features. Ein Feature ist ein allgemeiner Begriff und enthält je nach Verfahren unterschiedliche Informationen. Dies ist notwendig, da nicht nur die Position oder Intensität eines Pixels, sondern auch generelle Eigenschaften von Interesse sind. Globale Verfahren berücksichtigen bei der Bewertung jeden Pixel des Bildes gleichermaßen, lokale hingegen betrachten nur ein kleine Fenster des Bildes, also einen Pixel und seine Nachbarschaft. Die Suche nach globalen Merkmalen, die ein Bild charakterisieren, kann aber keine Objekte und Details im Bild berücksichtigen. Hierfür eignet sich die Extraktion von lokalen Features. Um Objekte aus unterschiedlichen Perspektiven und in verschiedenen Größen wieder zu erkennen, ist es notwendig, dass die Features affin invariant sind. Abbildung \ref{img:liberty} zeigt dasselbe Objekt, jedoch rotiert, skaliert und verschoben. Ein Algorithmus sollte mit hoher Wahrscheinlichkeit erkennen, dass es sich hier um dasselbe Objekt handelt \cite{ifd2016}.
+Um Bilder zu vergleichen, werden charakteristische Merkmale dieser betrachtet, die sogenannten Features. Ein Feature ist ein allgemeiner Begriff und enthält je nach Verfahren unterschiedliche Informationen. Dies ist notwendig, da nicht nur die Position oder Intensität eines Pixels, sondern auch generelle Eigenschaften von Interesse sind. Globale Verfahren berücksichtigen bei der Bewertung jeden Pixel des Bildes gleichermaßen, lokale hingegen betrachten nur ein kleine Fenster des Bildes, also einen Pixel und seine Nachbarschaft. Die Suche nach globalen Merkmalen, die ein Bild charakterisieren, kann aber keine Objekte und Details im Bild berücksichtigen. Hierfür eignet sich die Extraktion von lokalen Features. Um Objekte aus unterschiedlichen Perspektiven und in verschiedenen Größen wieder zu erkennen, ist es notwendig, dass die Features affin invariant sind. Abbildung \ref{img:liberty} zeigt dasselbe Objekt, jedoch rotiert, skaliert, verschoben und unter anderen Beleuchtungsverhältnissen. Ein Algorithmus sollte mit hoher Wahrscheinlichkeit erkennen, dass es sich hier um dasselbe Objekt handelt \cite{ifd2016}.
 
 \begin{figure}
 	\centering
@@ -39,11 +41,12 @@ Um Bilder zu vergleichen werden charakteristische Merkmale dieser betrachtet, di
 	\label{img:liberty}
 \end{figure}
 
-Die Gewinnung der Features ist in zwei Schritte aufgeteilt: 
+Die Gewinnung der Features ist in die Schritte Detektion und Extraktion aufgeteilt: 
 
 \begin{itemize}
-	\item \textbf{Detektion} Zuerst ermittelt ein Detektor Muster im Bild. Die untersuchten Muster sind abhängig vom Detektor Pixel, Linien oder Regionen einer Nachbarschaft. Hierfür wird jeder Pixel und seine Nachbarschaft betrachtet und entschieden ob es sich um einen \textit{keypoint} handelt. Ein Detektor gibt als Ergebnis alle Pixel zurück, bei denen es sich um \textit{keypoints} handelt. Manche Verfahren geben zusätzlich zu den \textit{keypoints} auch Eigenschaften wie die Orientierung oder den Maßstab aus. Um praktisch einsetzbar zu sein, muss ein Detektor ein Feature, dass in verschiedenen Bildern auftaucht, zuverlässig erkennen. Hier sollte aber die angestrebte Allgemeinheit berücksichtigt werden: Ein Feature Detektor für medizinische Bilder kann speziellere Annahmen treffen, als einer für eine allgemeine Bildsuche. In Abbildung \ref{img:keypoints} sind die durch einen SIFT-Detektor gefundenen \textit{keypoints} Farblich hervorgehoben.
-	\item \textbf{Extraktion} Die Feature Extraktion erzeugt aus den vom Detektor gefundenen \textit{keypoints} den Deskriptor. Ein Feature-Deskriptor ist eine kompakte Darstellung eines Features. Die \textit{keypoints} und deren Eigenschaften werden in Zahlen kodiert. Oft wird hier nicht nur ein Feature erzeugt, sondern ein Feature-Vektor, der auch die Nachbarschaft des \textit{keypoints} beschreibt. Von einem Deskriptor ist es wünschenswert, dass er affin invariant ist. Somit kann das Feature auch erkannt werden, wenn das Bild rotiert, verschoben oder skaliert wurde. \todo{Affine Invarianz?}
+	\item \textbf{Detektion} Ein Feature-Detektor in der Bildverarbeitung untersucht das Bild auf \enquote{interessante} Regionen. Die Definition hängt hier maßgeblich vom verwendeten Verfahren ab. Allgemein wird zwischen Detektoren unterschieden die Ecken, Kanten und Regionen betrachten. Einige der Detektoren berücksichtigen hier auch mehr als eine Kategorie: Das Difference of Gaussians Verfahren dient beispielsweise der Erkennung von Ecken und Regionen. Als Ergebnis liefert ein Detektor eine Menge von Pixel und ggf. ihrer Nachbarschaften. Diese Pixel sind die sogenannten \textit{keypoints} und beschreiben, mit ihren Nachbarschaften, die eingangs erwähnten \enquote{interessanten} Stellen.\newline
+	 Um praktisch einsetzbar zu sein, muss ein Detektor ein Feature, dass in verschiedenen Bildern auftaucht, zuverlässig erkennen. Hier sollte aber die angestrebte Allgemeinheit berücksichtigt werden: Ein Feature Detektor für medizinische Bilder, z.B. Röntgenaufnahmen, kann speziellere Annahmen treffen, als einer für eine allgemeine Bildsuche. In Abbildung \ref{img:keypoints} sind die durch einen SIFT-Detektor gefundenen \textit{keypoints} farblich hervorgehoben.
+	\item \textbf{Extraktion} Die Feature Extraktion erzeugt aus den vom Detektor gefundenen \textit{keypoints} und seinen lokalen Informationen den Deskriptor. Ein Feature-Deskriptor ist eine kompakte Darstellung eines Features. Die \textit{keypoints} und deren Nachbarschaften werden in Zahlen kodiert. Die meisten Deskriptoren kodieren die Informationen bereits normalisiert im Intervall zwischen 0 und 1. Diese Sequenz wird als ein Vektor notiert, sodass auch von Feature-Vektor gesprochen wird. Einige Verfahren reichern den Deskriptor mit zusätzlichen Informationen an, z.B. über die Stärke eines Gradienten bei der Kantendetektion.
 \end{itemize}
 
 \begin{figure}
@@ -55,11 +58,11 @@ Die Gewinnung der Features ist in zwei Schritte aufgeteilt:
 
 \subsection{Bildoperationen}
 
-Zur Detektion und Extraktion von Features werden eine Reihe mathematischer Operationen und Verfahren genutzt, wie sie in der Bildverarbeitung üblich sind. Hiervon werden diejenigen vorgestellt, die im Weiteren der Arbeit verwendet werden.
+Zur Detektion und Extraktion von Features werden eine Reihe mathematischer Operationen und Verfahren genutzt, wie sie in der Bildverarbeitung üblich sind. Hiervon werden diejenigen vorgestellt, die im Weiteren in der Arbeit verwendet werden.
 
 \subsubsection{Histogramm}
 
-Ein Histogramm ist eine diskrete Funktion, welche die Häufigkeitsverteilung in einer Menge abbildet. Hierfür wird jeder Wert der Menge einer Klasse zugeordnet. Die Größe der Intervalle einer Klasse leiten sich aus der Größe des gesamten Wertebereichs und der Anzahl der Klasse ab. So kann beispielsweise die Verteilung der Pixel eines Bildes auf die Intensitäten als Histogramm betrachtet werden. Bei einem monochromatischen Bild liegen 256 Intensitätswerte vor, die je eine Klassen repräsentieren. Beim Bilden des Histogramms wird jeder Pixels betrachtet und der Zähler der Klasse um eins inkrementiert, in deren Wertebereich der Intensitätswert des Pixels fällt. Ein Histogramm ist normalisiert, wenn es die relative Verteilung in der Menge darstellt.
+Ein Histogramm ist eine diskrete Funktion, welche die Häufigkeitsverteilung in einer Menge abbildet. Hierfür wird jeder Wert der Menge einer Klasse zugeordnet. Die Größe der Intervalle einer Klasse leiten sich aus der Größe des gesamten Wertebereichs ab. So kann beispielsweise die Verteilung der Pixel eines Bildes auf die Intensitäten als Histogramm betrachtet werden. Bei einem monochromatischen Bild liegen 256 Intensitätswerte vor, die je eine Klasse repräsentieren. Beim Bilden des Histogramms wird jeder Pixels betrachtet und der Zähler der Klasse um eins inkrementiert, in deren Wertebereich der Intensitätswert des Pixels fällt. Ein Histogramm ist normalisiert, wenn es die relative Verteilung in der Menge darstellt.
 In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein sehr heller Hintergrund und eine dunkle Katze, die den Großteil des Bildes ausmacht. Dies spiegelt sich auch im Histogramm wieder: Es ist eine große Mengen an Punkten im dunklen Bereich vorhanden (Intensität $< 128$) und eine kleine, extreme Häufung im hellen Bereich.
 
 \begin{figure}
@@ -70,7 +73,7 @@ In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein 
 \end{figure}
 
 \subsubsection{Filter} 
-Eine Filteroperation auf einem Bild soll bestimmte Bestandteile, z.B. Rauschen, reduzieren oder andere interessante Bereiche hervorheben. Dabei wird ein sogenannter Filterkern $F$, eine kleine Matrix von Koeffizienten, auf alle Teilbereiche des Bilders angewendet. 
+Ein Filter (auch Filterkern, Faltungsmatrix) ist eine, meist quadratische, Matrix von Koeffizienten. Eine Filteroperation auf einem Bild soll bestimmte Bestandteile, z.B. Rauschen, reduzieren oder andere Kanten bzw. Ecken hervorheben. Als Ergebnis dieses Prozesses resultiert also wieder ein Bild. Die Anwendung des Filters wird Faltung genannt und durch das $*$ Zeichen ausgedrückt. Hier handelt es sich aber nicht um eine klassische Matrixmultiplikation. Bei der Faltung wird zur Berechnung der neuen Intensität eines Pixels seine Nachbarschaft berücksichtigt. Bei Verwendung einer $3 \times 3$ Matrix zur Filterung bedeutet dies, dass der Pixel selbst und alle direkt angrenzenden, mit den entsprechenden Koeffizienten des Kerns multipliziert und anschließend aufsummiert werden. 
 
 \textbf{Gauß-Filter}
 Ein Gauß-Filter wird in der Bildbearbeitung verwendet um ein Bild zu verzerren und somit Rauschen aber auch Details zu unterdrücken. Diesem Filter liegt, wie der Name sagt, die Gauß-Funktion zu Grunde:
@@ -79,55 +82,59 @@ $$
 g_{\sigma}(x)=\frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2}}{2\sigma^{2}}}, \quad g_{\sigma}(x, y) = \frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2} + y^{2}}{2\sigma^{2}}}
 $$
 
-Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind: $F_{G}(x, y) = g(x) * g(y)$.
+Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind: \todo{$F_{G}(x, y) = g(x) * g(y)$}. 
 
-\textbf{Sobel-Filter}
-Ein Sobel-Filter wird ebenfalls zur Konvolution mit einem Bild genutzt. Dieser dient als \todo{Filter für hochfrequente} Signale und eignet sich dadurch besonders zur Erkennung von Kanten. Häufig wird der Sobel-Filter genutzt um die Gradienten in horizontale und vertikale Richtung zu bestimmen. Für einen $3 \times 3$ großen Filterkern ergeben sich dann die Matritzen:
-
-$$ 
-F_{S_x} = \begin{bmatrix}
-  1 & 0 & -1 \\
-  2 & 0 & -2 \\
-  1 & 0 & -1
-\end{bmatrix} \quad
-F_{S_y} = \begin{bmatrix}
-   1 &  2 &  1 \\
-   0 &  0 &  0 \\
-  -1 & -2 & -1
-\end{bmatrix}
-$$
-
-Aus einem Originalbild $O$ werden so die Gradienten-Bilder $G_{x}$ und $G_{y}$ durch die \todo{Konvolution mit dem * Operator} mit den jeweiligen Filterkernen $S_{x}$ und $S_{y}$ erzeugt:  
-
-$$ G_{x} = S_{x} * O \quad G_{y} = S_{y} * O $$
-
-Da im Standardfall eine Nachbarschaft von $3 \times 3$ um den Pixel vorhanden sein muss, ergeben sich bei einem Bilder der Größe $n \times m$ Gradienten-Bilder der Größe $(n-2) \times (m-2)$.
-
-\subsubsection{Difference of Gaussians}
-Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten hervorgehoben werden. Wie der Name andeutet wird hier die Differenz zwischen zwei Bildern gebildet, auf die jeweils ein Gauß-Filter angewandt wurde. Hier variieren die Standardabweichungen der Gauß-Funktionen um zwei unterschiedlich stark verzerrte Versionen des Originals zu erzeugen. Hierbei gilt, dass die Standardabweichung $\sigma_{2} > \sigma_{1}$ ist:
+\textbf{Difference of Gaussians}
+Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten hervorgehoben werden. Wie der Name andeutet wird hier die Differenz zwischen zwei Bildern gebildet, auf die jeweils ein Gauß-Filter angewandt wurde. Hier variieren die Standardabweichungen der Gauß-Funktionen um zwei unterschiedlich stark verzerrte Versionen des Originals zu erzeugen. Hierbei gilt, dass die Standardabweichung $\sigma_{2} > \sigma_{1}$ ist: \todo{$G_{\sigma_2}$}
 
 $$ DoG(x, y, \sigma_{1}, \sigma_{2}) = I * G_{\sigma_2} - I * G_{\sigma_1}$$
 
-\section{Bag of Visual Words}
+\subsection{Histogram of Oriented Gradients}
 
-Das Bag of Words Modell stammt aus dem Bereich Information Retrival und wird zur Klassifizierung von Dokumenten genutzt. Es wird das Auftreten jedes Wortes in einem Dokument gezählt und durch die Anzahl aller Wörter im Vokabular dividiert, um so einen normalisierten Wert zu erhalten, welcher die relative Häufigkeit eines Wortes angibt. Das Vokabular wird \textit{Codebook} genannt, die Wörter sind die \textit{Codewords}. \linebreak
-Dieses Modell wurde von der Computer Vision adaptiert um Bilder zu klassifizieren. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. Zunächst wird auf eine Familie der Clustering-Algorithmen, k-means, näher eingegangen. Auf diesem Verständnis aufbauend wird dann die Funktionsweise des Bag of Visual Words behandelt.
+Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. \todo{Gradienten}. Da sich Gradienten eignen, um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. 
+Um ein HOG zu generieren, wird das Bild in gleich große Zellen eingeteilt, die eine Nachbarschaft von Pixeln umfassen. Über die Pixel jeder Zelle werden nun die lokalen Gradienten berechnet. Diese fließen proportional zu ihrer Stärke in den kumulierten Gradienten der Zelle ein. Dabei hat jede Zelle eine feste, vorgegebene Anzahl an Klassen für die Orientierungen der Gradienten. 
+Dalal und Triggs nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \ref{img:hog} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
 
-\subsection{K-means Clustering}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/hog.png}
+	\caption{Schematische Darstellung des Histogram of Oriented Gradients  \cite{dif2004}}
+	\label{img:hog}
+\end{figure}
 
-Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der diesem am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Oft wird hier der quadrierte Fehler durch k-means minimiert, also beispielsweise $D = ||x_{i} - c_{j}||^{2}$. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am Geringsten ist:
+\subsection{SIFT}
+
+SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} entwickelt wurde. Neben der Größe bzw. den Maßstab, berücksichtigt SIFT teilweise auch die Rotation, Beleuchtung, Perspektive und Illumination. Der Algorithmus kombiniert mehrere mathematische Operationen und Verfahren um den Deskriptor eines Features als Ergebnis zu erhalten. Die Erzeugung des Deskriptors wird nach Lowe in vier wesentliche Schritte unterteilt:
+
+\begin{enumerate}
+	\item \textbf{Scale space} Im ersten Schritt wird der Maßstab behandelt. SIFT konstruiert hierfür einen \textit{scale space}. Hier werden aus dem Originalbild durch den \textit{Difference of Gaussians} immer verzerrtere Versionen erzeugt. Die Größe der neuen Bilder wird halbiert und die Prozedur wiederholt. Alle verzerrten Bilder einer Größe bilden eine sogenannte Oktave. SIFT verwendet vier Oktaven und fünf Bilder pro Oktave um den \textit{scale space} zu erzeugen. Um Ecken und Kanten in einem Bild zu ermitteln, die sich als Kandidaten für \textit{keypoints} eignen, wird nun zwischen allen aufeinanderfolgenden Bildern einer Oktave die Differenz gebildet. Das Prinzip ist für zwei Oktaven in Abbildung \ref{img:sift_dog} dargestellt. Das Ergebnis ist eine Approximation des \textit{Laplacian of Gaussians}\footnote{Der Laplacian of Gaussians (LoG) oder auch Marr-Hildreth-Operator dient ebenfalls der Kantendetektion in Bildern.}, jedoch ist dieses Verfahren weit weniger rechenintensiv. 
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.5]{images/sift_dog.png}
+	\caption{Difference of Gaussians Operator \cite{dif2004}}
+	\label{img:sift_dog}
+\end{figure}	
+	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DoG-Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DoG-Bildes und des Vorigen und Nachfolgenden im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genaue Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint} \todo{ausgehend}.
+	\item \textbf{Bestimmung der Orientierung} Bei dem Aufbau der Feature-Vektoren pro \textit{keypoint} wird die lokale Orientierung berechnet. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogram of Oriented Gradients. Hierfür werden zufällig Punkte aus der Nachbarschaft des \textit{keypoints} ausgewählt. Der \todo{Extremwert (besser: dominante Wert?)} des Histogramms wird dann als dominante Orientierung verwendet.
+	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
+\end{enumerate}
+
+\section{K-means Clustering}
+
+Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means-Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der ihm am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Oft wird hier der quadrierte Fehler durch k-means minimiert, also beispielsweise $D = \|x_{i} - c_{j}\|^{2}$. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am Geringsten ist:
 
 $$ X = \sum_{j=1}^{k} \sum_{i=1}^{n} min D(x_{i}, c_{j}) $$
 
-Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Schwerpunkte der Cluster, wie beispielsweise der Algorithmus von Llyod. Zunächst beginnt Llyods Algorithmus mit einer Initialisierung der Schwerpunkte. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert, also die Vektor-Cluster-Zuordnung sich nicht mehr oder nur noch gering ändert oder eine maximale Anzahl an Iterationen erreicht wurde: 
+Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Schwerpunkte der Cluster, wie beispielsweise der Algorithmus von Llyod. Llyods Algorithmus beginnt mit einer Initialisierung der Schwerpunkte. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert, also die Vektor-Cluster-Zuordnung sich nicht mehr bzw. nur noch gering ändert oder eine maximale Anzahl an Iterationen erreicht wurde: 
 
 \begin{enumerate}
 	\item \textbf{Initialisierung} Es werden zunächst $k$ Vektoren durch ein Verfahren (z.B. zufällig oder \textit{farthest-neighbour}) als Schwerpunkte der Cluster ausgewählt.
-	\item \textbf{Zuordnung}: Von den verbleibenden Vektoren wird nun mit jedem Cluster die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am geringsten bei Aufnahme des Vektors erhöht.
-	\item \textbf{Vektoren zuweisen}: Die Zentren der Cluster werden neu berechnet, um den neu zugeordneten Vektor in Folgeberechnungen miteinzubeziehen.
+	\item \textbf{Zuordnung}: Von den verbleibenden Vektoren wird nun mit jedem Cluster die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am Geringsten bei Aufnahme des Vektors erhöht.
+	\item \textbf{Vektoren zuweisen}: Die Zentren der Cluster werden neu berechnet, um die neue Zuordnung der Vektoren zu Clustern in Folgeberechnungen miteinzubeziehen.
 \end{enumerate}
 
-Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im zweidimensionalen Raum gegeben. Die Verteilung der Punkte ist in diesem Beispiel idealisiert, um bei einem Clustering mit einem $k = 3$, die Cluster in der rechten Grafik zu erhalten. Dies illustriert auch, dass abhängig von den Daten nicht immer sinvolle Cluster gebildet werden können. Die Wahl der initialen Clusterschwerpunkte kann das Ergebnis ebenfalls stark beeinflussen, daher sollte diese nicht immer zufäliig gewählt werden. \cite{mmd2011}
+Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im zweidimensionalen Raum gegeben. Die Verteilung der Punkte ist in diesem Beispiel idealisiert, um bei einem Clustering mit einem $k = 3$, die Cluster in der rechten Grafik zu erhalten. Dies illustriert auch, dass abhängig von den Daten nicht immer sinvolle Cluster gebildet werden können. Die Wahl der initialen Clusterschwerpunkte kann das Ergebnis ebenfalls stark beeinflussen, daher sollte diese nicht immer zufällig gewählt werden. Beispielsweise wählt die \textit{farthest neighbour} Methode als initial Zentren die Vektoren, welche am weitesten voneinander entfernt sind \cite{mmd2011}.
 
 \begin{figure}
 	\centering
@@ -136,28 +143,14 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 	\label{img:kmeans}
 \end{figure}
 
-\subsection{Funktionsweise}
-Um \textit{Visual Words} aus einer Menge von Trainingsbildern zu erhalten, werden zunächst Feature-Vektoren aus den Bildern extrahiert. Die Features werden dann durch ein Clusteringverfahren gruppiert. Die Idee ist, dass ähnliche Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ ein große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook}.
-Auf Basis des \textit{Codebooks} kann der Bag of Visual Words von Bildern erzeugt werden. Hierfür werden wieder die Features eines Bildes extrahiert. Aus diesen Daten wird nun eine Histogrammdarstellung des Bildes erzeugt: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert.
+\section{Neuronale Netze}
 
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.45]{images/bovw.png}
-	\caption{Training und Test, bzw. Anwendung, des Bag of Visual Word Modells. \todo{ref}}
-	\label{img:bovw}
-\end{figure}
+Neuronale Netze sind dem Aufbau und der Funktionsweise der Neuronen des menschlichen Gehirns nachempfunden. Es wird eine Menge von künstlichen Neuronen genutzt, um eine Lösung für ein Problem zu gestalten. Erste theoretische Überlegungen tauchten bereits in den 40er Jahren auf. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie \textit{Machine Learning} finden neuronale Netze seit Mitte der 80er Jahre vermehrt praktische Anwendung und akademische Zuwendung \cite{nnk2007}. Dadurch, dass neuronale Netze von Natur aus hoch parallel arbeiten können, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
 
-\todo{Quelle}
-
-\section{Autoencoder}
-
-Ein Autoencoder ist ein spezielles neuronales Netzwerk. Diese Netze werden für das unbeaufsichtigte Lernen einer komprimierten Darstellung von Daten genutzt. Zunächst wird hierfür ein Überblick über das Themengebiet der neuronale Netze im Allgemeinen gegeben und anschließend die Funktionsweise eines Autoencoders erläutert. Darauf aufbauend werden zwei Erweiterungen des Autoencoders vorgestellt, um Rauschen in den Daten und tiefe Netzwerke berücksichtigen.
-
-\subsection{Neuronale Netze}
-
-Neuronale Netze sind dem Aufbau und der Funktionsweise der Neuronen des menschlichen Gehirns nachempfunden. Es wird eine Menge von künstlichen Neuronen genutzt, um eine Lösung für ein Problem zu gestalten. Erste theoretische Überlegungen tauchten bereits in den 40er Jahren auf. Durch die wachsende Rechenleistung und neue Forschungsgebiete wie Machine Learning finden neuronale Netze seit Mitte der 80er Jahre vermehrt praktische Anwendung und akademische Zuwendung. Dadurch, dass neuronale Netze von Natur aus hoch parallel arbeiten können, eignen sie sich vor allem für parallele Architekturen und die Verarbeitung großer Datenmengen. 
-Ein neuronales Netz besteht aus einer Menge Neuronen, die in Schichten im Netzwerk angeordnet sind. Jedes Neuron besitzt einen Aktivierungszustand und einen Schwellwert. Von diesen hängt ab, ob ein Signal weitergeleitet wird. Neuronen benachbarter Schichten sind vollständig durch gewichtete Kanten miteinander verbunden. Diese Beziehung wird in einer Gewichtsmatrix ausgedrückt. Eine Kante zwischen zwei Neuronen die nicht verbunden sind, hat dann den Wert 0 als Gewicht, um die Abwesenheit auszudrücken. 
-Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\mathbb{R}^n$ dargestellt wird. Die erste Schicht des Netzwerks, der \textit{Input layer}, leitet das Signal nur an die nächste Schicht weiter und besitzt daher $n$ Neuronen. Die letzte Schicht, der \textit{Ouput layer}, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^m$, wobei $m$ die Anzahl der Elemente des Vektors angibt. Zwischen diesen beiden Schichten können sich beliebig viele \textit{Hidden layer} befinden. Die \textit{Hidden layer} bilden somit den Kern des Netzes, deren Kantengewichtungen, Kanten oder Neuronen während eines Lernprozess angepasst werden können. In Abbildung \ref{img:nnexample} ist ein Netz mit drei Schichten dargestellt. Der \textit{Input layer} nimmt einen Vektor mit vier Komponenten als Eingabe entgegen. Die Werte des Vektors werden an jedes der fünf Neuron im \textit{Hidden Layer} weitergeleitet, was durch die Kanten symbolisiert wird. Jede Kante besitzt dabei ein Gewicht, dass aus Gründen der Übersicht nicht aufgeführt ist. Schließlich werden die Ausgaben des \textit{Hidden layers} an das einzige Neuron des \textit{Output layers} geschickt und von diesem als Ergebnis $z$ ausgegeben.
+\subsection{Modell}
+Ein neuronales Netz besteht aus einer Menge Neuronen, die in Schichten im Netzwerk angeordnet sind. Jedes Neuron besitzt einen Aktivierungszustand und einen Schwellwert. Von diesen hängt ab, ob ein Signal weitergeleitet wird. Neuronen benachbarter Schichten sind, meist vollständig, durch gewichtete Kanten miteinander verbunden. Diese Beziehung wird in einer Gewichtsmatrix ausgedrückt. Eine Kante zwischen zwei Neuronen die nicht verbunden sind, hat dann den Wert 0 als Gewicht, um die Abwesenheit auszudrücken. 
+Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\mathbb{R}^n$ dargestellt wird. Die erste Schicht des Netzwerks, der \textit{Input Layer}, leitet das Signal nur an die nächste Schicht weiter und besitzt daher $n$ Neuronen. Die letzte Schicht, der \textit{Ouput Layer}, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^m$, wobei $m$ die Anzahl der Elemente des Vektors angibt. Zwischen diesen beiden Schichten können sich beliebig viele \textit{Hidden Layer} befinden. Die \textit{Hidden Layer} bilden somit den Kern des Netzes, deren Kantengewichtungen, Kanten oder Neuronen während eines Lernprozess angepasst werden können. \newline
+In Abbildung \ref{img:nnexample} ist ein Netz mit drei Schichten dargestellt. Der \textit{Input Layer} nimmt einen Vektor mit vier Komponenten als Eingabe entgegen. Die Werte des Vektors werden an jedes der fünf Neuron im \textit{Hidden Layer} weitergeleitet, was durch die Kanten symbolisiert wird. Jede Kante besitzt dabei ein Gewicht, dass aus Gründen der Übersicht nicht aufgeführt ist. Schließlich werden die Ausgaben des \textit{Hidden Layers} an das einzige Neuron des \textit{Output Layers} geschickt und von diesem als Ergebnis $z$ ausgegeben.
 
 \begin{figure}
 	\centering
@@ -193,9 +186,9 @@ Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\m
         \path (H-\source) edge (O);
 
     % Annotate the layers
-    \node[annot,above of=H-1, node distance=1cm] (hl) {Hidden layer};
-    \node[annot,left of=hl] {Input layer};
-    \node[annot,right of=hl] {Output layer};
+    \node[annot,above of=H-1, node distance=1cm] (hl) {Hidden Layer};
+    \node[annot,left of=hl] {Input Layer};
+    \node[annot,right of=hl] {Output Layer};
 	\end{tikzpicture}
 
 	\caption{Beispiel eines dreischichtigen neuronalen Netzes.}
@@ -204,9 +197,12 @@ Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\m
 
 Die Verarbeitung eines Signals in einem Neuron ist in Abbildung \ref{img:neuron} schematisch dargestellt und lässt sich in drei Schritte untergliedern:
 \begin{itemize}
-	\item \textbf{Propagierungsfunktion} Aus der Eingabe aller verbundenen Neuronen wird die Netzeingabe berechnet. Meist wird hier die gewichtete Summe zwischen Eingabe und Gewicht verwendet: $\sum_{i=1}^{} w_{i}x_{i} + b$. $b$ ist hier der sogenannter Bias-Vektor, der dazu verwendet werden kann Einfluss auf die Aktivierung zu nehmen.
-	\item \textbf{Aktivierungsfunktion} Es wird der neue Aktivierungszustand des Neurons aus dem alten Zustand und der Netzeingabe durch die Aktivierungsfunktion $a$ berechnet. Häufig wird hier die ReLU (Rectified Linear Unit) $a_{ReLU}(x)=max(0,x)$ bzw. die Sigmoidfunktion $a_{s}(x) = 1/1+e^{-x}$ verwendet.
-	\item \textbf{Ausgabefunktion} Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. Oft wird hier die Identitätsfunktion verwendet.
+	\item \textbf{Propagierungsfunktion} Aus der Eingabe aller verbundenen Neuronen wird die Netzeingabe $net_{in}$ berechnet. Meist wird hier die gewichtete Summe zwischen Eingabe und Gewicht verwendet: 
+	$$net_{in} = \sum_{i=1}^{} w_{i}x_{i} + b$$
+Die Variable $b$ ist hier der sogenannter Bias-Vektor, der dazu verwendet werden kann Einfluss auf die Aktivierung zu nehmen. Dieser wird als zusätzliches Neuron pro Schicht modelliert.
+	\item \textbf{Aktivierungsfunktion} Es wird der neue Aktivierungszustand des Neurons aus dem alten Zustand und der Netzeingabe $net_{in}$ durch die Aktivierungsfunktion $a$ berechnet. Häufig wird hier die ReLU (Rectified Linear Unit) $a_{relu}$ bzw. die Sigmoidfunktion $a_{s}$ verwendet: \todo{sigmoid}
+	$$a_{relu}(x) = max(0,x) \quad \quad a_{s}(x) = \frac1{1+e^{-x}}$$
+	\item \textbf{Ausgabefunktion} Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion $net_{out}$ berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. Oft wird hier die Identitätsfunktion verwendet.
 \end{itemize}
 
 \begin{figure}
@@ -261,93 +257,30 @@ Die Verarbeitung eines Signals in einem Neuron ist in Abbildung \ref{img:neuron}
 	\label{img:neuron}
 \end{figure}
 
+\subsection{Training und Lernprozess}
+
 Wurde ein neuronales Netz konstruiert, folgt darauf die Trainingsphase. Durch das Training ist es möglich, dass ein Netzwerk Neuronen oder Verbindungen hinzufügt bzw. entfernt, den Schwellwert für die Aktivierung von Neuronen verändert oder die Gewichte zwischen Neuronen anpasst. Pro Trainingselement wird die Fehlerquote $F$ zwischen dem angestrebten Ergebnis $z'$ und der Ausgabe des Netzes $z$ berechnet:
-$$ F(z, z')=\sum_{i=0}^{n}(z'_{i} - z_{i})^2 $$
-Durch eine Lernregel werden abhängig von der Fehlerquote beispielsweise die Gewichte der Kanten angepasst. Für Netze ohne \textit{Hidden layer} eignet sich hier die Hebbsche oder Delta Lernregel. Für Netze mit mindestens einem \textit{Hidden layer}, hat sich das \textit{Backpropagation} Verfahren etabliert. \textit{Backpropagation} minimiert den Gradientenabstieg auf der Fehleroberfläche die $F$ aufspannt. Der Algorithmus geht in drei Schritten vor:
+$$ F(z, z')=\sum_{i=0}^{m}(z'_{i} - z_{i})^2 $$
+Durch eine Lernregel werden abhängig von der Fehlerquote beispielsweise die Gewichte der Kanten angepasst. Für Netze ohne \textit{Hidden Layer} eignet sich hier die Hebbsche oder Delta Lernregel. Für Netze mit mindestens einem \textit{Hidden Layer}, hat sich das \textit{Backpropagation} Verfahren etabliert. \textit{Backpropagation} minimiert den Gradientenabstieg auf der Fehleroberfläche die $F$ aufspannt. Der Algorithmus geht in drei Schritten vor:
 
 \begin{enumerate}
 	\item \textbf{Forward Pass} Die Gewichte des Netzwerks werden initialisiert und eine Eingabe durch das Netz propagiert. Als Resultat liegt die Ausgabe vor.
-	\item \textbf{Fehlerberechnung} Die Fehler des \textit{Output layers} werden, durch einen Vergleich mit den erwarteten Werten, berechnet. Falls die Fehler unterhalb einer vorgegebenen Grenze liegen, ist das Training beendet. Andernfalls wird fortgefahren.
+	\item \textbf{Fehlerberechnung} Die Fehler des \textit{Output Layers} werden, durch einen Vergleich mit den erwarteten Werten, berechnet. Falls die Fehler unterhalb einer vorgegebenen Grenze liegen, ist das Training beendet. Andernfalls wird fortgefahren.
 	\item \textbf{Backward Pass} In diesem Schritt wird die Fehlerquote rückwärts durch das Netz propagiert. Die Gewichte an den Verbindungen zwischen Neuronen werden in Abhängigkeit ihres Einflusses auf den Fehler Schicht für Schicht aktualisiert.
 \end{enumerate}
 
-\todo{Gradienten erläutern}
-
-\subsection{Funktionsweise}
-Ein Autoencoder (AE) ist ein spezielles neuronales Netzwerk, dass eine komprimierte Kodierung der Eingabe lernt. Ein Autoencoder versucht die Daten zu rekonstruieren und kann daher unbeaufsichtigt lernen: Die rekonstruierten Daten können anhand einer Distanzmetrik mit den Originaldaten verglichen werden. Anschließend kann die Größe des Fehlers berechnet werden und durch \textit{Backpropagation} die Gewichtesmatrix aktualisiert werden.
-Um die Originaldaten als Ergebnis erhalten zu können, muss die Anzahl der Neuronen des \textit{Input layers} der Anzahl der Neuronen im \textit{Output layer} entsprechen. Die Anzahl der Neuronen im \textit{Hiddenlayer} ist geringer, um die komprimierte Darstellung des Features zu erreichen. Werden mehrere \textit{Hiddenlayer} verwendet, so nimmt die Neuronenanzahl von Schicht zu Schicht ab um die Anzahl der Komponenten weiter zu verringern. Dieser Vorgang ist die Enkodierung und liefert die gewünschte komprimierte Abbildung. Die Dekodierung ist umgekehrt aufgebaut, um das Original aus der komprimierten Repräsentation Schicht für Schicht zu rekonstruieren. Wie gut die Dekodierung gelungen ist, lässt sich dann anhand eines Vergleichs der Distanz des Original und der Rekonstruktion bewerten. Formal wird ein Eingabevektor $x \in [0,1]^n$ auf einen Vektor $y \in [0,1]^p$ durch $y = encode_{W,b}(x) = s(Wx + b)$  mit $p < n$ abgebildet. $W$ ist die Gewichtsmatrix $n \times p$ und $b$ der Bias-Vektor. Diese Parameter werden durch den Autoencoder optimiert. Die Rekonstruktion erfolgt durch die Dekodierungsfunktion: $z \in [0, 1]^n$ wird dann durch $z = decode_{W', b'}(y) = s(W'y + b')$ berechnet. \cite{ssn1997}. \todo{This image z is usually referred to as code, latent variables, or latent representation}
-
-In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet der als Eingabe einen Vektor $x \in [0,1]^4$ entgegen nimmt. Dieser wird auf den Vektor $y$ mit drei Komponenten abbildet, da der \textit{Hidden layer} drei Neuronen enthält. Die Rekonstruktion $z$ aus $y$ erfolgt dann durch die Berechnung der Dekodierungsfunktion.
-
-\begin{figure}
-	\centering
-
-	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
-    \tikzstyle{every pin edge}=[<-,shorten <=1pt]
-    \tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{input neuron}=[neuron, fill=green!50];
-    \tikzstyle{output neuron}=[neuron, fill=red!50];
-    \tikzstyle{hidden neuron}=[neuron, fill=blue!50];
-    \tikzstyle{annot} = [text width=6em, text centered]
-
-    % Draw the input layer nodes
-    \foreach \name / \y in {1,...,4}
-        \node[input neuron, pin=left:$x_{\y}$] (I-\name) at (0,-\y) {};
-
-    % Draw the hidden layer nodes
-    \foreach \name / \y in {1,2,3}
-        \path[yshift=-0.5cm]
-            node[hidden neuron] (H-\name) at (\layersep,-\y cm) {$y_{\y}$};
-    
-    % Draw the output layer nodes
-    \foreach \name / \y in {1,...,4}
-        \node[output neuron,pin={[pin edge={->}]right:$z_{\y}$}, right of=H-3] (O-\name) at (\layersep,-\y) {};
-
-    % Connect every node in the input layer with every node in the
-    % hidden layer.
-    \foreach \source in {1,...,4}
-        \foreach \dest in {1,2,3}
-            \path (I-\source) edge (H-\dest);
-
-    % Connect every node in the hidden layer with the output layer
-    \foreach \source in {1,2,3}
-        \foreach \dest in {1,...,4}
-        	\path (H-\source) edge (O-\dest);
-
-    % Annotate the layers
-    \node[annot,above of=H-1, node distance=1.5cm] (hl) {Hidden layer};
-    \node[annot,left of=hl] {Input layer};
-    \node[annot,right of=hl] {Output layer};
-	\end{tikzpicture}
-
-	\caption{Beispiel eines simplen Autoencoders}
-	\label{img:example_ae}
-\end{figure}
-
-\subsection{Stacked Denoising Autoencoder}
-
-Von Hinton and Salakhutdinov \cite{dae2006} wurde 2006 das Konzept des Stacked Autoencoders eingeführt, um einige Probleme mit herkömmlichen Autoencoder zu überwinden. Bei Netzwerken mit mehr als einem Hidden Layer erzielt die Gradientenabstiegs-Methode, aufgrund der zunehmenden Verzerrung der Gradienten, bei der Rückpropagierung keine guten Ergebnisse mehr. In vielen Ansätzen wurde auch eine zufällige Initialisierung der Gewichte gewählt. Hier besteht die Gefahr, dass der Algorithmus in einem lokalen Optimum verbleibt. Wenn die anfänglichen Gewichte hingegen bereits nah an einer guten Lösung liegen, sinkt die Wahrscheinlichkeit eines lokalen Optimums. Aus diesem Grund wurde das Pretraining für Autoencoder mit mehr als einer Schicht vorgeschlagen. Hierfür wird im Training jedes Paar aneinanderliegender Schichten als ein Autoencoder aufgefasst. Das Pretraining besteht aus drei Schritten, die wiederholt werden, bis alle Autoencoder trainiert sind.
-
-\begin{enumerate}
-	\item Es wird der aktuelle Autoencoder trainiert. Zu Beginn besteht dieser aus dem \textit{Input} und folgendem \textit{Hidden layer}.
-	\item Nun wird der Decoder des trainierten Autoencoders entfernt und ein neuer Autoencoder erzeugt. Dieser besitzt den \textit{Hidden layer} des trainierten Autoencoders als \textit{Input layer}.
-	\item Das Training wird mit dem neuen Autoencoder fortgeführt.
-\end{enumerate}
-
-Ein Stacked Denoising Autoencoder \cite{sda2010} dient dazu, dass auch ein korrektes Ergebnis zu erhalten, wenn in den Daten Rauschen vorliegt. Weiterhin ist es vorteilhaft verrauschte Testdaten zu verwenden, um so sicher zu stellen, dass der Autoencoder tatsächlich eine Abstraktion lernt und nicht nur eine feste Abbildung zwischen Ein- und Ausgabe. Hierfür ist es erforderlich die Testdaten durch ein stochastisches Verfahren zu korrumpieren. Dem liegt die Annahme zu Grunde, dass die Eingabe relativ robust gegenüber Verzerrungen ist. \todo{Grafik, RBMS, mehr Denoising}
-
 \section{CUDA}
 
-Der Begriff CUDA ist ein Akronym für \textit{Compute Unified Device Architecture}. Dahinter verbirgt sich eine Architektur von Nvidia für parallele Berechnungen durch Grafikkarten. Das Umsetzen von Programmen auf Grafikkarten, die nicht mit der Verarbeitung von grafischen Daten in Zusammenhang stehen, wird GPU Computing (Graphics Processing Unit Computing) genannt. Die meisten GPU Computing Ansätze, und auch CUDA, verwenden als Ausführungsmodell das Single Program Multiple Data (SPMD) Modell. Im Unterschied zum Multiple Instruction Multiple Data (MIMD) Modell, dass in CPUs verwendet wird, wenden alle Prozessoren das gleiche Programm auf unterschiedliche Daten an. Durch diese Art der Parallelisierung konnten in den letzten Jahren enorme Steigerungen der Gleitkommaoperationen pro Sekunde (flops) und der Speicherbandbreite bei Berechnungen erzielt werden. 
-Hier wird im wesentlichen ein Einblick in die im CUDA C Programming Guide \cite{cud2012} detailliert beschriebenen Dokumentation gegeben, sodass ein Leser Teile eines CUDA Programms nachvollziehen kann. Zunächst wird näher auf das Ausführungsmodell und dessen Umsetzung eingegangen. CUDA unterscheidet zwischen verschiedenen Speicherbereichen auf der Grafikkarte. Da die Verwendung der unterschiedlichen Speicherbereiche wesentliche Unterschiede in der Implementierung eines Algorithmus und dessen Laufzeit zur Folge hat, werden diese im Kapitel \ref{cudaMemory} Speicherverwaltung behandelt. Um den praktische Einsatz von CUDA zu illustrieren, wird abschließend ein Programm zur Addition zweier Vektoren auf der Grafikkarte.
+Der Begriff CUDA ist ein Akronym für \textit{Compute Unified Device Architecture}. Dahinter verbirgt sich eine Architektur von Nvidia für parallele Berechnungen durch Grafikkarten. Durch den Einsatz von Grafikkarten können Berechnungen gerade bei großen Datenmengen stark beschleunigt werden, da diese auf eine hoch-parallele Verarbeitung ausgelegt sind. Die meisten GPU Computing Ansätze, und auch CUDA, verwenden als Ausführungsmodell das Single Program Multiple Data (SPMD) Modell. Im Unterschied zum Multiple Instruction Multiple Data (MIMD) Modell, dass in CPUs verwendet wird, wenden alle Prozessoren das gleiche Programm auf unterschiedliche Daten an. Durch diese Art der Parallelisierung konnten in den letzten Jahren enorme Steigerungen der Gleitkommaoperationen pro Sekunde (flops) und der Speicherbandbreite bei Berechnungen erzielt werden.\newline
+Der Abschnitt gibt im Wesentlichen ein Einblick in die im CUDA C Programming Guide \cite{cud2012} detailliert beschriebenen Dokumentation gegeben, sodass ein Leser Teile eines CUDA Programms nachvollziehen kann. Zunächst wird näher auf das Ausführungsmodell und dessen Umsetzung eingegangen. CUDA unterscheidet zwischen verschiedenen Speicherbereichen auf der Grafikkarte. Da die Verwendung der unterschiedlichen Speicherbereiche wesentliche Unterschiede in der Implementierung eines Algorithmus und dessen Laufzeit zur Folge hat, werden diese im Abschnitt \ref{cudaMemory} Speicherverwaltung behandelt. Um den praktische Einsatz von CUDA zu illustrieren, wird abschließend ein Programm zur Addition zweier Vektoren auf der Grafikkarte vorgestellt.
 
 \subsection{Ausführungsmodell}
 
-Ein Programm, dass auf einer Nvidia Grafikkarte ausgeführt werden soll, muss in der Sprache CUDA C geschrieben sein. Aus der Sicht eines Programmierers handelt es sich hierbei um eine Erweiterung von C um Primitive und Funktionen für Berechnungen auf der Grafikkarte. Zum Übersetzen und Linken des Codes dient der \textit{nvcc} Compiler von Nvidia. Dieser unterscheidet zwischen Code der auf dem \textit{host}, der CPU, und dem \textit{device}, der GPU, ausgeführt wird. Das Kompilieren von \textit{host} Code erfolgt durch den auf dem \textit{host} installierten C Compiler. Der \textit{device} Code wird durch \textit{nvcc} zu PTX bzw. cubin binary code übersetzt.
-Nvidia hat das SPMD Modell durch \textit{kernels} umgesetzt. Ein \textit{kernel} ist ein Programm, dass parallel auf verschiedene Daten der GPU angewendet wird. 
-Bevor ein \textit{kernel} aufgerufen werden kann, muss der notwendige Speicher auf der Grafikkarte für die Daten und das Ergebnis allokiert werden. Anschließend werden die Daten von \textit{host} zu \textit{device} kopiert. Nach Durchführung der Berechnung kann dann das Ergebnis zurück zum \textit{host} kopiert werden. Die Datentransfers weisen eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten nur selten erfolgen.
-Die Daten liegen in der Regel als Vektor oder Matrix vor. Der Zugriff auf verschiedene Elemente durch unterschiedliche \textit{kernel} erfolgt dann durch eine Indexberechnung. Diese wird anhand des Beispiels der Vektoraddition näher erläutert.
-Beim Aufruf des \textit{kernels} muss die Anzahl der Threads pro Block und die Anzahl der Blocks in einem Grid angegeben werden. Ein Block ist eine logische Einheit und entspricht einem Multiprozessor der Grafikkarte. Durch diese Strukturierung können die Blöcke parallel auf der Hardware ausgeführt werden. Das Grid enthält die Blöcke und kann ein, zwei oder dreidimensional sein. In Abbildung \ref{img:cuda1} ist ein eindimensionales Grid mit sechs eindimensionalen Blöcken á 12 Threads schematisch dargestellt. Ein Block kann auf aktuellen Grafikkarten bis zu 1024 Threads beinhalten.
+Ein Programm, das auf einer Nvidia Grafikkarte ausgeführt werden soll, muss in der Sprache CUDA C geschrieben sein. Aus der Sicht eines Programmierers handelt es sich hierbei um eine Erweiterung von C um Primitive und Funktionen für Berechnungen auf der Grafikkarte. Zum Übersetzen und Linken des Codes dient der \textit{nvcc} Compiler von Nvidia. Dieser unterscheidet zwischen Code der auf dem \textit{host}, der CPU, und dem \textit{device}, der GPU, ausgeführt wird. Das Kompilieren von \textit{host} Code erfolgt durch den auf dem \textit{host} installierten C Compiler. Der \textit{device} Code wird durch \textit{nvcc} zu \textit{PTX}\footnote{PTX steht für Parallel Thread eXecution und ist eine \enquote{zwischen} Assemblersprache. Der generierte Code ist noch nicht ganz optimiert, da PTX als Basis mehrerer GPU Generationen dient.} bzw. \textit{cubin binary code}\footnote{cubin Dateien sind gerätespezifische Binärdateien} übersetzt.
+Nvidia hat das SPMD Modell durch \textit{kernels} umgesetzt. Ein \textit{kernel} ist ein Programm, das parallel auf verschiedene Daten der GPU angewendet wird. 
+Bevor ein \textit{kernel} aufgerufen werden kann, muss der notwendige Speicher auf der Grafikkarte für die Daten und das Ergebnis allokiert werden. Anschließend werden die Daten von \textit{host} zu \textit{device} kopiert. Nach Durchführung der Berechnung kann dann das Ergebnis zurück zum \textit{host} kopiert werden. Die Datentransfers weisen eine nicht unbeachtliche Latenz auf. Folglich sollte das Kopieren von Daten nur selten erfolgen.\newline
+Die Daten liegen in der Regel als Vektor oder Matrix vor. Der Zugriff auf verschiedene Elemente durch unterschiedliche \textit{kernel} erfolgt dann durch eine Indexberechnung. Diese wird anhand des Beispiels der Vektoraddition näher erläutert.\newline
+CUDA erfordert, dass ein Programmierer die Größe bzw. Anzahl von Grids und Blocks festlegt. Ein Block ist eine logische Einheit und entspricht einem Multiprozessor der Grafikkarte. Durch diese Strukturierung können die Blöcke parallel auf der Hardware ausgeführt werden. Das Grid enthält die Blöcke und kann ein, zwei oder dreidimensional sein. Beim Aufruf des \textit{kernels} muss die Anzahl der Threads pro Block und die Anzahl der Blocks in einem Grid angegeben werden. In Abbildung \ref{img:cuda1} ist ein zweidimensionales Grid mit sechs zweidimensionalen Blöcken á 12 Threads schematisch dargestellt. Ein Block kann auf aktuellen Grafikkarten bis zu 1024 Threads beinhalten.
 
 \begin{figure}
 	\centering
@@ -359,7 +292,7 @@ Beim Aufruf des \textit{kernels} muss die Anzahl der Threads pro Block und die A
 \subsection{Speicherverwaltung}
 \label{cudaMemory}
 
-Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden müssen und vice versa, unterscheidet cuda zwischen \textit{host memory} und \textit{device memory}. Darüber hinaus ist der \textit{device memory} bereits auf der Grafikkarte in verschiedene Bereiche organisiert, wie in Abbildung \ref{img:cuda_mem} dargestellt. Jeder Multiprozessor hat Zugriff auf den \textit{global memory} sowie einen eigenen lokalen \textit{shared memory}, \textit{Constant} und \textit{Texture Cache}. Lokal erstellten Variablen werden als \textit{Register} bezeichnet. Auf diese ist der Zugriff mitunter am schnellsten, jedoch sind sie lokal pro Thread. Die Daten liegen als Parameter zunächst im \textit{global memory} vor. Im \textit{Constant Cache} liegen alle durch das cuda Schlüsselwort \textit{\textunderscore\textunderscore constant\textunderscore\textunderscore} deklarierte Werte. Zugriffe auf den \textit{global memory} sind am langsamsten, da der Speicherbereich zwischen allen Multiprozessoren geteilt wird und Zugriffe mitunter synchronisiert werden müssen \todo{HARDWARE}. Durch Verwendung des \textit{shared memory} und \textit{texture cache} können Speicherzugriffe beschleunigt werden, jedoch können Daten aus diesen Bereichen nicht zwischen Blöcken geteilt werden.
+Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden müssen und vice versa, unterscheidet CUDA zwischen \textit{host memory} und \textit{device memory}. Darüber hinaus ist der \textit{device memory} bereits auf der Grafikkarte in verschiedene Bereiche organisiert, wie in Abbildung \ref{img:cuda_mem} dargestellt. Jeder Multiprozessor hat Zugriff auf den \textit{global memory} sowie einen eigenen lokalen \textit{shared memory}, \textit{constant} und \textit{texture cache}. Lokal erstellte Variablen werden als \textit{register} bezeichnet. Auf diese ist der Zugriff mitunter am schnellsten, jedoch sind sie lokal pro Thread. Die Daten liegen als Parameter zunächst im \textit{global memory} vor. Im \textit{constant cache} liegen alle durch das CUDA Schlüsselwort \textit{\textunderscore\textunderscore constant\textunderscore\textunderscore} deklarierte Werte. Zugriffe auf den \textit{global memory} sind am langsamsten, da der Speicherbereich zwischen allen Multiprozessoren geteilt wird und Zugriffe mitunter synchronisiert werden müssen \todo{Hier gab es noch ein Harddware Argument. Welches?}. Durch Verwendung des \textit{shared memory} und \textit{texture cache} können Speicherzugriffe beschleunigt werden, jedoch können Daten aus diesen Bereichen nicht zwischen Blöcken geteilt werden.
 
 \begin{figure}
 	\centering
@@ -370,12 +303,12 @@ Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden mü
 
 \subsubsection{Shared Memory}
 
-Gerade bei vielen parallelen Lese- / Schreibzugriffen kann hier eine hohe Latenz auftreten, wenn viele Threads auf die gleichen Adressen zugreifen. Aus diesem Grund empfiehlt es sich, die benötigten Daten von dem \textit{global} in den \textit{shared memory} zu kopieren. Der \textit{shared memory} wird von allen Threads in einem Block geteilt. Beim Kopieren der Daten muss ein Index berechnet werden, um die korrekten Daten dem jeweiligen Block zuzuordnen. Soll beispielsweise jeder \textit{kernel} auf dem Element eines Vektors arbeiten, setzt sich der globale Index aus der Position im Block und im Thread zusammen: $blockDim.x * blockId.x + threadId.x$. Die Variablen $blockDim$ und $blockId$ sind, wie $threadId$, durch CUDA gesetzt. Weiterhin ist zu beachten, dass nicht beliebig viel \textit{shared memory} allokiert werden kann: Je nach Grafikkarten stehen pro Block zwischen 16 und 48 Kilobyte Speicher zur Verfügung. 
-Durch den Einsatz von \textit{shared memory} können gegenüber Algorithmen die exklusiv den \textit{global memory} nutzen, wesentliche Steigerung in der Performance (hier: kürze Laufzeit) erreicht werden. Allerdings ist der \textit{shared memory} mit 16 bzw. 48 Kilobyte sehr begrenzt und erhöht die Komplexität durch notwendiges Kopieren von Daten und Indexberechnungen.
+Gerade bei vielen parallelen Lese- / Schreibzugriffen kann hier eine hohe Latenz auftreten, wenn viele Threads auf die gleichen Adressen zugreifen. Aus diesem Grund empfiehlt es sich, die benötigten Daten von dem \textit{global} in den \textit{shared memory} zu kopieren. Der \textit{shared memory} wird von allen Threads in einem Block geteilt. Beim Kopieren der Daten muss ein Index berechnet werden, um die korrekten Daten dem jeweiligen Block zuzuordnen. Soll beispielsweise jeder \textit{kernel} auf dem Element eines Vektors arbeiten, setzt sich der globale Index aus der Position im Block und im Thread zusammen: $blockDim.x * blockIdx.x + threadIdx.x$. Die Variablen $blockDim$ und $blockIdx$ sind, wie $threadIdx$, durch CUDA gesetzt, bzw. durch den Programmierer (im Falle der Blockdimension). Weiterhin ist zu beachten, dass nicht beliebig viel \textit{shared memory} allokiert werden kann: Je nach Grafikkarten stehen pro Block zwischen 16 und 48 Kilobyte Speicher zur Verfügung. 
+Durch den Einsatz von \textit{shared memory} können gegenüber Algorithmen die exklusiv den \textit{global memory} nutzen, wesentliche Steigerung in der Performance (hier: kürzere Laufzeit) erreicht werden. Allerdings ist der \textit{shared memory} mit 16 bzw. 48 Kilobyte sehr begrenzt und erhöht die Komplexität durch notwendiges Kopieren von Daten und Indexberechnungen.
 
 \subsection{Vektoraddition}
 
-Am Beispiel der Vektoraddition soll der Aufbau und Ablauf eines cuda Programms illustriert werden. Hierfür wird zunächst die Funktion \textit{vecAdd} angelegt. Hier wird in Zeile 8 - 10 durch \textit{cudaMalloc} der benötigte Speicher für die Vektoren und das Ergebnis allokiert. Anschließend werden die Daten von Vektor $a$ und $b$ zum \textit{device} kopiert. In den beiden folgenden Zeilen wird der Inhalt der Vektoren $a$ und $b$ vom \textit{host} zum \textit{device} kopiert. In Zeile 15 wird der \textit{kernel} \textit{add} aufgerufen, der auf der Grafikkarte ausgeführt wird. Einem \textit{kernel} muss durch Angabe in den dreifachen spitzen Klammern, die Dimension des Grids und der Blocks mitgeteilt werden. Im Beispiel werden pro Block 256 Threads verwendet (\textit{numThreads}) und die Anzahl der notwendigen Blocks aus der Vektorgröße und der Threadanzahl berechnet. Da die Verarbeitung asynchron erfolgt, wird durch \textit{cudaDeviceSynchronize} in der nächsten Zeile die Ausführung auf dem \textit{host} pausiert, bis die GPU fertig ist. In Zeile 17 wird das Ergebnis vom \textit{device} zurück zum \textit{host} kopiert und kann ausgegeben oder weiterverarbeitet werden.
+Am Beispiel der Vektoraddition soll der Aufbau und Ablauf eines cuda Programms illustriert werden. Hierfür wird zunächst die Funktion \textit{vecAdd} angelegt. In Zeile 8 - 10 wird durch \textit{cudaMalloc} der benötigte Speicher für die Vektoren und das Ergebnis allokiert. In den beiden folgenden Zeilen wird der Inhalt der Vektoren $a$ und $b$ vom \textit{host} zum \textit{device} kopiert. In Zeile 15 wird der \textit{kernel} \textit{add} aufgerufen, der auf der Grafikkarte ausgeführt wird. Einem \textit{kernel} muss durch Angabe in den dreifachen spitzen Klammern, die Dimension des Grids und der Blocks mitgeteilt werden. Im Beispiel werden pro Block 256 Threads verwendet (\textit{numThreads}) und die Anzahl der notwendigen Blocks aus der Vektorgröße und der Threadanzahl berechnet. Da die Verarbeitung asynchron erfolgt, wird durch \textit{cudaDeviceSynchronize} in der nächsten Zeile die Ausführung auf dem \textit{host} pausiert, bis die GPU fertig ist. In Zeile 17 wird das Ergebnis vom \textit{device} zurück zum \textit{host} kopiert und kann ausgegeben oder weiterverarbeitet werden.
 Der \textit{kernel} wird von jedem Thread ausgeführt. Jeder Thread kümmert sich um die Addition eines Elementes aus $a$ und aus $b$ am selben Index. Damit dieser Index global eindeutig ist, muss neben der $threadId$ in x-Richtung die Grid und Blockdimension des Threads berücksichtigt werden. Falls der berechnete Index innerhalb der Vektoren liegt, wird die Summe in $c$ geschrieben.
 
 \lstset{language=C}

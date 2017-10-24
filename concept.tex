@@ -1,100 +1,68 @@
 \chapter{Konzept}
 
-Die Konzeption beschäftigt sich zunächst mit dem Prozess der Feature-Extraktion. Hierfür wird der SIFT Algorithmus nach Lowe genutzt. Folgend wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering und Histogramm Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Anschließend wird der geplante Ablauf zum Generieren eines Bag of Visual Word Modells und \textit{Labeling} eines Bildes durch das Modell erläutert.
-Abschließend wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Autoencoder eingeführt, der aus einem HOG Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt.
+Die Konzeption beschäftigt sich zunächst mit einem Überblick des ganzen Prozesses, von der Feature-Extraktion über die Komprimierung bis hin zur Gruppierung. Anschließend folgt eine nähere Betrachtung dieser drei wesentlichen Bestandteile und wie sie ineinandergreifen.\newline
+Im Abschnitt \enquote{Feature Extraktion} werden die Feature-Deskriptoren vorgestellt, die hier verwendet werden: Zum einen der SIFT-Deskriptor, da dieser, neben guten praktischen Resultaten, bereits einigermaßen kompakt ist und auch direkt für die Komprimierung verwendet werden kann. Zum anderen wird ein Feature-Vektor konstruiert, der wesentlichen mehr Komponenten umfasst und sich somit für den Einsatz der Komprimierung eignet.\newline
+Im folgenden Abschnitt \enquote{Autoencoder} wird auf der Basis der Arbeit von Zhao \cite{aed2016} ein Stacked Denoising Autoencoder eingeführt, der aus einem Feature-Vektor mit 3042 Komponenten, eine Darstellung des Features in einem Raum mit 36 Dimensionen lernt.\newline
+Im letzten Abschnitt wird das Bag of Visual Words Modell näher betrachtet: Es werden auf Basis der Analyse parallele Varianten des Clustering- und Histogramm-Algorithmus entworfen, die sich zur Ausführung auf Grafikkarten eignen, die CUDA unterstützen. Abschließend wird behandelt, wie der Bag of Visual Words verwendet werden kann, um ein Modell zu generieren bzw. die Ähnlichkeit zweier Bilder zu bewerten.
+
+\section{Modell}
+
+In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier zur Gruppierung von Bildern dienen sollen. Um dies zu erreichen wird ein dreistufiges Modell vorgeschlagen, dass in Abbildung \ref{img:model} skizziert ist. Jede \enquote{Zeile} entspricht hier einer Phase der Verarbeitung. Die Ein- bzw. Ausgaben sind mit durch die Farbe grün gekennzeichnet, die Schritte zur Datenverarbeitung durch Orange. Diese Phasen werden im Folgenden detailliert dargestellt, hier soll jedoch zuerst ein Überblick über den Ablauf gegeben werden. Die drei Phasen zum Erzeugen eines Modells laufen wie folgt ab:\newline 
+
+\begin{itemize}
+	\item \textbf{Extraktion} Zuerst muss das Verfahren bestimmt werden, mit denen die Features gewonnen werden sollen. Je nach Anwendungsfall sollte dieses Verfahren austauschbar sein. Zu Beginn werden aus den Bilddaten \textit{Images} durch einen Feature-Extraktor die Feature-Vektoren \textit{Features A} erhoben. Bei den Bilddaten handelt es sich um eine Liste von Matritzen, welche die Intensitätswerte von Bildpixeln kodiert. \textit{Features A} ist ein Vektor von Features, die abhängig vom Verfahren verschiedene Eigenschaften beschreiben.
+	\item \textbf{Komprimierung} Um die Komponenten in einem Feature-Vektor auf die Wesentlichen zu reduzieren, erfolgt eine Komprimierung durch einen Autoencoder. Die Phase des Autoencoders ist hierbei optional und daher gestrichelt dargestellt. Sollten die Features nicht durch den Autoencoder komprimiert werden, so ist der Vektor \textit{Features B} gleich dem Vektor \textit{Features A}. Andernfalls enthält \textit{Features B} die komprimierten Features.
+	\item \textbf{Gruppierung} In der dritten Phase nimmt der Bag of \textit{Visual Words} die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die \textit{Visual Words} des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie die Features in \textit{Features B}.
+\end{itemize} 
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.85]{images/model.pdf}
+	\caption{Aufbau des Modells}
+	\label{img:model}
+\end{figure}
+
+Das Erzeugen der \textit{Visual Words} aus einem Bild läuft in den ersten beiden Schritten analog ab, nur das die Menge \textit{Images} aus genau einem Bild, dem zu verarbeitenden, besteht. Die Features werden erst extrahiert und dann optional komprimiert. Für diese Schritte müssen auch exakt die gleichen Parameter verwendet werden, d.h.:
+
+\begin{itemize}
+	\item Der gleiche Feature-Detektor bzw. -Deskriptor muss gewählt werden.
+	\item Eine Komprimierung muss stattfinden, wenn dies im Training der Fall war. Andernfalls darf sie nicht erfolgen.
+	\item Das gleiche Netzwerk zur Erzeugung der komprimierten Features muss gewählt werden.
+\end{itemize}
+
+In der dritten Phase verwendet der Bag of Visual Words das vorher generierte \textit{Codebook} und die Features aus der vorigen Phase, um die \textit{Visual Words} zu ermitteln.
 
 \section{Feature Extraktion}
 
-Die Extraktion der Features ist der erste Schritt zur Erzeugung der Modelle. Das Bag of Visual Words Modell nutzt die vom SIFT-Verfahren erzeugten Feature-Deskriptoren direkt für die weitere Verarbeitung. Der Autoencoder hingegen arbeitet mit den Gradienten der Nachbarschaft der \textit{keypoints} die vom SIFT Feature-Detektor ermittelt wurden. Die Extraktion der Features ist nicht Gegenstand der Parallelisierung bzw. Schwerpunkt dieser Arbeit. Es wird daher auf eine gängige Bibliothek zurückgegriffen, die sich in der Praxis bewährt hat. Sollte sich herausstellen, dass die Feature-Gewinnung einen nicht unerheblichen Teil der Gesamtberechnung ausmacht, kann die Implementierung später noch durch eine parallele bzw. GPU-gestüzte Variante ausgewechselt oder erweitert werden.
-Der SIFT Feature-Deskriptor enthält 128 Komponenten und ist so für einen Vergleich nur schwer geeignet: beispielsweise werden bei einem Bild der Größe $320px \times 200px$ bereits 100 bis 1000 Feature-Vektoren generiert. Es werden daher im folgenden zwei Ansätze vorgestellt, welche die Anzahl der Komponenten von Features reduzieren und eine durch Grafikkarten gestützte Berechnung von ähnlichen Bildern ermöglichen.
+Da es zahlreiche Verfahren zur Detektion und Extraktion von Features aus Bildern in Literatur und Praxis gibt, können diese unmöglich alle gleichermaßen Beachtung finden. In der Analyse wurde daher beschlossen, zunächst ein Clustering der Bilder anhand einer Objekterkennung zu realisieren. Um den Prozess des Clusterings zu beschleunigen, soll der Feature-Vektor kompakt sein. Eine solche Kompression kann durch einen Autoencoder erreicht werden. Die Effektivität hängt hierbei stark von den verwendeten Daten ab. Die Vektoren sollten initial möglichst viele Komponenten umfassen, um ein tiefes Netz konstruieren zu können. Ein solcher Deskriptor muss aber eigens für den Autoencoder trainiert werden: Die meisten etablierten Deskriptoren ermöglichen eben nicht die Konstruktion eines tiefen Netzes. Die Verwendung eines alternativen Deskriptors ist daher aus zwei Gründen plausibel:
 
-\section{Ansatz 1: Bag of Visual Words}
+\begin{itemize}
+	\item Da die Schritte im Prozess aufeinander aufbauen, hängt die Qualität der Ergebnisse des Bag of Visual Word Verfahrens auch vom Autoencoder ab. Um den Bag of Visual Words an sich testen zu können, soll ein bereits kompakter, praktisch bewährter Deskriptor als Alternative dienen.
+	\item Es ist denkbar, dass der Schritt der Komprimierung nicht in allen Fällen notwendig bzw. sinnvoll ist, da der Deskriptor bereits kompakt genug ist.
+\end{itemize} 
 
-In der Analyse wurde bereits sequentielle Varianten des Lloyd und Histogramm Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version für SPMD Prozessoren abgeleitet.
-In den beiden nachfolgenden Abschnitten Generierung des Modells und Labeling eines Bildes wird auf den Programmaufbau und -ablauf näher eingegangen. Es werden die wesentlichen Funktionen, ihre Parameter und Aufrufe skizziert.
+Der von Zhao \cite{aed2016} entwickelte Autoencoder nimmt daher einen eigens kreierten Feature-Vektor als Eingabe entgegen. Die \textit{keypoints} werden hier durch den Difference of Gaussians ermittelt. Um jeden der \textit{keypoints} wird eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Von diesen Ausschnitten werden die Gradienten in horizontale und vertikale Richtung bestimmt. Bei einem Einsatz eines Gaußfilters mit einer Filterkerngröße von $3 \times 3$, ergeben sich somit pro Richtung $1521$ Werte, die den Ausschnitt beschreiben. Der resultierende Feature-Vektor besitzt somit, für beide Richtungen, insgesamt $3042$ Komponenten.\newline
+Um das Clustering-Verfahren auch ohne einen Autoencoder anwenden zu können, bzw. sicherzustellen, dass andere Feature-Deskriptoren für Bilder direkt verwendet werden können, soll in einem Test auch SIFT Gegenstand sein. So kann nicht nur die Qualität der Ergebnisse der beiden Deskriptoren verglichen werden, sondern auch Auswirkungen auf die Laufzeit des Bag of Visual Words.
 
-\subsection{Parellisierung von Llyods Algorithmus}
+\section{Autoencoder}
 
-Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $v$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern nimmt $\Theta(nk)$ Zeit in Anspruch, wobei $n$ die Anzahl Vektoren und $k$ die Anzahl der Cluster ist. Diese Phase kann parallelisiert werden, in dem pro Feature Vektor ein Thread verwendet wird: Jeder Thread berechnet für seinen Feature Vektor die Distanz zu allen Clusterschwerpunkten und bestimmt den Index des Clusters, der am Nächsten ist. Dieser Prozess ist in Pseudocode in Zeile 6 bis 8 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist.
+In diesem Ansatz wird ein Stacked Denoising Autoencoder zur Komprimierung eines Feature-Vektors entworfen, wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Hierfür wird zunächst im Abschnitt \enquote{Modell} ein objektorientiertes Modell entworfen, dass den Autoencoder, wie er in der Analyse beschrieben wurde, abbildet. Durch dieses Klassenstruktur lassen sich nun beliebige Autoencoder definieren. Im Teil \enquote{Parameter} wird dann auf den konkreten Autoencoder eingegangen, den Zhao entworfen hat.
 
-\lstset{language=C}
-\begin{lstlisting}[mathescape=true]
-kmeans_gpu
-	if threadId == 0
-		$c_{j} = rand(p_{i}) \in P, \: j = 1,...,k, \: c_{j} \neq c_{i} \: \forall i \neq j$
-	synchronize threads
-	until convergence
-		for each $x_{i} \in P_{threadId}$
-			$l_{i} = argminD(c_{j}, p_{i})$
-		synchronize threads
-		if threadId == 0
-			for each $p_{i} \in P$
-				$c_{l_{i}} = c_{l_{i}} + p_{i}$
-				$m_{l_{i}} = m_{l_{i}} + 1$
-			for each $c_{j} \in C$
-				$c_{j} = \frac{1}{m_{j}} c_{i}$
-\end{lstlisting}
+\subsection{Modell}
 
-\subsection{Parallele Reduzierung von Histogrammen}
-
-Die Berechnung eines Histogramms kann hervorragend parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im global Speicher vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.
-
-\lstset{language=C}
-\begin{lstlisting}
-__global__
-void histogram_kernel (float *buffer, long size, int *histo, int bins) {
-	extern __shared__ int *copy[];
-	
-	if (threadIdx.x < bins) {
-		copy[threadIdx.x] = 0;		
-	}
-	__syncthreads();
-
-	int id = threadIdx.x + blockDim.x * gridDim.x;
-	int stride = blockDim.x * gridDim.x;
-	
-	while (i < stride) {
-		int bin = buffer[i] / bins; 
-		atomicAdd(&(copy[bin]), 1);
-		i += stride;	
-	}
-	__syncthreads();
-	
-	if (threadIdx.x < bins) {
-		atomicAdd(&(histo[threadIdx.x]), copy[threadIdx.x]);		
-	}
-}
-\end{lstlisting} 
-
-\subsection{Aufbau des Bag of Visual Words Algorithmus}
-
-Das Bag of Visual Words Modell soll zwei Anwendungsfälle unterstützen. Zunächst muss aus einer Menge von Bildern ein Modell generiert werden. Da verschiedene Modelle erstellt werden sollen, müssen diese gespeichert und auch wieder eingelesen werden können. Der Abschnitt Generierung des Modells beschäftigt sich mit einem Entwurf solch eines Systems. Sofern ein Modell generiert wurde, soll es einem Anwender möglich sein ein neues Bild anhand des Modells zu labeln. Dieser Prozess ist in Kapitel Labeling eines Bildes dargestellt.
-
-\subsubsection{Generierung des Modells}
-
-Die Generierung eines Modells kann durch die Funktion \textit{generateModel} gestartet werden. Als Parameter werden der Pfad für die Bilddaten \textit{imageDir}, der Zielpfad \textit{modelPath} und die Anzahl der Cluster \textit{k} erwartet. Der Ablauf der folgenden Funktionsaufrufe ist in Abbildung \ref{img:concept_bovw_1} dargestellt. Im ersten Schritt wird \textit{extractFeatures} aufgerufen, um alle SIFT Features der Bilder, die in \textit{imageDir} enthalten sind, zu extrahieren. Als nächstes werden durch \textit{clusterFeatures} die Features in \textit{k} Cluster gruppiert. Die Berechnung der Cluster, der Distanzen von Features zu Clustern und des Konvergenzkriteriums erfolgt durch die GPU. Als Ergebnis werden die $k$ berechneten Schwerpunkte der Cluster und die Mitgliedschaft der Features zurückgegeben. Abschließend speichert \textit{saveModel} die Cluster unter dem Pfad  \textit{modelPath}/clusters und die Mitgliedschaft unter \textit{modelpath}>/membership. \todo{single extractFeature}
-
+Im Klassendiagramm in Abbildung \ref{img:ae_class} sind die wesentlichen Bestandteile eines Autoencoders erfasst: Der Großteil der Parameter sind private Variablen, die bei Erzeugung, also im Konstruktor, übergeben werden müssen. Die Anzahl der Schichten ergibt sich durch die Anzahl der Elemente in \textit{layers}. Jede Ganzzahl steht hier für die Anzahl der Neuronen in einer Schicht. Die Gewichte zwischen zwei Schichten sind in \textit{weights} gespeichert. Ein  Gewicht $w_{ij}$ von Neuron $i$ zu Neuron $j$ zwischen zwei Schichten befindet sich an der Position \textit{weights[i][j]}. Da zwischen Schichten unterschiedliche Aktivierungsfunktionen verwendet werden können, wird eine Liste  mit einer Aktivierungsfunktion pro Schichtpaar erwartet. \newline
+Durch \textit{encode} wird der Autoencoder genutzt, um die Testdaten zu komprimieren. Die Anzahl der Koordinaten eines Features muss hier gleich der Anzahl der Neuronen in der ersten Schicht des Autoencoders sein. Die Methode \textit{decode} kehrt den Prozess der Enkodierung wieder um. Hier werden entsprechend Features erwartet, die genauso viele Koordinaten wie die letzte Schicht des Netzwerks aufweisen.
+  
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.8]{images/concept_bovw_1.png}
-	\caption{Funktionen zur Generierung eines Modells}
-	\label{img:concept_bovw_1}
+	\includegraphics[scale=0.6]{images/ae_class.pdf}
+	\caption{Klassendiagramm des Autoencoders}
+	\label{img:ae_class}
 \end{figure}
 
-\subsubsection{Labeling eines Bildes}
+\subsection{Parameter}
 
-Sofern ein Modell erstellt wurde, können auf dessen Basis Bilder verglichen werden. In Abbildung \ref{img:concept_bovw_2} sind schematisch die aufeinanderfolgenden Funktionsaufrufe dargestellt. Die Funktion \textit{getImageLabels} wird mit dem Pfad des Modells und des zu vergleichenden Bildes aufgerufen. Das Modell wird durch \textit{readModel} eingelesen und die Clusterschwerpunkte initialisiert. Die SIFT Features werden, wie bei der Generierung, durch \textit{extractFeatures} ermittelt. Die Funktion \textit{selectLabels} berechnet durch \textit{computeFrequencies} das Histogramm der Visual Words aus den Clustern und Features auf der GPU. Auf dieser Basis werden dann die top $num$ Labels ermittelt und zurückgegeben. Hierbei ist die Anzahl der Labels $num$ vom Benutzer festzulegen.
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{images/concept_bovw_2.png}
-	\caption{Funktionen zur Gewinnung von Labels eines Bildes}
-	\label{img:concept_bovw_2}
-\end{figure}
-
-\section{Ansatz 2: Autoencoder}
-
-In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein Stacked Denoising Autoencoder verwendet wie er in der Arbeit von Zhao \cite{aed2016} vorgeschlagen wurde. Der Autoencoder soll eine komprimierte Darstellung der Gradientenvektoren erzielen, die aus den \textit{keypoints} berechnet werden. Hierfür werden Patches der Größe $41 \times 41$ Pixel, zentriert auf den \textit{keypoints}, extrahiert und die Gradienten in horizontale und vertikale Richtung bestimmt. Pro Richtung werden dadurch 1521 Werte erfasst, denn die Gradienten werden in einem Fenster der Größe $39 \times 39$ ermittelt. Dadurch resultiert ein Vektor mit 3042 Elementen für zwei Richtungen. Folglich besitzt der Autoencoder in der Eingabeschicht 3042 Neuronen. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. In der Arbeit von Zhao wurde bereits aufgezeigt, dass der modellierte Autoencoder state of the art Ergebnisse erzielt: Die Ergebnisse des Autoencoders wurden unter verschiedenen Kriterien mit den Ergebnissen der SIFT-PCA und \todo{zweite Methode} Methode verglichen. Dabei erkannte der Autoencoder in fast allen vielen die gleichen Features, jedoch durch einen 36 statt 128 elementigen Feature-Vektor. Theoretisch wird hier also das gleiche Ergebnis in einem Drittel der Zeit ermittelt.
+Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder definieren lassen, soll das von Zhao vorgeschlagene Netzwerk näher betrachtet werden. Die Leistung dieses Autoencoders wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
 
 \begin{figure}
 	\centering
@@ -103,43 +71,110 @@ In diesem Ansatz wird zur Reduzierung der Dimensionen der Feature-Vektoren ein S
 	\label{img:ae_model}
 \end{figure}
 
-\subsection{Aufbereitung der Features}
+Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Zhao verwendete hier für die Lernrate einen Wert von $2\%$, sodass $l = 0.02$. Für das Training der jeweiligen Autoencoderpaare werden verschieden viele Iterationen benutzt:
+\begin{itemize}
+	\item 1. Schicht: $1000$ Iterationen
+	\item 2. Schicht: $700$ Iterationen
+	\item 3. bis 5. Schicht: Je $500$ Iterationen
+\end{itemize}
+Als Größe für einen \textit{batch} wurde hier 128 gewählt, also sieht das Netz in einem \textit{foward} und \textit{backward pass} je 128 Trainingsexemplare. Da dies im Wesentlichen die Laufzeit durch eine Verwendung von mehr Speicher bewirkt, kann diese Zahl bei ungenügenden Ressourcen auch reduziert werden.
 
-Da der vorgeschlagene Autoencoder nicht direkt mit Bildern arbeitet, sondern Feature-Vektoren, werden die Bilddaten vor der Ausführung entsprechend aufbereitet. Zunächst werden die \textit{keypoints} durch einen SIFT-Detektor ausgewählt. Um die gefundenen \textit{keypoints} wird nun jeweils eine Nachbarschaft der Größe $41 \times 41$ betrachtet. Zum Aufbau des Feature-Vektors werden von diesen Nachbarschaften die Gradienten in horizontale und vertikale Richtung berechnet. Mathematisch entspricht dies einer Konvolution des Ausschnittes mit einem Sobel-Operator. Aus einem Originalbild $O$ werden die Gradienten-Bilder $G_{x}$ und $G_{y}$ durch die Multiplikation mit einer Matrix pro Richtung erzeugt:  
+\section{Bag of Visual Words}
 
-$$ G_{x} = O * \begin{bmatrix}
-  1 & 0 & -1 \\
-  2 & 0 & -2 \\
-  1 & 0 & -1
-\end{bmatrix} \quad
-G_{y} = O * \begin{bmatrix}
-   1 &  2 &  1 \\
-   0 &  0 &  0 \\
-  -1 & -2 & -1
-\end{bmatrix}
-$$
+In der Analyse wurde bereits sequentielle Varianten des Lloyd- und Histogramm-Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version abgeleitet, welche sich für die Realisierung als CUDA Programm eignen.
+Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsaufrufe skizziert. Zur Interaktion stehen einem Anwender im Wesentlichen eine Funktion zu Generierung eines Modells und zur Berechnung der \textit{Visual Words} eines Bildes zur Verfügung.
 
-Bei einem Filter mit einem Kernel der Größe $3 \times 3$ entsteht so pro Richtung eine $39 \times 39$ Matrix. Diese werden normalisiert und anschließend zusammen kodiert, sodass der 3042-elementige Feature-Vektor entsteht, der durch den Autoencoder verarbeitet werden kann.
+\subsection{Paralellisierung von Llyods Algorithmus}
 
-\subsection{TensorFlow}
+Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. In nachfolgendem Listing dieser Ablauf in Pseudocode ausgedrückt. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern nimmt $\Theta(nk)$ Zeit in Anspruch, wobei $n$ die Anzahl Vektoren und $k$ die Anzahl der Cluster ist. Diese Phase kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seinen Feature-Vektor die Distanz zu allen Clusterschwerpunkten und bestimmt den Index des Clusters, der am Nächsten ist. Dieser Prozess ist in Pseudocode in Zeile 6 bis 8 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist. \todo{simplerer Pseudocode}
 
-TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \grqq fließen\grqq und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Hierfür ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
-TensorFlow folgt dem sogenannten \glqq lazy\grqq  Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \glqq Session\grqq wird das Modell trainiert bzw. auf Testdaten ausgeführt.
-
-\lstset{language=Python}
-\begin{lstlisting}
-import tensorflow as tf
-
-a = tf.placeholder(tf.int16)
-b = tf.placeholder(tf.int16)
-
-addOp = tf.add(a, b)
-
-init = tf.initialize_all_variables()
-
-with tf.Session() as sess:
-    sess.run(init)
-    print "Addition: %i" % sess.run(addOp, feed_dict={a: 2, b: 3})
-
-sess.close()
+\lstset{language=C}
+\begin{lstlisting}[mathescape=true]
+lloyd_gpu(V, C, k)
+	if threadId == 0
+		$c_{j} = rand(v_{i}) \in V, \: j = 1,...,k, \: c_{j} \neq c_{i} \: \forall i \neq j$
+	synchronize threads
+	until convergence
+		for each $v_{i} \in V_{threadId}$
+			$l_{i} = argminD(c_{j}, v_{i})$
+		synchronize threads
+		if threadId == 0
+			for each $v_{i} \in V$
+				$c_{l_{i}} = c_{l_{i}} + v_{i}$
+				$m_{l_{i}} = m_{l_{i}} + 1$
+			for each $c_{j} \in C$
+				$c_{j} = \frac{1}{m_{j}} c_{i}$
 \end{lstlisting}
+
+\subsection{Parallele Reduzierung von Histogrammen}
+
+Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle, in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads, die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.\newline
+In nachfolgendem Listing ist solch ein Histogrammalgorithmus unter CUDA aufgeführt. Als Parameter werden hier die Features \textit{features}, die Cluster \textit{clusters}, das zu beschreibende Histogramm \textit{histo}, die Anzahl an Komponenten in einem Feature \textit{featureSize}, die Anzahl der Features \textit{count} sowie die Anzahl der Cluster \textit{k} erwartet. Zunächst wird in Zeile 3 und 4 der nötige \textit{shared memory} allokiert. Das Schlüsselwort \textit{extern} gibt an, dass die Größe des \textit{shared memory} bei Aufruf des \textit{kernels} mitgegeben wird (in den dreifachen, spitzen Klammern). Die Klassen des privaten Histogramms werden alle mit 0 initialisiert und die Threads synchronisiert. In Zeile 11 wird der Index des ersten Features berechnet, dessen Cluster dieser Thread berechnen soll. Die Anzahl der Features die der Block insgesamt berechnet ergibt sich dann aus der Block- und Griddimension. Die \textit{while}-Schleife in Zeile 14 wird dann für all diese Features durchlaufen. Hier wird der Index des nächsten Clusters berechnet und die entsprechende Klasse des privaten Histogramms inkrementiert. Da nicht jeder Block unbedingt gleich viele Features bearbeitet, also wenn die Anzahl der Features nicht ein Vielfaches der Blockdimension ist, müssen die Threads nach der Schleife wieder synchronisiert werden. Abschließend werden die Werte des privaten Histogramms eines Blocks in das globale kopiert.
+
+\lstset{language=C}
+\begin{lstlisting}
+__global__
+void histogram_kernel (float *features, float *clusters, unsigned int *histo, int featureSize, int count, int k) {
+	extern __shared__ int *sharedMemory[];
+	unsigned int histo_private = (unsigned int*) sharedMemory;
+	
+	if (threadIdx.x < k) {
+		histo_private[threadIdx.x] = 0;		
+	}
+	__syncthreads();
+
+	int i = threadIdx.x + blockDim.x * gridDim.x;
+	int stride = blockDim.x * gridDim.x;
+	
+	while (i < count) {
+		float *feature = &features[i * featureSize];
+		int bin = findNearestCluster(feature, clusters, featureSize, k)); 
+		atomicAdd(&(histo_private[bin]), 1);
+		i += stride;	
+	}
+	__syncthreads();
+	
+	if (threadIdx.x < k) {
+		atomicAdd(&(histo[threadIdx.x]), histo_private[threadIdx.x]);		
+	}
+}
+\end{lstlisting} 
+
+\subsection{Aufbau des Bag of Visual Words Algorithmus}
+
+Der Aufbau des Bag of Visual Words Modell ist als Klassendiagramm in Abbildung \ref{img:bovw_class} dargestellt. Cluster und Features werden hier als Punkte in einem $n$-dimensionalen Raum aufgefasst, deren Position durch eine Liste von $n$ \textit{float}-Werten definiert ist. Diese Gemeinsamkeit wird durch Point abstrahiert. Ein Objekt der Klasse Cluster enthält zusätzlich eine Liste \textit{members}, welche die Features enthält, die dem Cluster zugeordnet sind.
+Die BagOfVisualWords-Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans-, Histogramm- und Shared-Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
+Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern und Laden eines Modells} und \enquote{Berechnung der Visual Words} illustrieren die Kernfunktionalitäten der BagOfVisualWords-Klasse sowie den jeweiligen Prozessablauf anhand des Klassendiagramms.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.57]{images/bovw_class.pdf}
+	\caption{Klassendiagramm des Bag of Visual Words}
+	\label{img:bovw_class}
+\end{figure}
+ 
+\subsubsection{Generierung des Modells}
+
+Die Generierung eines Modells kann durch die Funktion \textit{createModel} gestartet werden. Die Funktion ist überladen und erwartet als Parameter entweder eine Liste der Features oder den Pfad zu einer Datei, in der die Features gespeichert sind. Der Ablauf der Methodenaufrufe ist dann wie folgt:
+
+\begin{itemize}
+	\item Es werden bei Aufruf mit einem String die Features eingelesen und anschließend \textit{createModel} mit dieser Feature-Liste aufgerufen. Der k-means-Algorithmus wird mit den Features und \textit{k} aufgerufen. Die Daten werden zum \textit{device} kopiert und der Prozess gestartet. 
+	\item Kmeans nutzt die ausgelagerte Funktion \textit{findNearestCluster} um den nächsten Cluster eines jeden Features zu bestimmen. Intern wird hier durch \textit{computeEuclideanDistance} die Entfernung eines Cluster-Feature-Paares bestimmt.
+	\item Anschließend prüft \textit{computeDelta} ob sich die Zuordnung von Features zu Clustern nicht mehr wesentlich geändert hat, d.h. die relative Veränderung unter dem Schwellwert liegt.
+	\item Ist der Schwellwert oder eine maximale Anzahl an Iterationen erreicht, ist der Prozess abgeschlossen und die \textit{device} Cluster werden in die Cluster des aufrufenden BagOfVisualWords-Objektes kopiert.
+\end{itemize}
+ 
+\subsubsection{Speichern und Laden eines Modells}
+
+Um Modelle über den Speicher hinaus verwenden zu können, soll die Funktion angeboten werden, diese persistent zu speichern und wieder einlesen zu können. Die Methode \textit{saveModel(modelPath: String)} der BagOfVisualWords-Klasse speichert die Anzahl der Cluster \textit{k}, die Liste der Cluster \textit{clusters} sowie die Zuordnung der Features \textit{members} unter dem Pfad \textit{modelPath}. Durch das Pendant \textit{readModel(modelPath: String)} kann ein so gespeichertes Modell, also \textit{k}, \textit{clusters} und \textit{members}, wieder eingelesen werden.\newline
+So ergibt sich zum Beispiel für ein $k = 5$ und 100 Features mit je 128 Komponenten, eine Datei mit 106 Zeilen: Die erste Zeile enthält \textit{k}. Darauf folgen \textit{k} viele, also hier fünf, Zeilen mit den Zentren der Cluster und anschließend 100 Zeilen mit den Features. Die Zeilen mit den Clustern enthalten hier 128 Werte, durch Leerzeichen separiert. Die Features enthalten einen Wert am Ende der Zeile mehr: Diese Ganzzahl gibt den Index des Clusters an, zu der das Feature gehört.
+
+\subsubsection{Berechnung der Visual Words}
+
+Die Erzeugung der \textit{Visual Words} wird durch die BagOfVisualWords-Klasse angestoßen. Wie bei der Modellgenerierung wird intern ein CUDA-Programm, die Histogram-Klasse, verwendet. Für den Gebrauch muss die \textit{computeVisualWords} Methode aufgerufen werden. Der Ablauf ist dann wie folgt:
+
+\begin{itemize}
+	\item Wie beim kmeans Algorithmus kann \textit{computeVisualWords} der BagOfVisualWords-Klasse mit einer Liste der Features oder dem Pfad zu einer Feature-Datei aufgerufen werden. Letztere ließt die Features ein und ruft dann wiederum \textit{computeVisualWords} mit der Feature-Liste auf. Es wird geprüft, ob ein Modell vorhanden ist, also eine Liste von Clustern vorliegt. Ist dies nicht der Fall, wird abgebrochen.
+	\item Die \textit{run} Methode der Histogram-Klasse wird nun mit den \textit{clustern} der aufrufenden BagOfVisualWords-Instanz und den Features aus dem vorigen Schritt aufgerufen. Um das \textit{Visual Word} für ein Feature zu bestimmen, wird \textit{findNearestCluster} aus der Shared-Klasse genutzt. Da diese Funktion den Index des Clusters zurückgibt, kann dieser direkt für die zu inkrementierende Position im Histogramm verwendet werden.
+	\item Das Histogramm wird zum \textit{host} kopiert und an den Aufrufer zurückgegeben. Es kann nun gespeichert oder für weitere Analyse verwendet werden.
+\end{itemize}
