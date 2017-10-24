@@ -41,6 +41,9 @@ uim_sorter/out
 uim_sorter/.idea
 uim_sorter/.metadata
 
+// autoencoder
+uim_autoencoder/img
+
 // omg more files
 .metadata
 RemoteSystemsTempFiles
