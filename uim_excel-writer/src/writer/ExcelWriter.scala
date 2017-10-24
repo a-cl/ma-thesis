@@ -4,8 +4,15 @@ import java.io.{File, FileInputStream, FileOutputStream}
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
-class Test (val image1: File, val image2: File, val similarity: Float) {
+class Test (val image1: File, val image2: File, val same: Boolean, val error: Float) {
+
   def isSameClass: Boolean = image1.getParentFile.equals(image2.getParentFile)
+
+  def sameImages (test:  Test): Boolean = {
+    test.image1.equals(image1) && test.image2.equals(image2) ||
+      test.image1.equals(image2) && test.image2.equals(image1)
+  }
+
 }
 
 class ExcelWriter {
@@ -39,7 +46,7 @@ class ExcelWriter {
       row.createCell(1, 1).setCellValue(test.image2.getAbsolutePath)
       row.createCell(2, 1).setCellFormula("RAND()")
       row.createCell(3, 1).setCellValue(if (test.isSameClass) "+" else "-")
-      row.createCell(4, 1).setCellValue(test.similarity)
+      row.createCell(4, 1).setCellValue(test.error)
       row.createCell(5, 2).setCellFormula(makePrecisionFormula(rowIndex + 1))
       row.createCell(6, 2).setCellFormula(makeTruePositiveFormula(rowIndex + 1, count))
       row.createCell(7, 2).setCellFormula(makeFalsePositiveFormula(rowIndex + 1, count))
