@@ -36,6 +36,11 @@ uim_excel-writer/data
 uim_excel-writer/.idea
 uim_excel-writer/.metadata
 
+// sorter
+uim_sorter/out
+uim_sorter/.idea
+uim_sorter/.metadata
+
 // omg more files
 .metadata
 RemoteSystemsTempFiles
