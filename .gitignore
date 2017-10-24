@@ -42,7 +42,9 @@ uim_sorter/.idea
 uim_sorter/.metadata
 
 // autoencoder
+uim_autoencoder/__pycache__
 uim_autoencoder/img
+uim_autoencoder/sift_data
 
 // omg more files
 .metadata
