@@ -89,6 +89,10 @@ Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten herv
 
 $$ DoG(x, y, \sigma_{1}, \sigma_{2}) = I * G_{\sigma_2} - I * G_{\sigma_1}$$
 
+\subsection{Gradienten}
+
+\todo{Text}
+
 \subsection{Histogram of Oriented Gradients}
 
 Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features als Histogramm der Richtung der Gradienten eines Bildes. \todo{Gradienten}. Da sich Gradienten eignen, um Kanten in Bildern zu erkennen, wird so die Form der Objekte eines Bildes erkannt. Dalal und Triggs \cite{hog2005} entwickelten und nutzten diesen Verfahren bereits 2005, mit großem Erfolg, um Menschen in Bilder zu erkennen. 
@@ -200,7 +204,7 @@ Die Verarbeitung eines Signals in einem Neuron ist in Abbildung \ref{img:neuron}
 	\item \textbf{Propagierungsfunktion} Aus der Eingabe aller verbundenen Neuronen wird die Netzeingabe $net_{in}$ berechnet. Meist wird hier die gewichtete Summe zwischen Eingabe und Gewicht verwendet: 
 	$$net_{in} = \sum_{i=1}^{} w_{i}x_{i} + b$$
 Die Variable $b$ ist hier der sogenannter Bias-Vektor, der dazu verwendet werden kann Einfluss auf die Aktivierung zu nehmen. Dieser wird als zusätzliches Neuron pro Schicht modelliert.
-	\item \textbf{Aktivierungsfunktion} Es wird der neue Aktivierungszustand des Neurons aus dem alten Zustand und der Netzeingabe $net_{in}$ durch die Aktivierungsfunktion $a$ berechnet. Häufig wird hier die ReLU (Rectified Linear Unit) $a_{relu}$ bzw. die Sigmoidfunktion $a_{s}$ verwendet: \todo{sigmoid}
+	\item \textbf{Aktivierungsfunktion} Es wird der neue Aktivierungszustand des Neurons aus dem alten Zustand und der Netzeingabe $net_{in}$ durch die Aktivierungsfunktion $a$ berechnet. Häufig wird hier die ReLU (Rectified Linear Unit) $a_{relu}$ bzw. die Sigmoidfunktion $a_{s}$ verwendet:
 	$$a_{relu}(x) = max(0,x) \quad \quad a_{s}(x) = \frac1{1+e^{-x}}$$
 	\item \textbf{Ausgabefunktion} Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion $net_{out}$ berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. Oft wird hier die Identitätsfunktion verwendet.
 \end{itemize}
@@ -292,7 +296,7 @@ CUDA erfordert, dass ein Programmierer die Größe bzw. Anzahl von Grids und Blo
 \subsection{Speicherverwaltung}
 \label{cudaMemory}
 
-Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden müssen und vice versa, unterscheidet CUDA zwischen \textit{host memory} und \textit{device memory}. Darüber hinaus ist der \textit{device memory} bereits auf der Grafikkarte in verschiedene Bereiche organisiert, wie in Abbildung \ref{img:cuda_mem} dargestellt. Jeder Multiprozessor hat Zugriff auf den \textit{global memory} sowie einen eigenen lokalen \textit{shared memory}, \textit{constant} und \textit{texture cache}. Lokal erstellte Variablen werden als \textit{register} bezeichnet. Auf diese ist der Zugriff mitunter am schnellsten, jedoch sind sie lokal pro Thread. Die Daten liegen als Parameter zunächst im \textit{global memory} vor. Im \textit{constant cache} liegen alle durch das CUDA Schlüsselwort \textit{\textunderscore\textunderscore constant\textunderscore\textunderscore} deklarierte Werte. Zugriffe auf den \textit{global memory} sind am langsamsten, da der Speicherbereich zwischen allen Multiprozessoren geteilt wird und Zugriffe mitunter synchronisiert werden müssen \todo{Hier gab es noch ein Harddware Argument. Welches?}. Durch Verwendung des \textit{shared memory} und \textit{texture cache} können Speicherzugriffe beschleunigt werden, jedoch können Daten aus diesen Bereichen nicht zwischen Blöcken geteilt werden.
+Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden müssen und vice versa, unterscheidet CUDA zwischen \textit{host memory} und \textit{device memory}. Darüber hinaus ist der \textit{device memory} bereits auf der Grafikkarte in verschiedene Bereiche organisiert, wie in Abbildung \ref{img:cuda_mem} dargestellt. Jeder Multiprozessor hat Zugriff auf den \textit{global memory} sowie einen eigenen lokalen \textit{shared memory}, \textit{constant} und \textit{texture cache}. Lokal erstellte Variablen werden als \textit{register} bezeichnet. Auf diese ist der Zugriff mitunter am schnellsten, jedoch sind sie lokal pro Thread. Die Daten liegen als Parameter zunächst im \textit{global memory} vor. Im \textit{constant cache} liegen alle durch das CUDA Schlüsselwort \textit{\textunderscore\textunderscore constant\textunderscore\textunderscore} deklarierte Werte. Zugriffe auf den \textit{global memory} sind am langsamsten, da der Speicherbereich zwischen allen Multiprozessoren geteilt wird und Zugriffe mitunter synchronisiert werden müssen. Durch Verwendung des \textit{shared memory} und \textit{texture cache} können Speicherzugriffe beschleunigt werden, jedoch können Daten aus diesen Bereichen nicht zwischen Blöcken geteilt werden.
 
 \begin{figure}
 	\centering
