@@ -78,7 +78,7 @@ Nach Erzeugung des Modells mit den Trainingsbildern, werden nun die Features der
 $$sim(h_1, h_2) = 1 - MSE(h_1, h_2)$$
 $$MSE(h_1, h_2) = \frac{1}{n}\sum_{i=0}^{n}(h_{1_i} - h_{2_i})^{2}$$
 
-\todo{Ergebnisse für alle Kandidaten nach sim sortieren. \enquote{Hohe Werte} (nah 1) sollten die gleiche Kategorie haben, geringe eine verschiedene} Hier gibt es zwei Fälle zu unterscheiden:
+Beträgt die Ähnlichkeit von zwei Histogrammen 1 werden sie als identisch angesehen. Werte nahe 0 drücken aus, dass die Histogramme sich sehr voneinander unterscheiden. Damit nun unterschieden werden kann, ob zwei Bilder in derselben Klasse sind, muss die Ähnlichkeit mit einem Schwellwert verglichen werden. So kann beispielsweise definiert werden, dass es sich bei einer Ähnlichkeit größer als $0.8$ um dieselbe Klasse handelt. Somit hat der Schwellwert unmittelbar Auswirkungen auf die Ergebnisse und sollte selbst Bestandteil des Experiments sein. Das Resultat eines solchen Vergleichs ist dann einer der beiden folgenden Kategorien zuzuordnen:
 
 \begin{itemize}
 	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
