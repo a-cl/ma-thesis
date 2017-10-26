@@ -13,11 +13,13 @@ object Main {
   def main(args: Array[String]): Unit = {
     val sourcePath = args(0)
     val targetPath = args(1)
-    val writer = new ExcelWriter
+    val excelWriter = new ExcelWriter
+    val textWriter = new TextWriter(targetPath)
     val data = Reader.read(sourcePath)
 
-    data.keys.foreach(k => writer.write(k, data(k)))
-    writer.save(targetPath)
+    data.keys.foreach(k => excelWriter.write(k, data(k)))
+    excelWriter.save(targetPath)
+    data.keys.foreach(k => textWriter.write(k, data(k)))
   }
 
 }
