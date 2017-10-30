@@ -1,8 +1,8 @@
 \chapter{Grundlagen}
 
 Das Grundlagenkapitel gibt eine Einführung und Übersicht über die verwendeten Begriffe und Konzepte, die im Weiteren dieser Arbeit von Bedeutung sind. Zunächst wird die Darstellung von Bildern behandelt und anschließend die Erhebung von charakteristischen Merkmalen aus Bildern, den Features. Hier genutzte Operationen auf Bildern bzw. Verfahren zur Detektion und Extraktion von Features aus diesen, werden im Anschluss erläutert.\newline
-In den folgenden Kapiteln wird ein Modell konzipiert und realisiert, dass eine Gruppierung von Bildern durch einen Autoencoder und Bag of Visual Words ermöglicht. Diese Verfahren werden tiefer in der Analyse betrachtet, hier soll jedoch der mathematische Hintergrund betrachtet werden. Aus diesem Grund wird für den Bag of Visual Words die Familie der k-means-Algorithmen eingeführt. Da es sich bei einem Autoencoder um ein spezielles neuronales Netzwerk handelt, werden in diesem anschließenden Abschnitt die Grundlagen neuronaler Netze vorgestellt.\newline
-Im letzten Teil des Kapitels wird auf die Berechnung numerischer Probleme, das \textit{GPU Computing}, unter Verwendung von CUDA, eingegangen.
+In den folgenden Kapiteln wird ein Modell konzipiert und realisiert, dass eine Gruppierung von Bildern durch einen Autoencoder und Bag of Visual Words ermöglicht. Da diese Algorithmen im Bereich des \textit{Machine Learning} angesiedelt sind, wird zunächst eine Einführung in die Thematik gegeben, um anschließend auf die eingangs erwähnten Modelle im Detail vorzustellen. Für den Bag of Visual Words wird hier näher auf die Familie der k-means-Algorithmen eingegangen. Da es sich bei einem Autoencoder um ein spezielles neuronales Netzwerk handelt, beginnt der Abschnitt zu diesem mit einer Einführung in die Grundlagen neuronaler Netze. Auf dieser Basis wird dann die Funktionsweise eines Autoencoders erläutert und zwei Erweiterungen vorgestellt.\newline
+Im letzten Teil des Kapitels wird auf die Berechnung numerischer Probleme durch Grafikkarten, das \textit{GPU Computing}, unter Verwendung von CUDA, eingegangen. Ein Beispielprogramm zur Vektoraddition in CUDA schließt das Kapitel ab.
 
 \section{Bilder und Features}
 
@@ -171,11 +171,25 @@ Je nach Fragestellung haben sich unterschiedliche Methoden entwickelt, um den Le
 
 Beim überwachten Lernen ist es notwendig, dass sowohl Ursachen (Eingaben) als auch Effekte (Ausgaben) gemessen wurden. Hier sollen dann durch ein trainiertes Modell eine Vorhersage der Ausgabe abhängig von der Eingabe erfolgen. Beim unüberwachten Lernen hingegen sind die Eingaben latente Variablen. Das heißt, sie sind nicht direkt gemessen worden, sondern durch mathematische Verfahren von Observationen abgeleitet. Dadurch ist ein exploratives Vorgehen möglich. Es können Beziehungen in den Daten entdeckt und Gruppierungen bzw. Klassifizierungen durchgeführt werden.
 
+\subsection{Clustering und Dimensionality Reduction}
+
+\textbf{Clustering-Verfahren} quantisieren die Daten in Gruppen. Eine Gruppe steht hier für ein semantisches Merkmal und vertritt eine Menge von konkreten Daten. Unter Clustering-Verfahren fallen Algorithmen wie k-means, hierarchical clustering oder etwa das Gaussian Mixture Model.\newline
+Ein Clustering-Algorithmus hat in dem Kontext dieser Arbeit das Ziel, eine großen Menge Feature-Deskriptoren auf die Wesentlichen zu reduzieren. Durch diese Quantisierung in $n$ Gruppen müssen, bei einer Bewertung eines neuen Deskriptors, nur $n$ Deskriptoren betrachtet werden, statt jedes Deskriptors der Ursprungsmenge.\newline
+
+\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. Ein Vektor aus einem $n$-dimensionalen Raum wird auf einen $m$-dimensionalen Raum mit $m < n$ abgebildet. Um die Grundidee zu vermitteln, soll ein einfaches Beispiel dienen: Die roten Punkte in Abbildung \ref{img:compress2} stellen Messwerte dar. Durch die eingezeichnete Linie wird deutlich, dass die Funktion $f(x)=2y$ die Verteilung sehr gut annähert. Würden diese Werte beispielsweise über ein Netzwerk übertragen, so reicht es $x$ zu senden. Der Empfänger kann dann $y$ anhand der Funktion bestimmen. Dadurch könnte 50\% der Daten bei der Übertragung eingespart werden und nur wenig Information geht verloren.\newline 
+\begin{figure}
+	\centering
+	
+	\includegraphics[scale=0.65]{images/compress2d.png}
+	\caption{Beispielhafte Verteilung von Messwerten.}
+	\label{img:compress2}
+\end{figure}
+
 \section{Autoencoder}
 
-Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und dieses Wissen zu transferieren. 
-Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe. 
-Als erstes wird im folgenden Abschnitt der Aufbau und die Funktionsweise eines Autoencoders erläutert. Darauf aufbauend werden zwei Erweiterungen des Autoencoders vorgestellt: Der Stacked Autoencoder und der Denoising Autoencoder. Ersterer wird verwendet, um effektiv tiefe Netzwerke zu konstruieren, letzterer ermöglicht eine korrekte Konstruktion aus verzerrten Daten.
+Durch den Aufschwung des maschinellen Lernens in den letzten Jahren sind neuronale Netze stark in den Fokus der Industrie und Wissenschaft gerückt. Solche künstlichen neuronalen Netze werden genutzt, um aus Beispielen Muster zu lernen und dieses Wissen zu transferieren.\newline
+Ein spezielles neuronales Netzwerk zum unbeaufsichtigten Lernen ist der Autoencoder. Diese Art von Netzwerk lernt selbstständig eine komprimierte Darstellung der Eingabe.  
+Als erstes wird im folgenden Abschnitt eine Übersicht über das Themegebiet der neuronalen Netze gegeben, um darauf aufbauend den Aufbau und die Funktionsweise eines Autoencoders zu erläutern. Im Anschluss werden zwei Erweiterungen des Autoencoders vorgestellt: Der Stacked Autoencoder und der Denoising Autoencoder. Ersterer wird verwendet, um effektiv tiefe Netzwerke zu konstruieren, letzterer ermöglicht eine korrekte Rekonstruktion aus verzerrten Daten.
 
 \subsection{Neuronale Netze}
 
@@ -387,9 +401,23 @@ In der Praxis hat sich zur Korruption der Eingabe die \textit{masking corruption
 
 Das Bag of Visual Words lehnt sich an das Bag of Words Modell aus dem Bereich Information Retrival an. Daher soll zunächst die Funktionsweise des Bag of Word Modells erläutert werden, um darauf aufbauend den Bag of Visual Words einzuführen.\newline 
 Der Bag of Words wird zur Klassifizierung von Dokumenten genutzt. Dieses Verfahren zählt das Auftreten jedes Wortes in einem Dokument. Diese Anzahl wird durch die Anzahl aller Wörter im Vokabular dividiert, um die relative Häufigkeit eines Wortes zu ermitteln. Das Vokabular wird in diesem Kontext \textit{Codebook} genannt, die Wörter werden auch als \textit{Codewords} bezeichnet.\newline
-Dieses Modell wurde von der digitalen Bildverarbeitung adaptiert \cite{bok2004}. Es wird anhand der Features von Trainingsbildern ein visuelles Vokabular gelernt, das zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert, der direkt verglichen werden kann, \todo{ein Feature hingegen ist ein Vektor in einem hochdimensionalen Raum, der Eigenschaften beschreibt}\footnote{Neh. Hier floats statt int string}. Um konkrete Werte zu erhalten, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. \newline
+Dieses Modell wurde von der digitalen Bildverarbeitung adaptiert \cite{bok2004}. Es wird anhand der Features von Trainingsbildern ein visuelles Vokabular gelernt, das zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert, der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor, der aus vielen Gleitkommazahlen besteht. Dies heißt, dass es keinen Sinn ergibt, Features direkt miteinander zu vergleichen: Die Komponenten zweier Vektoren sind unter Umständen ähnlich, aber unter fast keine Umständen gleichen. Um also eine Darstellung zu erhalten, die als Basis für einen Vergleich dienen kann, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. \newline
 Zunächst wird die Funktionsweise des Bag of Visual Words im folgenden Abschnitt näher betrachtet. Dem schließt eine Betrachtung des Kernstücks des Algorithms an: Das Clustering der Features. Hier wird ein k-means Algorithmus, Llyods heuristische Variante, verwendet. Es wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird.\newline
 Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
+
+
+\subsection{Funktionsweise}
+
+Der Bag of Visual Words besteht aus einer Trainings- und Testphase, wie in Abbildung \ref{img:bovw} dargestellt. Die Extraktion der Features ist beiden Phasen vorgelagert.\newline
+Zu Beginn erfolgt die Trainingsphase, das Clustering der extrahierten Features. Das so erzeugte \textit{Codebook} ist das Modell, gegen das anschließend getestet werden kann. Die Idee ist, dass ähnliche Feature-Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering-Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ eine große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook} bzw. Modell.\newline
+Der Testprozess erzeugt nun, auf Basis des \textit{Codebooks}, die \textit{Visual Words} von Bildern. Hierfür werden die Features eines Bildes extrahiert und ein Histogrammalgorithmus ermittelt die Verteilung der \text{Visual Words}: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert. Wird dieser Prozess auf zwei Bilder angewendet, so können die resultierenden Histogramme miteinander verglichen werden (z.B. mit dem \textit{MSE (mean squared error)} als Metrik).
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.65]{images/bovw_process.pdf}
+	\caption{Training- und Testprozess des Bag of Visual Word Modells.}
+	\label{img:bovw}
+\end{figure}
 
 \subsection{K-means Clustering}
 
@@ -412,19 +440,6 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 	\includegraphics[scale=0.55]{images/kmeans.png}
 	\caption{K-means Clustering im zweidimensionalen Raum mit $k = 3$.}
 	\label{img:kmeans}
-\end{figure}
-
-\subsection{Funktionsweise}
-
-Der Bag of Visual Words besteht aus einer Trainings- und Testphase, wie in Abbildung \ref{img:bovw} dargestellt. Die Extraktion der Features ist beiden Phasen vorgelagert.\newline
-Zu Beginn erfolgt die Trainingsphase, das Clustering der extrahierten Features. Das so erzeugte \textit{Codebook} ist das Modell, gegen das anschließend getestet werden kann. Die Idee ist, dass ähnliche Feature-Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering-Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ eine große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook} bzw. Modell.\newline
-Der Testprozess erzeugt nun, auf Basis des \textit{Codebooks}, die \textit{Visual Words} von Bildern. Hierfür werden die Features eines Bildes extrahiert und ein Histogrammalgorithmus ermittelt die Verteilung der \text{Visual Words}: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert. Wird dieser Prozess auf zwei Bilder angewendet, so können die resultierenden Histogramme miteinander verglichen werden (z.B. mit dem \textit{MSE (mean squared error)} als Metrik).
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.65]{images/bovw_process.pdf}
-	\caption{Training- und Testprozess des Bag of Visual Word Modells.}
-	\label{img:bovw}
 \end{figure}
 
 \subsection{Lloyds Algorithmus}
