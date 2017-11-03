@@ -37,9 +37,11 @@ Um Bilder zu vergleichen, werden charakteristische Merkmale dieser betrachtet, d
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.6]{images/liberty.png}
-	\caption{Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen.}
+	\caption[liberty]{Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen. \footnotemark}
 	\label{img:liberty}
 \end{figure}
+
+\footnotetext{Quellen: https://www.pexels.com/photo/new-york-statue-of-liberty-usa-monument-64271 (links), http://www.publicdomainpictures.net/view-image.php?image=198474\& picture=statue-of-liberty (rechts)}
 
 Die Gewinnung der Features ist in die Schritte Detektion und Extraktion aufgeteilt: 
 
@@ -68,9 +70,11 @@ In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{images/big_cat.png}
-	\caption{Graustufenbild und Verteilung der Intensitätswerte}
+	\caption[cat]{Graustufenbild und Verteilung der Intensitätswerte \footnotemark}
 	\label{img:hist}
 \end{figure}
+
+\footnotetext{Quelle: https://www.pexels.com/photo/grayscale-photography-of-cat-164089/}
 
 \subsubsection{Filter} 
 Ein Filter (auch Filterkern, Faltungsmatrix) ist eine, meist quadratische, Matrix von Koeffizienten. Eine Filteroperation auf einem Bild soll bestimmte Bestandteile, z.B. Rauschen, reduzieren oder andere Kanten bzw. Ecken hervorheben. Als Ergebnis dieses Prozesses resultiert also wieder ein Bild. Die Anwendung des Filters wird Faltung genannt und durch das $*$ Zeichen ausgedrückt. Hier handelt es sich aber nicht um eine klassische Matrixmultiplikation. Bei der Faltung wird zur Berechnung der neuen Intensität eines Pixels seine Nachbarschaft berücksichtigt. Bei Verwendung einer $3 \times 3$ Matrix zur Filterung bedeutet dies, dass der Pixel selbst und alle direkt angrenzenden, mit den entsprechenden Koeffizienten des Kerns multipliziert und anschließend aufsummiert werden. 
@@ -506,7 +510,7 @@ Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden mü
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.4]{images/cuda_mem.png}
-	\caption{Organisierung der verschiedenen Speichertypen}
+	\caption{Organisierung der verschiedenen Speichertypen \cite{cud2012}}
 	\label{img:cuda_mem}
 \end{figure}
 

@@ -29,9 +29,8 @@ Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hie
 \lstset{language=Python,label={lst:compGrad}}
 \begin{lstlisting}
 def computeGradients(image):
-  \todo{Hier hatte ich erst Sobel benutzt, muss den Code noch aktualisieren.}
-  grad_x = cv2.Sobel(image, cv2.CV16S, 1, 0)
-  grad_y = cv2.Sobel(image, cv2.CV16S, 0, 1)
+  grad_x = cv2.GaussianBlur(image, (3, 1), 0)
+  grad_y = cv2.GaussianBlur(image, (1, 3), 0)
   return [grad_x, grad_y]
 \end{lstlisting}
 
@@ -40,9 +39,11 @@ In Abbildung \ref{img:gradients} sind auf der rechten Seite sind, in zwei Reihen
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.65]{images/gradients_patch.png}
-	\caption{Stop-Schild und Gradienten um einige der gefundenen \textit{keypoints}.}
+	\caption[stop]{Stop-Schild und Gradienten um einige der gefundenen \textit{keypoints} \footnotemark}
 	\label{img:gradients}
 \end{figure}
+
+\footnotetext{Quelle: Caltech101 (stop\textunderscore sign/image\textunderscore 0005.jpg)}
 
 Sollte im Späteren eine Umsetzung des Autoencoders in CUDA C erfolgen, so lässt sich die Gewinnung der Patches leicht portieren. Die Verwendung von SIFT erfolgt in C analog (in entsprechender Syntax).
 
