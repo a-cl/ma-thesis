@@ -19,10 +19,18 @@ Für die Gruppierung des Bildmaterials eignen sich maschinelle Lernverfahren bes
 
 Das Gruppieren von Vektoren, hier den Bild-Features, kann also durch einen \textit{Clustering} Algorithmus umgesetzt werden. Außerdem scheint es sinnvoll die Features vor dem Clustering aufzubereiten: Durch eine kompaktere Darstellung der Vektoren kann der notwendige Speicher reduziert und die Berechnung beschleunigt werden. Solche Methoden zur Kompression sind sogenannte assoziative Verfahren: Hier werden Strukturen in den Daten gesucht, die nicht offensichtlich sind. Durch die Verwendung dieser unterliegenden Strukturen kann auf einen Teil der ursprünglichen Information verzichtet werden. Im nächsten Abschnitt wird betrachtet, wie sich andere Autoren dieser Fragestellung angenähert haben und welche Vorarbeit bereits geleistet wurde.
 
-\subsection{Arbeiten Anderer}
-\todo{Hier related work}
+\subsection{Verwandte Arbeiten}
 
-Das Konzept des Autoencoders reicht zwar bis in die 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton \cite{dae2006} entwickelt worden. \todo{Zhao}
+Methoden, um großen Mengen Daten zu gruppieren, sind aktuell gefragter denn jeh: Die zunehmende Vernetzung und Nutzung von Technik im privaten sowie in der Wirtschaft, führt zu großen Datenströmen. Zentrales Element in den Arbeiten andere ist meist ein k-means Algorithmus. Dieser wird hinsichtlich verschiedener Ziele, wie Ausführungszeit oder Präzision, von den Autoren optimiert.  Einige dieser Arbeiten werden im folgenden vorgestellt.\newline
+Bevor ein Clustering zum Einsatz kommt, ist es wünschenswert, dass die Daten in kompakter Form vorliegen. Oft sind in den Daten viele Informationen vorhanden, die nicht substantiell sind, also als \enquote{Rauschen } betrachtet werden. Außerdem ist es von Vorteil die Daten in einem Raum mit wenig Dimensionen zu beschreiben, um den \enquote{Fluch der Dimensionalität} zu vermeiden. Klassische Verfahren wie die Hauptkomponentenanalyse gelangen bei komplexen, nicht lineare Daten an ihre Grenzen. Aus diesem Grund schließt sich der Vorstellung verschiedener Clustering-Verfahren eine Betrachtung von modernen Ansätzen zur Verringerung der Dimensionalität an.\newline
+
+Joint Image Segmentation von Seldan \cite{jis2003} et al. Analogie model/images - word/document. Texturen als Features. Link zwischen Texturen herstellen -> ähnliche Bilder haben viele Texturen gemeinsam. Zwei Phasen: Unsupervised Selection + Unsupervised Classification. Anwendung auf Natürliche Bilder (Meer), Malstile.\newline
+Improved K-Means \cite{ikm2010}. % Madhu Yedla, Srinivasa Rao Pathakota, T. M. Srinivasa6 proposed Enhancing K-means clustering algorithm with improved initial center. A new method for finding the initial centroid is introduced and it provides an effective way of assigning the data points to suitable clusters with reduced time complexity. They proved their proposed algorithm has more accuracy with less computational time comparatively original k-means clustering algorithm. This algorithm does not require any additional input like threshold value. But this algorithm still initializes the number of cluster k and suggested determination of value of k as one of the future work
+
+\todo{isomaps?} %https://lvdmaaten.github.io/publications/papers/TR\_Dimensionality\_Reduction\_Review\_2009.pdf
+
+\todo{PCA? Anderes nicht-lineares Verfahren}
+Eine andere Möglichkeit Datenstrukturen in einem Raum mit geringerer Dimensionalität unüberwacht zu lernen, ist der Einsatz von speziellen neuronalen Netzen, den sogenannten Autoencodern. Das Konzept des Autoencoders reicht zwar bis in die 80er Jahre zurück, eine Methode zum Training tiefer Netze ist aber erst 2006 von Hinton \cite{dae2006} entwickelt worden. Zhao \cite{aed2016} hat 2016 einen Autoencoder entworfen, der einen Deskriptor aus Gradienten eines Bildes erzeugt. In einem Experiment mit den ImageNet Bilddaten wurden die Ergebnisse mit denen von Lowes SIFT-Deskriptor verglichen: 
 
 \subsection{Auswahl des Modells}
 
