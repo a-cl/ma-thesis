@@ -470,16 +470,16 @@ Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: 
 \subsection{Histogramme}
 
 Ein sequentielles Histogramm kann als Programm in einer Schleife über die Daten ausgedrückt werden: Für jedes Element wird der Index der Klasse des Histogramms berechnet und um eins inkrementiert. Zur Normalisierung des Histogramms ist es anschließend notwendig, jede Klasse des Histogramms durch die Gesamtanzahl der Werte zu dividieren. Da es sich bei der Anzahl der Klassen jedoch um eine kleine Zahl, im Vergleich zur Anzahl der Elemente in den Daten, handelt, ist dieser Aufwand vernachlässigbar.
-Um das Histogramm der Visual Words eines Bildes zu erzeugen, muss für jedes extrahierte Feature das nächste Visual Word bestimmt werden. Dies entspricht im nachfolgenden Pseudocode der doppelten Schleife über die Features $F$ und Cluster $C$ in Zeile 2 und 3. Der Index des nächsten Clusters wird dann in Zeile 4 durch $argmin D$ berechnet und in der nächsten Zeile wird das Histogramm $H$ an der entsprechenden Stelle inkrementiert.
+Um das Histogramm der Visual Words eines Bildes zu erzeugen, muss für jedes extrahierte Feature das nächste Visual Word bestimmt werden. Dies entspricht im nachfolgenden Pseudocode der doppelten Schleife über die Features $F$ und Cluster $C$ in Zeile 2 und 3. Der Index des nächsten Clusters wird dann in Zeile 4 durch $\arg \min D$ berechnet und in der nächsten Zeile wird das Histogramm $H$ an der entsprechenden Stelle $i$ inkrementiert. Abschließend erfolgt in der Schleife in Zeile 6 und 7 die Normalisierung des Histogramms.
 
 \begin{lstlisting}[mathescape=true]
-histogram ($P, C, H, k$)
+histogram ($P, C, H$)
 	for each $p \in P$
 		for each $c \in C$
-			$bin = arminD(c, p)$ 
-		$H_{k} = H_{k} + 1$		
-	for each $h in H$
-		$h = h / |H|$
+			$i = \arg \min D(c, p)$ 
+		$H_{i} = H_{i} + 1$		
+	for each $h \in H$
+		$h = \frac{h}{\|H\|}$
 \end{lstlisting}
 
 \section{CUDA}
