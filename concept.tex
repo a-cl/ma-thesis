@@ -86,18 +86,18 @@ Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Al
 \begin{lstlisting}[mathescape=true]
 lloyd_gpu(V, C, k)
 	if threadId == 0
-		$c_{j} = rand(v_{i}) \in V, \: j = 1,...,k, \: c_{j} \neq c_{i} \: \forall i \neq j$
+		$c_j = rand(v_i) \in V, \: j = 1,...,k, \: c_j \neq c_i \: \forall i \neq j$
 	synchronize threads
 	until convergence
-		for each $v_{i} \in V_{threadId}$
-			$l_{i} = argminD(c_{j}, v_{i})$
+		for each $v_i \in V_{threadId}$
+			$l_i = \arg \min D(c_j, v_i)$
 		synchronize threads
 		if threadId == 0
 			for each $v_{i} \in V$
-				$c_{l_{i}} = c_{l_{i}} + v_{i}$
-				$m_{l_{i}} = m_{l_{i}} + 1$
-			for each $c_{j} \in C$
-				$c_{j} = \frac{1}{m_{j}} c_{i}$
+				$c_{l_i} = c_{l_i} + v_i$
+				$m_{l_i} = m_{l_i} + 1$
+			for each $c_j \in C$
+				$c_j = \frac{1}{m_j} c_i$
 \end{lstlisting}
 
 \subsection{Parallele Reduzierung von Histogrammen}
