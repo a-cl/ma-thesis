@@ -97,10 +97,10 @@ import numpy
 
 model = StackedAutoEncoder(
   dims=[3042, 1024, 512, 128, 36],
-  activations=['relu', 'relu', 'relu', 'relu', 'relu'], 
-  epoch=[1000, 1000, 700, 700, 500], 
+  activations=['sigm', 'sigm', 'sigm', 'sigm', 'sigm'], 
+  epoch=[700, 700, 700, 700, 700], 
   loss='rmse', 
-  lr=0.02, 
+  lr=0.03, 
   batch_size=100
 )
 
@@ -114,10 +114,8 @@ def decode(features):
   model.transform(data=features, mode='decode')
 \end{lstlisting}
 
-In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. 
-Die Abkürzung \textit{relu} steht hier für \textit{Rectified Linear Unit (ReLU)}. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die \textit{ReLU} benutzt \todo{Grund}.
-Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
-Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 2\% gesetzt.\newline
+In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit{StackedAutoEncoder} entstammt hierbei dem Eingangs erwähnten Projekt von Rajarshee Mitra. Hier ist es nicht möglich, die Parameter des \textit{Pretrainings} und des \textit{Finetunings} separat zu definieren. Als Ausgangspunkt werden hier daher die Werte des \textit{Finetunings} für beide Prozesse verwendet. In \textit{dims} wird die Menge der Schichten des Encoder-Teils durch eine Liste von Ganzzahlen dargestellt: Eine Zahl steht für die Anzahl der Neuronen pro Schicht. Hier wird davon ausgegangen, dass benachbarte Schichten voll verbunden sind. Der Decoder-Teil ist umgekehrt aufgebaut, daher leitet sich dieser aus der Encoder-Definition ab und muss nicht notiert werden. Folglich werden in \textit{activations} die Aktivierungsfunktion auch nur einmal notiert. Die Abkürzung \textit{sigm} steht hier für die sigmoid Funktion. Die Schichten können über verschiedene Aktivierungsfunktionen miteinander verbunden sein, hier wird aber für alle die sigmoid Funktion benutzt. Wichtig ist hier, dass die Aktivierungsfunktion nicht linear ist, damit komplexe Zusammenhänge gelernt werden können. Die Liste \textit{epoch} enthält die Anzahl der Trainingsiteration für die Autoencoder, die aus den benachbarten Schichten konstruiert und einzelnen trainiert werden. In Zeile 9 wird unter \textit{loss} die Metrik definiert, mit welcher der Fehler der Rekonstruktion gemessen wird. \textit{rmse} steht für \textit{root-mean-square error} und ist somit der gemittelte quadratische Fehler. 
+Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 3\% gesetzt.\newline
 In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Als Eingabe werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
 
 \todo{Etwas erläutern, wie das Modell mit TensorFlow zusammenhängt!}

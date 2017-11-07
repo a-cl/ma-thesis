@@ -71,13 +71,7 @@ Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder de
 	\label{img:ae_model}
 \end{figure}
 
-Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Zhao verwendete hier für die Lernrate einen Wert von $2\%$, sodass $l = 0.02$. Für das Training der jeweiligen Autoencoderpaare werden verschieden viele Iterationen benutzt:
-\begin{itemize}
-	\item 1. Schicht: $1000$ Iterationen
-	\item 2. Schicht: $700$ Iterationen
-	\item 3. bis 5. Schicht: Je $500$ Iterationen
-\end{itemize}
-Als Größe für einen \textit{batch} wurde hier 128 gewählt, also sieht das Netz in einem \textit{foward} und \textit{backward pass} je 128 Trainingsexemplare. Da dies im Wesentlichen die Laufzeit durch eine Verwendung von mehr Speicher bewirkt, kann diese Zahl bei ungenügenden Ressourcen auch reduziert werden.
+Die Hyperparameter für das verwendete Modell sind auch vollständig dokumentiert. Dabei wird zwischen dem \textit{Pretraining} und dem \textit{Finetuning} unterschieden: Zunächst findet das \textit{Pretraining} statt, also das trainieren der einzelnen Enkoder-Paare. Jedes Paar wird für 500 Iterationen trainiert und die Lernrate auf $0.05$ gesetzt. Beim \textit{Finetuning} wird dann das Backpropagation-Verfahren angewendet. Das ganze Netz wird für 700 Iterationen mit einer Lernrate von $0.03$ trainiert. Zhao verwendete hier für die Lernrate einen Wert von $2\%$, sodass $l = 0.02$. Als Aktivierungsfunktion wird in beiden Phasen die logistische (sigmoid) Funktion verwendet und ein \textit{batch} enthält 100 Elemente. Das Netz sieht so in einem \textit{foward} und \textit{backward pass} je 100 Trainingsexemplare. Da dies im Wesentlichen die Laufzeit durch eine Verwendung von mehr Speicher bewirkt, kann diese Zahl bei ungenügenden Ressourcen auch reduziert werden. Sowohl beim \textit{Pretraining} als auch beim \textit{Finetuning} werden 30\% der Eingabe korrumpiert.
 
 \section{Bag of Visual Words}
 
