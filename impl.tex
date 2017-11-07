@@ -118,9 +118,45 @@ In den Zeilen 5 bis 12 findet die Definition des Autoencoders statt. Der \textit
 Die Lernrate wird hier mit \textit{lr} bezeichnet und wurde entsprechend des konzipierten Autoencoders auf 3\% gesetzt.\newline
 In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \textit{train}, \textit{encode} und \textit{decode} definiert. Diese ermöglichen eine Verwendung des konkreten Autoencoders. Der Parameter \textit{features} muss bei \textit{train} und \textit{encode} eine Liste sein, die als Elemente Listen mit 3042 Komponenten enthält. Als Eingabe werden hier \textit{numpy} Arrays verwendet, sodass sich die Form \textit{shape(n, 3042)} bei $n$ Features ergibt. Dementsprechend erwartet \textit{decode} ein Array der Form \textit{shape(n, 36)}.\newline
 
-\todo{Etwas erläutern, wie das Modell mit TensorFlow zusammenhängt!}
+\textbf{Zusammenhang mit TensorFlow} Das Modell verbirgt jegliche Interaktion mit TensorFlow. Intern wurden die Operationen jedoch in TensorFlow umgesetzt. Pro Schicht wird die \textit{run} Funktion aufgerufen. Hier wird zunächst eine Session \textit{sess}, ein Platzhalter für die Eingabe $x$ und die Ausgabe $x\textunderscore$, sowie die Funktionen \textit{encode} und \textit{decode} deklariert:
 
-Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
+\lstset{language=Python}
+\begin{lstlisting}
+sess = tf.Session()
+x = tf.placeholder(dtype=tf.float32, shape=[None, inp_dim], name='x')
+x_ = tf.placeholder(dtype=tf.float32, shape=[None, inp_dim], name='x_')
+
+encode = { 
+  'weights': tf.Variable(tf.truncated_normal([inp_dim, hid_dim], dtype=tf.float32)),
+  'biases': tf.Variable(tf.truncated_normal([hid_dim], dtype=tf.float32))
+}
+decode = {
+  'biases': tf.Variable(tf.truncated_normal([inp_dim], dtype=tf.float32)),
+  'weights': tf.transpose(encode['weights'])
+}
+\end{lstlisting}
+
+Die Dimensionen der Eingabe und Schichten (\textit{inp\textunderscore dim} und \textit{hid\textunderscore dim}) sind Parameter des Algorithmus. Durch \textit{truncted\textunderscore normal} werden zufällige, normalverteilte Zahlen erzeugt. Anschließend wird dann definiert, wie die Daten kodiert bzw. dekodiert werden, der Fehler berechnet wird und welches Verfahren zum Training angewendet wird (gekürzter Code, im Original werden mehrere Metriken zu Fehlerberechnung angeboten):
+
+\lstset{language=Python}
+\begin{lstlisting}
+encoded = activate(tf.matmul(x, encode['weights']) + encode['biases'])
+decoded = tf.matmul(encoded, decode['weights']) + decode['biases']
+loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(x_, decoded))))
+train_op = tf.train.AdamOptimizer(lr).minimize(loss)
+\end{lstlisting}
+
+Die Funktion \textit{activate} entspricht hier der angegebenen Aktivierungsfunktion. Da bei Zhao die sigmoid Funktion verwendet wird, entspricht dies dem Aufruf von \textit{tf.nn.sigmoid}. Die Variable \textit{lr} gibt die Lernrate an und ist Paramter der \textit{run}-Methode. Zum Schluss findet die Anwendung des Modells für die definierte Anzahl an Epochen statt: 
+
+\lstset{language=Python}
+\begin{lstlisting}
+sess.run(tf.global_variables_initializer())
+for i in range(epoch):
+	batch_x, batch_x_ = utils.get_batch(data_x, data_x_, batch_size)
+	sess.run(train_op, feed_dict={x: batch_x, x_: batch_x_})
+\end{lstlisting}
+
+\textbf{Verwendung durch die Kommandozeile} Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
 
 \lstset{language=Python}
 \begin{lstlisting}
@@ -224,15 +260,15 @@ extern __shared__ char sharedMemory[];
 unsigned int *membershipChanged = (unsigned int *)sharedMemory;
     
 #if SHARED_MEM
-    float *clusters = (float *)(sharedMemory + blockDim.x);
+	float *clusters = (float *)(sharedMemory + blockDim.x);
 	for (int i = threadIdx.x; i < k; i += blockDim.x) {
   		for (int j = 0; j < size; j++) {
     		clusters[k * j + i] = deviceClusters[k * j + i];
-  		}
+		}
 	}
 	__syncthreads();
 #else
-    float *clusters = deviceClusters;
+	float *clusters = deviceClusters;
 #endif
 \end{lstlisting}
 
