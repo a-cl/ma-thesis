@@ -449,22 +449,23 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 
 \subsection{Lloyds Algorithmus}
 
-Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. Im nachfolgenden Codelisting ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Punkte $P$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster statt. Die Zuordnung von Punkten zu Clustern erfolgt in Zeile 7: $argminD$ wählt den Cluster aus, dessen Varianz am Wenigsten bei Aufnahme des Punktes $p_{i}$ steigt. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. \todo{Lol neu}
+Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. Im nachfolgenden Codelisting ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Punkte $P$, eine leere Menge Cluster $C$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster $c_j$ statt. Innerhalb der Schleife in Zeile 4 werden zunächst alle $k$ Cluster $C_j$ als leere Menge definiert. Anschließend wird für jeden Punkt $p_i$ aus $P$ der Index $j$ des nächsten Clusterschwerpunktes ermittelt. Der Punkt wird dann in den entsprechenden Cluster $C_j$ aufgenommen. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. Hierfür wird pro Cluster die Summe über alle enthaltenen Punkte gebildet und anschließend normalisiert.
 
 \lstset{language=C}
 \begin{lstlisting}[mathescape=true]
 kmeans_lloyd ($P, C, k$)
-	initialisierung
+	$c_j = rand p_i \in P, j=1,...,k \quad c_j != c_i \forall i != j
+
 	until convergence
 		$C_{j} = \emptyset, j = 1,...,k$
 		for each $p_{i} \in P$
 			$j = \arg \min D(c_j, p_i)$	
 			$C_j = C_j \cup p_i$	
 		for each $c_{j} \in  C$
-			$c = \frac{1}{\|c\|} \sum_{p_i \in C_j} p_i$
+			$c_j = \frac{1}{\|C_j\|} \sum_{p_i \in C_j} p_i$
 \end{lstlisting}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Varianz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Varianzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Distanz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Distanzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
 
 % http://www.know-center.tugraz.at/download\_extern/papers/latex8.pdf
 
