@@ -8,8 +8,7 @@ Zu Ermittlung der \textit{keypoints} durch den SIFT-Detektor wird auf die \texti
 
 Da der Autoencoder in Python geschrieben ist, erfolgt die Gewinnung der Patches in der gleichen Sprache, um so eine einfache weitere Verarbeitung zu ermöglichen. Der Prozess lässt sich in drei Schritte untergliedern. Um alle Features eines Bildes zu erhalten, wird die Funktion \textit{extractFeatures} mit dem Pfad zu einer Bilddatei ausgerufen. Es wird das Bild eingelesen, konvertiert und durch den \textit{opencv} SIFT-Detektor die \textit{keypoints} ermittelt. Die Berechnung der Gradienten der Nachbarschaften um diese \textit{keypoints} erfolgt dann durch die Funktion \textit{computeDescriptors}:
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 def computeDescriptors(image, keypoints):
   descriptors = []
   
@@ -24,10 +23,9 @@ def getPatch (image, keypoint):
   return image[y-20:y+21, x-20:x+21]
 \end{lstlisting}
 
-Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hierbei handelt es sich um die Nachbarschaften der Größe $41 \times 41$. Die Gradienten in vertikale und horizontale Richtung eines solchen \textit{Patches} werden durch \textit{computeGradients} bestimmt. In Zeile 2 und 3 in Abbildung \ref{lst:compGrad} findet die Konvolution des Patches mit einem Sobel-Operator statt, den \textit{opencv} anbietet.
+Für jeden \textit{keypoint} werden nun wiederum \textit{Patches} berechnet: Hierbei handelt es sich um die Nachbarschaften der Größe $41 \times 41$. Die Gradienten in vertikale und horizontale Richtung eines solchen \textit{Patches} werden durch \textit{computeGradients} bestimmt. In Zeile 2 und 3 in nachfolgendem Codelisting findet die Faltung des Patches mit dem Gauß-Filter statt, den \textit{opencv} anbietet.
 
-\lstset{language=Python,label={lst:compGrad}}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 def computeGradients(image):
   grad_x = cv2.GaussianBlur(image, (3, 1), 0)
   grad_y = cv2.GaussianBlur(image, (1, 3), 0)
@@ -67,8 +65,7 @@ In diesem Abschnitt wird behandelt wie, der Autoencoder in Python und TensorFlow
 TensorFlow ist ein Deep-Learning Framework, dass in Python geschrieben ist. Darüber hinaus gibt aus aber auch Schnittstellen zu anderen Sprachen wie beispielsweise C oder Java. Aus dem Namen leitet sich die bereits die Idee ab, die TensorFlow zugrunde liegt: Ein Tensor ist ein (multidimensionales) Array aus Daten. Diese Tensoren sind mit mathematischen Operationen, den Knoten, miteinander verbunden, sodass die Daten durch die Tensoren und Knoten \enquote{fließen} und dabei transformiert werden. Daher eignet sich TensorFlow hervorragend für die Darstellung neuronaler Netze: Die Kanten des Netzes entsprechen den Tensoren, die Neuronen in den Schichten führen mathematische Operationen auf den eingehenden Daten aus und leiten diese weiter an den nächsten Tensor. Die in TensorFlow definierten Modelle lassen sich sowohl auf mehreren CPUs sowie Nvidia GPUs ausführen. Für die Ausführung auf Nvidia Hardware ist es notwendig, dass auf dem System mindestens CUDA $7.5$ und die cuDNN Bibliothek $4.0$ installiert ist. 
 TensorFlow folgt dem sogenannten \enquote{lazy} Programmierparadigma. Dies bedeutet, dass zunächst aus den Definitionen ein Modell aufgebaut wird. Dieses Modell kann durch TensorFlow automatisiert geprüft und visualisiert werden. Im nächsten Schritt werden alle nötigen Variablen initialisiert. Erst durch das Erzeugen und Aufrufen einer \enquote{Session} wird das Modell trainiert bzw. auf Testdaten ausgeführt.
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 import tensorflow as tf
 
 a = tf.placeholder(tf.int16)
@@ -89,8 +86,7 @@ sess.close()
 
 Diese Umsetzung des Autoencoders ist in TensorFlow unter Verwendung der Bibliothek \textit{libsdae-autoencoder-tensorflow}\footnote{https://github.com/rajarsheem/libsdae-autoencoder-tensorflow} von Rajarshee Mitra erfolgt. Der in der Konzeption vorgestellte Stacked Autoencoder von Zhao kann so wie folgt definiert werden:
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 from deepautoencoder import StackedAutoEncoder
 import cv2
 import numpy
@@ -120,8 +116,7 @@ In Zeile 14, 17 und 20 werden die in der Konzeption vorgestellten Methoden \text
 
 \textbf{Zusammenhang mit TensorFlow} Das Modell verbirgt jegliche Interaktion mit TensorFlow. Intern wurden die Operationen jedoch in TensorFlow umgesetzt. Pro Schicht wird die \textit{run} Funktion aufgerufen. Hier wird zunächst eine Session \textit{sess}, ein Platzhalter für die Eingabe $x$ und die Ausgabe $x\textunderscore$, sowie die Funktionen \textit{encode} und \textit{decode} deklariert:
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 sess = tf.Session()
 x = tf.placeholder(dtype=tf.float32, shape=[None, inp_dim], name='x')
 x_ = tf.placeholder(dtype=tf.float32, shape=[None, inp_dim], name='x_')
@@ -138,8 +133,7 @@ decode = {
 
 Die Dimensionen der Eingabe und Schichten (\textit{inp\textunderscore dim} und \textit{hid\textunderscore dim}) sind Parameter des Algorithmus. Durch \textit{truncted\textunderscore normal} werden zufällige, normalverteilte Zahlen erzeugt. Anschließend wird dann definiert, wie die Daten kodiert bzw. dekodiert werden, der Fehler berechnet wird und welches Verfahren zum Training angewendet wird (gekürzter Code, im Original werden mehrere Metriken zu Fehlerberechnung angeboten):
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 encoded = activate(tf.matmul(x, encode['weights']) + encode['biases'])
 decoded = tf.matmul(encoded, decode['weights']) + decode['biases']
 loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(x_, decoded))))
@@ -148,8 +142,7 @@ train_op = tf.train.AdamOptimizer(lr).minimize(loss)
 
 Die Funktion \textit{activate} entspricht hier der angegebenen Aktivierungsfunktion. Da bei Zhao die sigmoid Funktion verwendet wird, entspricht dies dem Aufruf von \textit{tf.nn.sigmoid}. Die Variable \textit{lr} gibt die Lernrate an und ist Paramter der \textit{run}-Methode. Zum Schluss findet die Anwendung des Modells für die definierte Anzahl an Epochen statt: 
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 sess.run(tf.global_variables_initializer())
 for i in range(epoch):
 	batch_x, batch_x_ = utils.get_batch(data_x, data_x_, batch_size)
@@ -158,8 +151,7 @@ for i in range(epoch):
 
 \textbf{Verwendung durch die Kommandozeile} Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
 
-\lstset{language=Python}
-\begin{lstlisting}
+\begin{lstlisting}[style=Python]
 import sys
 import util
 import featureExtractor
@@ -231,8 +223,7 @@ Wenn das Konvergenzkriterium \textit{conv} oder die maximale Anzahl an Iteration
 
 Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem gegebenen Punkt, soll CUDAs \textit{shared memory} genutzt werden. Hierfür werden die Cluster pro Block vom \textit{global} in den \textit{shared memory} kopiert. Daraus ergibt sich eine Anpassung an mehreren Stellen im Programm. Um beide Implementierungen zu unterstützen, fragt eine Direktive für den Präprozessor den Wert der Variable \textit{SHARED\textunderscore MEM} ab. Falls der Wert der Variable \textit{true} ist, wird Code nur für die \textit{shared memory} Implementierung eingebunden, andernfalls für die \textit{global memory} Variante:
 
-\lstset{language=C}
-\begin{lstlisting}
+\begin{lstlisting}[style=CUDA]
 #if SHARED_MEM
 // shared memory Logik
 #else
@@ -241,8 +232,7 @@ Zur Beschleunigung der Berechnung bei der Suche des nächsten Clusters zu einem 
 
 Die Größe des extra zu allokierenden Speichers pro Block muss in \textit{blockSharedDataSize} berücksichtigt werden und ergibt sich aus der Anzahl der Cluster und der Anzahl der Elemente eines Features:
 
-\lstset{language=C}
-\begin{lstlisting}
+\begin{lstlisting}[style=CUDA]
 const unsigned int membershipDataSize = numThreads * sizeof(unsigned char);
 const unsigned int clusterDataSize = k * featureSize * sizeof(float);
 
@@ -254,8 +244,7 @@ const unsigned int clusterDataSize = k * featureSize * sizeof(float);
 
 In der Funktion \textit{findNearestCluster} wird der Parameter \textit{clusters} in \textit{deviceClusters} umbenannt. Wenn die \textit{global memory} Variante genutzt wird, sind diese gleich den Clustern \textit{clusters}. Andernfalls werden die \textit{deviceCluster} in die \textit{clusters} im \textit{shared memory} kopiert.
 
-\lstset{language=C}
-\begin{lstlisting}
+\begin{lstlisting}[style=CUDA]
 extern __shared__ char sharedMemory[];
 unsigned int *membershipChanged = (unsigned int *)sharedMemory;
     

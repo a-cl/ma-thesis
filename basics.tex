@@ -77,7 +77,7 @@ In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein 
 \footnotetext{Quelle: https://www.pexels.com/photo/grayscale-photography-of-cat-164089/}
 
 \subsubsection{Filter} 
-Ein Filter (auch Filterkern, Faltungsmatrix) ist eine, meist quadratische, Matrix von Koeffizienten. Eine Filteroperation auf einem Bild soll bestimmte Bestandteile, z.B. Rauschen, reduzieren oder andere Kanten bzw. Ecken hervorheben. Als Ergebnis dieses Prozesses resultiert also wieder ein Bild. Die Anwendung des Filters wird Faltung genannt und durch das $*$ Zeichen ausgedrückt. Hier handelt es sich aber nicht um eine klassische Matrixmultiplikation. Bei der Faltung wird zur Berechnung der neuen Intensität eines Pixels seine Nachbarschaft berücksichtigt. Bei Verwendung einer $3 \times 3$ Matrix zur Filterung bedeutet dies, dass der Pixel selbst und alle direkt angrenzenden, mit den entsprechenden Koeffizienten des Kerns multipliziert und anschließend aufsummiert werden. 
+Ein Filter (auch Filterkern, Faltungsmatrix) ist eine, meist quadratische, Matrix von Koeffizienten. Eine Filteroperation auf einem Bild soll bestimmte Bestandteile, z.B. Rauschen, reduzieren oder andere wie Kanten bzw. Ecken hervorheben. Als Ergebnis dieses Prozesses resultiert also wieder ein Bild. Die Anwendung des Filters wird Faltung genannt und durch das $*$ Zeichen ausgedrückt. Hier handelt es sich aber nicht um eine klassische Matrixmultiplikation. Bei der Faltung wird zur Berechnung der neuen Intensität eines Pixels seine Nachbarschaft berücksichtigt. Bei Verwendung einer $3 \times 3$ Matrix zur Filterung bedeutet dies, dass der Pixel selbst und alle direkt angrenzenden, mit den entsprechenden Koeffizienten des Kerns multipliziert und anschließend aufsummiert werden. 
 
 \textbf{Gauß-Filter}
 Ein Gauß-Filter wird in der Bildbearbeitung verwendet um ein Bild zu verzerren und somit Rauschen aber auch Details zu unterdrücken. Diesem Filter liegt, wie der Name sagt, die Gauß-Funktion zu Grunde:
@@ -103,7 +103,7 @@ $$ DoG(x, y)_{\sigma_{1}, \sigma_{2}} = I * g_{\sigma_2}(x, y) - I * g_{\sigma_1
 
 \subsection{Gradienten}
 
-Ein Gradient beschreibt die Änderungen der Intensität eines Bildes in eine Richtung.  Ändert sich die Intensität beispielsweise proportional von Pixel zu Pixel, wird von einem linearen Gradienten gesprochen. In der Bildverarbeitung sind große bzw. plötzliche Änderungen in der Intensität von Bedeutung: Hier handelt es sich potentiell um Kanten, die für weitere Analysen des Bildes verwendet werden können. Da zunächst nur ein Pixel vorliegt, muss senkrecht zum Gradienten untersucht werden, ob ähnliche Veränderungen der Intensität vorliegen. In Abbildung \ref{img:grad} ist links wieder das Bild der Freiheitsstatue dargestellt, rechts die berechneten Gradienten (Laplace Operator).
+Ein Gradient beschreibt die Änderungen der Intensität eines Bildes in eine Richtung.  Ändert sich die Intensität beispielsweise proportional von Pixel zu Pixel, wird von einem linearen Gradienten gesprochen. In der Bildverarbeitung sind große bzw. plötzliche Änderungen in der Intensität von Bedeutung: Hier handelt es sich potentiell um Ecken oder Kanten, die für weitere Analysen des Bildes verwendet werden können. Da zunächst nur ein Pixel vorliegt, muss senkrecht zum Gradienten untersucht werden, ob ähnliche Veränderungen der Intensität vorliegen. In Abbildung \ref{img:grad} ist links wieder das Bild der Freiheitsstatue dargestellt, rechts die berechneten Gradienten (Laplace Operator).
 
 \begin{figure}
 	\centering
@@ -408,7 +408,7 @@ Das Bag of Visual Words lehnt sich an das Bag of Words Modell aus dem Bereich In
 Der Bag of Words wird zur Klassifizierung von Dokumenten genutzt. Dieses Verfahren zählt das Auftreten jedes Wortes in einem Dokument. Diese Anzahl wird durch die Anzahl aller Wörter im Vokabular dividiert, um die relative Häufigkeit eines Wortes zu ermitteln. Das Vokabular wird in diesem Kontext \textit{Codebook} genannt, die Wörter werden auch als \textit{Codewords} bezeichnet.\newline
 Dieses Modell wurde von Faheema und Rakshit \cite{bow2010} adaptiert, um für die digitale Bildverarbeitung von Nutzen zu sein. Der Bag of Visual Words lernt anhand der Features von Trainingsbildern ein visuelles Vokabular, dass zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert, der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor, der aus vielen Gleitkommazahlen besteht. Dies heißt, dass es keinen Sinn ergibt, Features direkt miteinander zu vergleichen: Die Komponenten zweier Vektoren sind unter Umständen ähnlich, aber unter fast keine Umständen gleichen. Um also eine Darstellung zu erhalten, die als Basis für einen Vergleich dienen kann, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. \newline
 Zunächst wird die Funktionsweise des Bag of Visual Words im folgenden Abschnitt näher betrachtet. Dem schließt eine Betrachtung des Kernstücks des Algorithms an: Das Clustering der Features. Hier wird ein k-means Algorithmus, Llyods heuristische Variante, verwendet. Es wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird.\newline
-Bei der Einordnung eines Bildes wird ein Histogramm der Visual Words generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
+Bei der Einordnung eines Bildes wird ein Histogramm der \textit{Visual Words} generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
 
 
 \subsection{Funktionsweise}
@@ -470,9 +470,9 @@ Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: 
 \subsection{Histogramme}
 
 Ein sequentielles Histogramm kann als Programm in einer Schleife über die Daten ausgedrückt werden: Für jedes Element wird der Index der Klasse des Histogramms berechnet und um eins inkrementiert. Zur Normalisierung des Histogramms ist es anschließend notwendig, jede Klasse des Histogramms durch die Gesamtanzahl der Werte zu dividieren. Da es sich bei der Anzahl der Klassen jedoch um eine kleine Zahl, im Vergleich zur Anzahl der Elemente in den Daten, handelt, ist dieser Aufwand vernachlässigbar.
-Um das Histogramm der Visual Words eines Bildes zu erzeugen, muss für jedes extrahierte Feature das nächste Visual Word bestimmt werden. Dies entspricht im nachfolgenden Pseudocode der doppelten Schleife über die Features $F$ und Cluster $C$ in Zeile 2 und 3. Der Index des nächsten Clusters wird dann in Zeile 4 durch $\arg \min D$ berechnet und in der nächsten Zeile wird das Histogramm $H$ an der entsprechenden Stelle $i$ inkrementiert. Abschließend erfolgt in der Schleife in Zeile 6 und 7 die Normalisierung des Histogramms.
+Um das Histogramm der \textit{Visual Words} eines Bildes zu erzeugen, muss für jedes extrahierte Feature das nächste \textit{Visual Word} bestimmt werden. Dies entspricht im nachfolgenden Pseudocode der doppelten Schleife über die Features $F$ und Cluster $C$ in Zeile 2 und 3. Der Index des nächsten Clusters wird dann in Zeile 4 durch $\arg \min D$ berechnet .In der folgenden Zeile wird das Histogramm $H$ an der entsprechenden Stelle $i$ inkrementiert. Abschließend erfolgt in der Schleife in Zeile 6 und 7 die Normalisierung des Histogramms.
 
-\begin{lstlisting}[mathescape=true]
+\begin{lstlisting}[mathescape=true, style=Math]
 histogram ($P, C, H$)
 	for each $p \in P$
 		for each $c \in C$
