@@ -23,6 +23,8 @@
 \usepackage{dirtree}
 % Korrekte Anführungszeichen
 \usepackage{csquotes}
+% Abschnitte hervorheben (Delta für Korrekturen)
+\usepackage[titles]{tocloft}
 
 % Farben (für Codelistings)
 \definecolor{mygreen}{rgb}{0,0.6,0}
@@ -30,32 +32,6 @@
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 
 \newcommand{\todo}[1]{\textcolor{red}{TODO: {#1}}}
-
-% Genereller Style für Codelistings
-\lstset{ %
-  backgroundcolor=\color{white},
-  breakatwhitespace=false,
-  basicstyle=\footnotesize\sffamily,
-  breaklines=true,
-  captionpos=b,
-  commentstyle=\color{mygreen},
-  escapeinside={\%*}{*)},
-  extendedchars=true,
-  keepspaces=true,
-  keywordstyle=\color{blue},
-  language=Octave,
-  morekeywords={__shared__, __global__, until, each, synchronize threads},
-  numbers=left,
-  numbersep=5pt,
-  numberstyle=\small\color{mygray},
-  rulecolor=\color{black},
-  showspaces=false,                
-  showstringspaces=false,
-  showtabs=false,
-  stepnumber=1,
-  stringstyle=\color{mymauve},
-  tabsize=2
-}
 
 % Optionen für neuronale Netze
 \def\layersep{3.0cm}
@@ -78,13 +54,54 @@
 \raggedbottom
 \renewcommand{\topfraction}{1}
 \renewcommand{\bottomfraction}{1}
+ 
+\lstdefinestyle{Math}{
+    language        = Python,
+    keywordstyle    = \color{blue},
+    morekeywords={__shared__, __global__, until, each}
+} 
 
+\lstdefinestyle{CUDA}{
+    language        = C,
+    morekeywords={__shared__, __global__}
+} 
+
+\lstdefinestyle{Python}{
+    language        = Python,
+    stringstyle    = \color{red}\ttfamily
+}
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %							hier gehts los								%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}    
+
+% Genereller Style für Codelistings
+\lstset{ %
+  backgroundcolor=\color{white},
+  breakatwhitespace=false,
+  basicstyle=\fontsize{10}{12}\sffamily,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{mygreen},
+  escapeinside={\%*}{*)},
+  extendedchars=true,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=Octave,
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\small\color{mygray},
+  rulecolor=\color{black},
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  stringstyle=\color{mymauve},
+  tabsize=2
+}
+
   \thispagestyle{empty} % Titelseite
 \includegraphics[width=0.2\textwidth]{images/hsh_wortmarke.pdf}
 { \sffamily
