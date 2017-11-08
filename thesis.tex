@@ -24,7 +24,7 @@
 % Korrekte Anführungszeichen
 \usepackage{csquotes}
 % Abschnitte hervorheben (Delta für Korrekturen)
-\usepackage[titles]{tocloft}
+\usepackage{xcolor,titlesec,titletoc}
 
 % Farben (für Codelistings)
 \definecolor{mygreen}{rgb}{0,0.6,0}
@@ -54,7 +54,9 @@
 \raggedbottom
 \renewcommand{\topfraction}{1}
 \renewcommand{\bottomfraction}{1}
- 
+
+% Listing styles
+
 \lstdefinestyle{Math}{
     language        = Python,
     keywordstyle    = \color{blue},

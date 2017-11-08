@@ -37,7 +37,7 @@ Um Bilder zu vergleichen, werden charakteristische Merkmale dieser betrachtet, d
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.6]{images/liberty.png}
-	\caption[liberty]{Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen. \footnotemark}
+	\caption[Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen.]{Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen\footnotemark .}
 	\label{img:liberty}
 \end{figure}
 
@@ -70,7 +70,7 @@ In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{images/big_cat.png}
-	\caption[cat]{Graustufenbild und Verteilung der Intensitätswerte \footnotemark}
+	\caption[Graustufenbild einer Katze und das Histogramm der Intensitätswerte.]{Graustufenbild einer Katze\footnotemark und das Histogramm der Intensitätswerte.}
 	\label{img:hist}
 \end{figure}
 
@@ -135,7 +135,7 @@ SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} en
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.5]{images/sift_dog.png}
-	\caption{Difference of Gaussians Operator \cite{dif2004}}
+	\caption{Schematische Darstellung der Subtraktion von Bildern im \textit{scale space} beim Difference of Gaussians Verfahren \cite{dif2004}.}
 	\label{img:sift_dog}
 \end{figure}	
 	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DoG-Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DoG-Bildes und des Vorigen und Nachfolgenden im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genaue Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint}.
@@ -306,7 +306,7 @@ Die Variable $b$ ist hier der sogenannter Bias-Vektor, der dazu verwendet werden
 	
 	\end{tikzpicture}
 
-	\caption{Verarbeitung eines Signales in einem Neuron (ohne Ausgabefunktion).}
+	\caption[Verarbeitung eines Signales in einem Neuron.]{Verarbeitung eines Signales in einem Neuron (ohne Ausgabefunktion).}
 	\label{img:neuron}
 \end{figure}
 
@@ -384,7 +384,7 @@ In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet, der als Eingab
     \node[annot,right of=hl] {Output Layer};
 	\end{tikzpicture}
 
-	\caption{Beispiel eines simplen Autoencoders}
+	\caption{Beispiel eines Autoencoders mit einem \textit{Hidden Layer}.}
 	\label{img:example_ae}
 \end{figure}
 
