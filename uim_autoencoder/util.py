@@ -29,3 +29,7 @@ def arrayToFeature (array):
         grad_x.append(array[i:i+39])
         grad_y.append(array[half+i:half+i+39])
     return [grad_x, grad_y]
+
+def readImagePaths (filePath):
+    file = open(filePath, "r")
+    return file.readlines()

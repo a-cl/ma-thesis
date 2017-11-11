@@ -5,16 +5,9 @@ import cv2
 import extractor
 import util
 
-paths = [
-    'img/electric_guitar/image_0011.jpg',
-    'img/electric_guitar/image_0035.jpg',
-    'img/electric_guitar/image_0044.jpg',
-    'img/dragonfly/image_0002.jpg',
-    'img/dragonfly/image_0020.jpg',
-    'img/dragonfly/image_0035.jpg',
-    'img/dragonfly/image_0056.jpg'
-]
+# read in image paths of train.txt
 
+paths = util.readImagePaths('img/train.txt')
 gradients = extractor.extractAllFeatures(paths)
 normFeatures = util.featuresToArrays(gradients)
 idx = np.random.rand(normFeatures.shape[0]) < 0.8
