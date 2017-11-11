@@ -22,9 +22,11 @@ def run(train, test):
         print_step=50
     )
 
+    print("Starting training of the network")
     model.fit(train)
+    print("Starting to transform data.")
     test_ = model.transform(test)
-    print("Trans len", len(test_), test_.shape)
+    print("Writing results")
     result = util.arraysToFeatures(test_)
     util.writeFeatures("test1.txt", result)
 
