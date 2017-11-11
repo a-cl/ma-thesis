@@ -89,7 +89,13 @@ Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \texti
 
 \section{Experimentdurchführung}
 
-\todo{Auswertung für verschiedene k und beide Deskriptoren notieren. Das Ganze für drei verschieden Testsets. ROC Grafiken hinzufügen.}
+Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigenschaften einer Bildmenge variiert, um zu beobachten, wie sich diese Veränderungen auf die Qualität der Ergebnisse auswirkt. Die Testmengen sind jeweils wie folgt gewählt:
+
+\begin{itemize}
+	\item \textbf{Test 1} besteht aus zwei Kategorien: \enquote{Erdbeere} und \enquote{E-Gitarre}. Es wurden \todo{x} Bilder verwendet, aus beiden Kategorien je \todo{x/2}. Von diesen Bildern sind 30\% für die Trainings- und die anderen 70\% für die Testphase bestimmt. Insgesamt liegen im Training ca. $41.000$ Features vor, ähnlich viele wie in Zhaos Experiment (dort ca. $40.000$).
+	\item \textbf{Test 2} enthält ebenfalls, wie Test 1, die Kategorien \enquote{Erdbeere} und \enquote{E-Gitarre}. Hier werden aber insgesamt \todo{2x} Bilder verwendet. Aus beiden Kategorien wurden wieder gleich viele Bilder gewählt und die Aufteilung in Trainings- bzw. Testdaten bleibt auch gleich. Durch SIFT wurden hier für das Training ca. $77.000$ Features ermittelt, also nicht ganz doppelt so viele wie in Test 1.
+	\item \textbf{Test 3} enthält drei Kategorien von Bildern, um zu testen, ob eine komplexere Kategorisierung prinzipiell möglich ist. Als Kategorien wurden hier \enquote{Flugzeug}, \enquote{Yin-Yang} und \enquote{Stop-Schild} gewählt. Insgesamt werden \todo{y} viele Bilder verwendet, jede Kategorie steuert ein Drittel der Bilder bei. Die Aufteilung in Trainings- und Testdaten wird auch hier beibehalten. In der Trainingsphase lagen \todo{z} Features vor.
+\end{itemize} 
 
 \begin{table}
     \hfill
