@@ -42,7 +42,9 @@ def extractFeatures (imagePath):
 def extractAllFeatures (imagePaths):
     features = []
     for imagePath in imagePaths:
-        features.extend(extractFeatures(imagePath))
+        imgFeatures = extractFeatures(imagePath)
+        features.extend(imgFeatures)
+    print("Extracted", len(features), "Features in total.")
     return features
 
 # 'img/stop_sign/image_0001.jpg'
