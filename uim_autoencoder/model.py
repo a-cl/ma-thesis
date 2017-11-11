@@ -5,34 +5,29 @@ import cv2
 import extractor
 import util
 
-# read in image paths of train.txt
+def getFeatures (path):
+    paths = util.readImagePaths(path)
+    gradients = extractor.extractAllFeatures(paths)
+    return util.featuresToArrays(gradients)
 
-paths = util.readImagePaths('img/train.txt')
-gradients = extractor.extractAllFeatures(paths)
-normFeatures = util.featuresToArrays(gradients)
-idx = np.random.rand(normFeatures.shape[0]) < 0.8
-train_X = normFeatures[idx]
-test_X = normFeatures[~idx]
-
-def runAE1():
+def run(train, test):
     model = StackedAutoEncoder(
         dims=[3042, 1024, 512, 128, 36],
         activations=['sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
         epoch=[500, 500, 500, 500, 500],
         loss='rmse',
-        lr=0.03,
+        lr=0.05,
         noise='mask-0.3',
         batch_size=100,
         print_step=50
     )
 
-    model.fit(train_X)
-    test_X_ = model.transform(test_X)
-    print("Trans len", len(test_X_), test_X_.shape)
-    result = util.arraysToFeatures(test_X_)
-    #print(len(result), len(result[0]), len(result[0][0]), len(result[0][0][0]), result[0][0][0][0])
+    model.fit(train)
+    test_ = model.transform(test)
+    print("Trans len", len(test_), test_.shape)
+    result = util.arraysToFeatures(test_)
+    util.writeFeatures("test1.txt", result)
 
-def runAE2():
-    autoencoder2.run(train_X, test_X)
-
-runAE1()
+train = getFeatures('../uim_test-select/test1/train.txt')
+test = getFeatures('../uim_test-select/test1/test_ae.txt')
+run(train, test)
