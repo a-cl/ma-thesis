@@ -7,7 +7,6 @@ def featuresToArrays (features):
         arrays.append(imageToArray(feature))
     return np.array(arrays)
 
-
 def arraysToFeatures (arrays):
     features = []
 
@@ -31,5 +30,17 @@ def arrayToFeature (array):
     return [grad_x, grad_y]
 
 def readImagePaths (filePath):
+    files = []
     file = open(filePath, "r")
-    return file.readlines()
+
+    for line in file:
+        files.append(line.replace("\\", "/").strip())
+    return files
+
+def writeFeatures (filePath, features):
+    file = open(filePath, "w")
+    for feature in features:
+        file.write(" ".join(str(x) for x in feature))
+        file.write("")
+    
+    file.close()
