@@ -12,7 +12,7 @@ def arraysToFeatures (arrays):
     features = []
 
     for arr in arrays:
-        features.append(arrayToFeatures(arr))
+        features.append(arrayToFeature(arr))
     return features
 
 def imageToArray (feature):

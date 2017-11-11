@@ -6,9 +6,9 @@ import extractor
 import util
 
 paths = [
-    'img/guitar/image_0011.jpg',
-    'img/guitar/image_0035.jpg',
-    'img/guitar/image_0044.jpg',
+    'img/electric_guitar/image_0011.jpg',
+    'img/electric_guitar/image_0035.jpg',
+    'img/electric_guitar/image_0044.jpg',
     'img/dragonfly/image_0002.jpg',
     'img/dragonfly/image_0020.jpg',
     'img/dragonfly/image_0035.jpg',
@@ -25,9 +25,10 @@ def runAE1():
     model = StackedAutoEncoder(
         dims=[3042, 1024, 512, 128, 36],
         activations=['sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
-        epoch=[700, 700, 500, 500, 500],
+        epoch=[500, 500, 500, 500, 500],
         loss='rmse',
-        lr=0.005,
+        lr=0.03,
+        noise='mask-0.3',
         batch_size=100,
         print_step=50
     )
@@ -41,4 +42,4 @@ def runAE1():
 def runAE2():
     autoencoder2.run(train_X, test_X)
 
-runAE2()
+runAE1()

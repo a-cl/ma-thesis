@@ -12,15 +12,18 @@ def DoG(image):
 def getPatch (image, keypoint):
     x = int(keypoint.pt[0])
     y = int(keypoint.pt[1])
-    return DoG(image[y-20:y+19, x-20:x+19])
+    return image[y-20:y+19, x-20:x+19]
 
 def computeGradients (patch):
-    grad_x = cv2.Sobel(patch, cv2.CV_16S, 1, 0, ksize=7, scale=1, delta=0)
-    grad_y = cv2.Sobel(patch, cv2.CV_16S, 0, 1, ksize=7, scale=1, delta=0)
+    #grad_x = cv2.Sobel(patch, cv2.CV_16S, 1, 0, ksize=7, scale=1, delta=0)
+    #grad_y = cv2.Sobel(patch, cv2.CV_16S, 0, 1, ksize=7, scale=1, delta=0)
+    grad_x = cv2.GaussianBlur(patch, (3, 1), 0.5)
+    grad_y = cv2.GaussianBlur(patch, (1, 3), 0.5)
     #print("dat shape", grad_x.shape)
     return [grad_x, grad_y]
 
 def computeDescriptors (image, keypoints):
+    print("Computing descriptors for", len(keypoints), "keypoints")
     desc = []
     for keypoint in keypoints:
         patch = getPatch(image, keypoint)
@@ -29,6 +32,7 @@ def computeDescriptors (image, keypoints):
     return desc
 
 def extractFeatures (imagePath):
+    print("Extracting features of", imagePath)
     img = cv2.imread(imagePath)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     sift = cv2.xfeatures2d.SIFT_create()
