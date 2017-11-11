@@ -56,7 +56,7 @@ class Database (path: String) {
     val result = ListBuffer[File]()
     var i = 0
 
-    while (i < max || files.isEmpty) {
+    while (i < max && files.nonEmpty) {
       val index = (Math.random() * (files.length - 1)).toInt
       val file = files(index)
 

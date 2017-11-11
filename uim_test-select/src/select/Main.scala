@@ -1,7 +1,5 @@
 package select
 
-import java.io.File
-
 /**
   * Runs the test selector. How to:
   *
@@ -12,8 +10,9 @@ import java.io.File
   * testPerSet:   Number of test samples per set
   * testCount:    Number of tests to create
   *
-  * 1# ../caltech101 ../data/test/50k/ 10 15 20 1500
-  * 2# ../caltech101 ../data/test/new/ 3  80 40 1500
+  * 1# test1 test1 2 15 35 2000
+  * 2# test2 test2 2 30 70 2000
+  * 3# test3 test3 3 20 60 2000
   */
 object Main {
 
