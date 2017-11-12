@@ -150,7 +150,7 @@ for i in range(epoch):
 	sess.run(train_op, feed_dict={x: batch_x, x_: batch_x_})
 \end{lstlisting}
 
-\textbf{Verwendung durch die Kommandozeile} Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 9 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 10 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
+\textbf{Verwendung durch die Kommandozeile} Die Datei \textit{main.py} importiert dann den Feature-Extraktor sowie den parametrierten Autoencoder. In Zeile 6 und 7 werden durch die \textit{readImages} Methode die Bilddaten eingelesen. Hierfür müssen die Pfade zu den Trainigs- bzw. Test-Dateien auf der Kommandozeile angegeben werden: \textit{python3 main.py /train/path test/path}. In Zeile 10 wird dann die \textit{train}-Methode des Autoencoders genutzt, um die Gewichte anhand der Trainingsdaten zu initialisieren. In Zeile 11 erfolgt die Komprimierung der Testdaten und abschließend in der nächsten Zeile die Speicherung.
 
 \begin{lstlisting}[style=Python]
 import sys
@@ -160,10 +160,11 @@ import autoencoder
 
 train = util.readImages(sys.argv[1])
 test = util.readImages(sys.argv[2])
+target = sys.argv[3];
 
 autoencoder.train(featureExtractor.extractAll(train))
 result = autoencoder.encode(featureExtractor.extractAll(test))
-util.writeFeatures(result)
+util.writeFeatures(target, result)
 \end{lstlisting}
 
 \section{Bag of Visual Words}
