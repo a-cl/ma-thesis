@@ -40,7 +40,7 @@ def readImagePaths (filePath):
 def writeFeatures (filePath, features):
     file = open(filePath, "w")
     for feature in features:
-        file.write(" ".join(str(x) for x in feature))
-        file.write("")
+        file.write(" ".join(map(lambda x: '{0:.10f}'.format(x), feature)))
+        file.write("\n")
     
     file.close()
