@@ -138,7 +138,7 @@ Die Dimensionen der Eingabe und Schichten (\textit{inp\textunderscore dim} und \
 encoded = activate(tf.matmul(x, encode['weights']) + encode['biases'])
 decoded = tf.matmul(encoded, decode['weights']) + decode['biases']
 loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(x_, decoded))))
-train_op = tf.train.AdamOptimizer(lr).minimize(loss)
+train_op = tf.train.GradientDescentOptimizer(lr).minimize(loss)
 \end{lstlisting}
 
 Die Funktion \textit{activate} entspricht hier der angegebenen Aktivierungsfunktion. Da bei Zhao die sigmoid Funktion verwendet wird, entspricht dies dem Aufruf von \textit{tf.nn.sigmoid}. Die Variable \textit{lr} gibt die Lernrate an und ist Paramter der \textit{run}-Methode. Zum Schluss findet die Anwendung des Modells für die definierte Anzahl an Epochen statt: 
