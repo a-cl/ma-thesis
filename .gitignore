@@ -21,6 +21,9 @@ uim_bag-of-visual-words/models
 uim_bag-of-visual-words/model
 uim_bag-of-visual-words/membership
 uim_bag-of-visual-words/Debug
+uim_bag-of-visual-words/data/1/test*
+uim_bag-of-visual-words/data/2/test*
+uim_bag-of-visual-words/data/3/test*
 
 // test-select - generated files
 uim_test-select/out
