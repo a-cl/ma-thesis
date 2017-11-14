@@ -16,21 +16,24 @@ using namespace std;
 const unsigned int TASK = 2;
 
 int main(int argc, char *argv[]) {
-	const string path = "data/";//argv[0];
-	const int k = 20;//argv[1]
+	const string trainPath = "data/1/train36.txt";
+	const string modelPath = "data/1/model.txt";
+	const string testSourcePath = "data/1/test36.txt";
+	const string testTargetPath = "data/1/test36_res.txt";
+	const int k = 20;
 
-	BagOfWords *bow = new BagOfWords(path, k);
+	BagOfWords *bow = new BagOfWords(k);
 	bow->setMode(1);
 
 	if (TASK == 0) {
-		bow->createModel();
-		bow->writeModel();
+		bow->createModel(trainPath);
+		bow->writeModel(modelPath);
 	} else if (TASK == 1) {
-		bow->readModel();
-		bow->runTests();
+		bow->readModel(modelPath);
+		bow->runTests(testSourcePath, testTargetPath);
 	} else if (TASK == 2) {
-		bow->createModel();
-		bow->runTests();
+		bow->createModel(modelPath);
+		bow->runTests(testSourcePath, testTargetPath);
 	}
 
 	delete bow;

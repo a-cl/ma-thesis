@@ -14,23 +14,20 @@
 #include <iostream>
 #include <fstream>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
 #include <vector>
 #include <string>
 #include <sstream>
 
 using namespace std;
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/xfeatures2d.hpp>
-
 using namespace cv;
 
 #include "histo_gpu.h"
 #include "histo_cpu.h"
 #include "kmeans_cpu.h"
 #include "kmeans_gpu.h"
+#include "kmeans_global_gpu.h"
 #include "util.h"
 
 string intToString (int a) {
@@ -39,12 +36,12 @@ string intToString (int a) {
     return temp.str();
 }
 
-BagOfWords::BagOfWords(string path, unsigned int k) {
-	this->path = path;
+BagOfWords::BagOfWords(unsigned int k) {
 	this->mode = 0;
+	this->variant = 0;
 	this->k = k;
 	this->count = -1;
-	this->size = SIFT_SIZE;
+	this->size = FEATURE_SIZE;
 	this->tests = vector<Test>();
 	this->modelInitialized = false;
 	this->clusters = NULL;
@@ -58,21 +55,12 @@ BagOfWords::~BagOfWords() {
 	free(this->membership);
 }
 
-void BagOfWords::createModel() {
+void BagOfWords::createModel(const string modelPath) {
 	cout << "Generating model ";
 	cout << (mode == 0 ? "(GPU)" : "(CPU)") << endl;
 	cout << "Extracting features" << endl;
 
-	string line;
-	ifstream file;
-	file.open((this->path + "/train.txt").c_str());
-	Mat features;
-
-	while (getline(file, line)) {
-		Mat imageFeatures = this->extractFeature(line);
-		features.push_back(imageFeatures);
-		this->count += imageFeatures.rows;
-	}
+	Mat features = this->readFeatures(modelPath);
 	cout << "Extraction completed (" << features.rows << " features)" << endl;
 
 	this->clusters = malloc2D(k, this->size);
@@ -80,7 +68,11 @@ void BagOfWords::createModel() {
 	cout << "Clustering features with k = " << intToString(this->k) << endl;
 
 	if (this->mode == 0) {
-		kmeans_gpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
+		if (this->variant == 0) {
+			kmeans_global_gpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
+		} else {
+			kmeans_gpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
+		}
 	} else {
 		kmeans_cpu(matToPtr(&features), this->clusters, this->membership, this->count, this->size, this->k);
 	}
@@ -88,7 +80,7 @@ void BagOfWords::createModel() {
 	cout << "Clustering completed" << endl;
 }
 
-void BagOfWords::writeModel() {
+void BagOfWords::writeModel(const string modelPath) {
 	if (!this->modelInitialized) {
 		cerr << "Cannot write model: No model created." << endl;
 		return;
@@ -97,8 +89,7 @@ void BagOfWords::writeModel() {
 	cout << "Writing model and membership" << endl;
 
 	ofstream file;
-	string modelFile = "/model" + intToString(this->k);
-	file.open((this->path + modelFile).c_str());
+	file.open((modelPath + "/" + intToString(this->k)).c_str());
 	file << this->k << " " << this->size << "\n";
 
 	for (int i = 0; i < this->k; i++) {
@@ -109,6 +100,7 @@ void BagOfWords::writeModel() {
 	}
 	file.close();
 
+	/*
 	string memberFile = "/membership" + intToString(this->k);
 	file.open((this->path + memberFile).c_str());
 	file << count << "\n";
@@ -117,15 +109,15 @@ void BagOfWords::writeModel() {
 		file << this->membership[i] << "\n";
 	}
 	file.close();
+	*/
 }
 
-void BagOfWords::readModel() {
+void BagOfWords::readModel(const string modelPath) {
 	cout << "Reading model" << endl;
 
 	string line;
 	ifstream file;
-	string modelName = "/model" + intToString(this->k);
-	file.open((this->path + modelName).c_str());
+	file.open((modelPath + "/" + intToString(this->k)).c_str());
 	int i = 0;
 
 	getline(file, line);
@@ -151,19 +143,19 @@ void BagOfWords::readModel() {
 	this->modelInitialized = true;
 }
 
-void BagOfWords::runTests () {
-	this->readTestData();
+void BagOfWords::runTests (const string testSourcePath, const string testTargetPath) {
+	this->readTestData(testSourcePath);
 	this->executeTests();
-	this->writeTestResults();
+	this->writeTestResults(testTargetPath);
 }
 
-void BagOfWords::readTestData () {
+void BagOfWords::readTestData (const string testPath) {
 	cout << "Reading tests" << endl;
 
 	this->tests = vector<Test>();
 	string line;
 	ifstream file;
-	file.open((this->path + "/test.txt").c_str());
+	file.open(testPath.c_str());
 
 	while (getline(file, line)) {
 		vector<string> tokens = split(line, ' ');
@@ -188,8 +180,8 @@ void BagOfWords::executeTests() {
 		}
 
 		Test test = this->tests[i];
-		histo1 = computeVisualWords(test.getImage1());
-		histo2 = computeVisualWords(test.getImage2());
+		histo1 = computeVisualWords(this->readFeatures(test.getImage1()));
+		histo2 = computeVisualWords(this->readFeatures(test.getImage2()));
 		this->tests[i].setSimilarity(calculateSimilarity(histo1, histo2));
 	}
 
@@ -197,12 +189,12 @@ void BagOfWords::executeTests() {
 	free(histo2);
 }
 
-void BagOfWords::writeTestResults() {
+void BagOfWords::writeTestResults(const string testPath) {
 	cout << "Writing tests" << endl;
 
 	ofstream file;
-	string fileName = "/tests" + intToString(this->k) + ".txt";
-	file.open((this->path + fileName).c_str());
+	string fileName = testPath + "/" + intToString(this->k) + ".txt";
+	file.open(fileName.c_str());
 
 	for (int i = 0; i < this->tests.size(); i++) {
 		Test test = tests[i];
@@ -214,19 +206,11 @@ void BagOfWords::writeTestResults() {
 	file.close();
 }
 
-float* BagOfWords::computeVisualWords(string imagePath) {
+float* BagOfWords::computeVisualWords(Mat features) {
 	if (!this->modelInitialized) {
 		cerr << "Cannot label image: No model provided." << endl;
 		return (float*) calloc(k, sizeof(float));
 	}
-
-	const Mat img = imread(imagePath, 0);
-	cv::Ptr<Feature2D> f2d = xfeatures2d::SIFT::create();
-	vector<KeyPoint> keypoints;
-	Mat features;
-
-	f2d->detect(img, keypoints);
-	f2d->compute(img, keypoints, features);
 
 	const unsigned long count = features.rows;
 	float *histo = (float*) calloc(k, sizeof(float));
@@ -251,14 +235,27 @@ float BagOfWords::calculateSimilarity (float *histo1, float *histo2) {
 	return mse / this->k;
 }
 
-Mat BagOfWords::extractFeature(string imagePath) {
-	const Mat img = imread(imagePath, 0);
-	cv::Ptr<Feature2D> f2d = xfeatures2d::SIFT::create();
-	vector<KeyPoint> keypoints;
+// TODO: check
+Mat BagOfWords::readFeatures(const string featuresPath) {
+	ifstream file;
+	string line;
+	file.open(featuresPath.c_str());
 	Mat descriptors;
 
-	f2d->detect(img, keypoints);
-	f2d->compute(img, keypoints, descriptors);
+	while (getline(file, line)) {
+		vector<string> tokens = split(line, ' ');
+		vector<float> values;
+
+		for (int i = 0; i < tokens.size(); i++) {
+			values.push_back(atof(tokens[i].c_str()));
+		}
+
+		Mat1f mat(Mat1f(values).t());
+		descriptors.push_back(mat);
+	}
+	file.close();
+
+	// TODO: set dim
 	return descriptors;
 }
 
@@ -268,6 +265,10 @@ void BagOfWords::setK(unsigned int k) {
 
 void BagOfWords::setMode(unsigned int mode) {
 	this->mode = mode;
+}
+
+void BagOfWords::setVariant(unsigned int variant) {
+	this->variant = variant;
 }
 
 void BagOfWords::setSize(unsigned int size) {

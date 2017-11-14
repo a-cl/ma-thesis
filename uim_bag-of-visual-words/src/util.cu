@@ -2,6 +2,7 @@
  * util.cpp
  */
 
+#include <opencv2/opencv.hpp>
 #include <dirent.h>
 #include <stdlib.h>
 #include <fstream>
@@ -14,8 +15,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <stdio.h>
-
-#include <opencv2/core/core.hpp>
 
 #include "Test.h"
 
