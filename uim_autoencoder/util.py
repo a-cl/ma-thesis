@@ -37,10 +37,31 @@ def readImagePaths (filePath):
         files.append(line.replace("\\", "/").strip())
     return files
 
+def readTests (filePath):
+    tests = []
+    file = open(filePath, "r")
+
+    for line in file:
+        tests.append(line.replace("\\", "/").strip().split(" "))
+    return tests
+
 def writeFeatures (filePath, features):
     file = open(filePath, "w")
+
     for feature in features:
         file.write(" ".join(map(lambda x: '{0:.10f}'.format(x), feature)))
         file.write("\n")
-    
+    file.close()
+
+def writeTests (filePath, tests):
+    file = open(filePath, "w")
+
+    for test in tests:
+        file.write(test[0] + '\n')
+        for feature in test[1]:
+            file.write(",".join(map(lambda x: str(x), feature)))
+        file.write('\n' + test[2] + '\n')
+        for feature in test[3]:
+            file.write(",".join(map(lambda x: str(x), feature)))
+        file.write('\n' + test[4] + '\n')
     file.close()
