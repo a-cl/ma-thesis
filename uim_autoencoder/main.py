@@ -27,9 +27,9 @@ def run(train, test):
     test_ = model.transform(test)
     print(' Done.')
     print('Writing results.', end='')
-    util.writeFeatures('../uim_bag-of-visual-words/data/test3.txt', test_)
+    util.writeFeatures('../uim_bag-of-visual-words/data/3/train36.txt', test_)
     print(' Done.')
 
 train = getFeatures('../uim_test-select/test3/train.txt')
-test = getFeatures('../uim_test-select/test3/test_ae.txt')
+test = getFeatures('../uim_test-select/test3/train.txt')
 run(train, test)
