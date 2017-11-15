@@ -15,19 +15,19 @@ using namespace std;
 
 static int ThreadsPerBlock = 512;
 
-static inline int nextPowerOfTwo(int n);
+static inline int nextPowerOfTwo_global(int n);
 
-__device__ inline static float euclid_dist_2(const unsigned int size, const long count, const unsigned int k,
+__device__ inline static float euclid_dist_2_global(const unsigned int size, const long count, const unsigned int k,
 		float *points, float *clusters, int oId, int cId);
 
-__global__ void compute_delta(int *deviceIntermediates, int numIntermediates, int numIntermediates2);
+__global__ void compute_delta_global(int *deviceIntermediates, int numIntermediates, int numIntermediates2);
 
-__global__ void nearest_cluster(const unsigned int size, const long count, const unsigned int k, float *points,
+__global__ void nearest_cluster_global(const unsigned int size, const long count, const unsigned int k, float *points,
 		float *deviceClusters, int *membership, int *intermediates);
 
 // function definitions
 
-static inline int nextPowerOfTwo(int n) {
+static inline int nextPowerOfTwo_global(int n) {
 	n--;
 
 	n = n >> 1 | n;
@@ -41,7 +41,7 @@ static inline int nextPowerOfTwo(int n) {
 }
 
 __device__ inline static
-float euclid_dist_2(const unsigned int size, const long count, const unsigned int k, float *points, float *clusters,
+float euclid_dist_2_global(const unsigned int size, const long count, const unsigned int k, float *points, float *clusters,
 		int oId, int cId) {
 	float ans = 0.0;
 
@@ -53,7 +53,7 @@ float euclid_dist_2(const unsigned int size, const long count, const unsigned in
 }
 
 __global__
-void compute_delta(int *deviceIntermediates, int numIntermediates, int numIntermediates2) {
+void compute_delta_global(int *deviceIntermediates, int numIntermediates, int numIntermediates2) {
 	extern __shared__ unsigned int intermediates[];
 	intermediates[threadIdx.x] = (threadIdx.x < numIntermediates) ? deviceIntermediates[threadIdx.x] : 0;
 
@@ -71,7 +71,7 @@ void compute_delta(int *deviceIntermediates, int numIntermediates, int numInterm
 	}
 }
 
-__global__ void nearest_cluster(const unsigned int size, const long count, const unsigned int k, float *points,
+__global__ void nearest_cluster_global(const unsigned int size, const long count, const unsigned int k, float *points,
 		float *deviceClusters, int *membership, int *intermediates) {
 	extern __shared__ char sharedMemory[];
 	unsigned char *membershipChanged = (unsigned char *) sharedMemory;
@@ -83,10 +83,10 @@ __global__ void nearest_cluster(const unsigned int size, const long count, const
 	if (objectId < count) {
 		int index = 0;
 		float dist;
-		float min_dist = euclid_dist_2(size, count, k, points, clusters, objectId, 0);
+		float min_dist = euclid_dist_2_global(size, count, k, points, clusters, objectId, 0);
 
 		for (int i = 1; i < k; i++) {
-			dist = euclid_dist_2(size, count, k, points, clusters, objectId, i);
+			dist = euclid_dist_2_global(size, count, k, points, clusters, objectId, i);
 
 			if (dist < min_dist) {
 				min_dist = dist;
@@ -153,7 +153,7 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 	cout << "  Blocks: " << numBlocks << endl;
 	cout << "  Threads: " << ThreadsPerBlock << endl;
 
-	const unsigned int numReductionThreads = nextPowerOfTwo(numBlocks);
+	const unsigned int numReductionThreads = nextPowerOfTwo_global(numBlocks);
 	const unsigned int reductionBlockSharedDataSize = numReductionThreads * sizeof(unsigned int);
 
 	cudaMalloc((void **) &deviceClusters, k * size * sizeof(float));
@@ -167,10 +167,10 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 	do {
 		cudaMemcpy(deviceClusters, dimClusters[0], k * size * sizeof(float), cudaMemcpyHostToDevice);
 
-		nearest_cluster<<<numBlocks, ThreadsPerBlock, clusterBlockSharedDataSize>>>(size, count, k, deviceObjects,
+		nearest_cluster_global<<<numBlocks, ThreadsPerBlock, clusterBlockSharedDataSize>>>(size, count, k, deviceObjects,
 				deviceClusters, deviceMembership, deviceIntermediates);
 
-		compute_delta<<<1, numReductionThreads, reductionBlockSharedDataSize>>>(deviceIntermediates, numBlocks,
+		compute_delta_global<<<1, numReductionThreads, reductionBlockSharedDataSize>>>(deviceIntermediates, numBlocks,
 				numReductionThreads);
 
 		cudaDeviceSynchronize();

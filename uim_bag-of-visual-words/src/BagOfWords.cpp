@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -89,7 +90,7 @@ void BagOfWords::writeModel(const string modelPath) {
 	cout << "Writing model and membership" << endl;
 
 	ofstream file;
-	file.open((modelPath + "/" + intToString(this->k)).c_str());
+	file.open((modelPath + intToString(this->k)).c_str());
 	file << this->k << " " << this->size << "\n";
 
 	for (int i = 0; i < this->k; i++) {
@@ -149,6 +150,24 @@ void BagOfWords::runTests (const string testSourcePath, const string testTargetP
 	this->writeTestResults(testTargetPath);
 }
 
+Mat stringToFeature (string featureStr) {
+	vector<string> features = split(featureStr, '|');
+	Mat mat = Mat::ones(0, FEATURE_SIZE, CV_32F);
+
+	for (int i = 0; i < features.size(); i++) {
+		vector<string> components = split(features[i], ',');
+		Mat values = Mat::ones(1, FEATURE_SIZE, CV_32F);
+
+		if (components.size() == FEATURE_SIZE) {
+			for (int j = 0; j < components.size(); j++) {
+				values.at<float>(0, j) = atof(components[j].c_str());
+			}
+			mat.push_back(values);
+		}
+	}
+	return mat;
+}
+
 void BagOfWords::readTestData (const string testPath) {
 	cout << "Reading tests" << endl;
 
@@ -158,11 +177,17 @@ void BagOfWords::readTestData (const string testPath) {
 	file.open(testPath.c_str());
 
 	while (getline(file, line)) {
-		vector<string> tokens = split(line, ' ');
-		string img1 = tokens[0];
-		string img2 = tokens[1];
-		bool sameClass = tokens[2] == "-" ? false : true;
-		this->tests.push_back(Test(img1, img2, sameClass));
+		vector<string> tokens = split(line, '\n');
+		string img1 = line;
+		getline(file, line);
+		Mat features1 = stringToFeature(line);
+		getline(file, line);
+		string img2 = line;
+		getline(file, line);
+		Mat features2 = stringToFeature(line);
+		getline(file, line);
+		bool sameClass = line == "-" ? false : true;
+		this->tests.push_back(Test(img1, features1, img2, features2, sameClass));
 	}
 
 	file.close();
@@ -180,8 +205,8 @@ void BagOfWords::executeTests() {
 		}
 
 		Test test = this->tests[i];
-		histo1 = computeVisualWords(this->readFeatures(test.getImage1()));
-		histo2 = computeVisualWords(this->readFeatures(test.getImage2()));
+		histo1 = computeVisualWords(test.getFeatures1());
+		histo2 = computeVisualWords(test.getFeatures2());
 		this->tests[i].setSimilarity(calculateSimilarity(histo1, histo2));
 	}
 
@@ -193,7 +218,7 @@ void BagOfWords::writeTestResults(const string testPath) {
 	cout << "Writing tests" << endl;
 
 	ofstream file;
-	string fileName = testPath + "/" + intToString(this->k) + ".txt";
+	string fileName = testPath + intToString(this->k) + ".txt";
 	file.open(fileName.c_str());
 
 	for (int i = 0; i < this->tests.size(); i++) {
@@ -231,31 +256,44 @@ float BagOfWords::calculateSimilarity (float *histo1, float *histo2) {
 		float err = histo2[i] - histo1[i];
 		mse += err * err;
 	}
-
-	return mse / this->k;
+	return sqrt(mse) / this->k;
 }
 
-// TODO: check
 Mat BagOfWords::readFeatures(const string featuresPath) {
 	ifstream file;
 	string line;
+
 	file.open(featuresPath.c_str());
-	Mat descriptors;
+	Mat descriptors = Mat::ones(0, FEATURE_SIZE, CV_32F);
+	int count = 0;
 
 	while (getline(file, line)) {
+		count++;
 		vector<string> tokens = split(line, ' ');
-		vector<float> values;
+		Mat values = Mat::ones(1, FEATURE_SIZE, CV_32F);
 
 		for (int i = 0; i < tokens.size(); i++) {
-			values.push_back(atof(tokens[i].c_str()));
+			values.at<float>(0, i) = atof(tokens[i].c_str());
 		}
-
-		Mat1f mat(Mat1f(values).t());
-		descriptors.push_back(mat);
+		descriptors.push_back(values);
 	}
 	file.close();
 
-	// TODO: set dim
+	/*
+	for (int i = 0; i < descriptors.rows; i++) {
+		cout << descriptors.at<float>(0, i) << " ";
+	}
+	cout << endl;
+	for (int i = 0; i < descriptors.rows; i++) {
+		cout << descriptors.at<float>(1, i) << " ";
+	}
+	cout << endl;	for (int i = 0; i < descriptors.rows; i++) {
+		cout << descriptors.at<float>(2, i) << " ";
+	}
+	cout << endl;
+	*/
+
+	this->count = count;
 	return descriptors;
 }
 
