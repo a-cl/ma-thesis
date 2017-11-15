@@ -58,15 +58,25 @@ def generateTestData(train, imagePairs, target):
     print('Writing results.')
     util.writeTests(target, tests)
 
-# Test 3 train data
-'''
+# train data
+generateTrainData(
+    getFeatures('../uim_test-select/test1/train.txt'),
+    getFeatures('../uim_test-select/test1/train.txt'),
+    '../uim_bag-of-visual-words/data/1/train36.txt'
+)
+generateTrainData(
+    getFeatures('../uim_test-select/test2/train.txt'),
+    getFeatures('../uim_test-select/test2/train.txt'),
+    '../uim_bag-of-visual-words/data/2/train36.txt'
+)
 generateTrainData(
     getFeatures('../uim_test-select/test3/train.txt'),
     getFeatures('../uim_test-select/test3/train.txt'),
     '../uim_bag-of-visual-words/data/3/train36.txt'
 )
-'''
 
+# test data
+'''
 generateTestData(
     getFeatures('../uim_test-select/test1/train.txt'),
     util.readTests('../uim_test-select/test1/test.txt'),
@@ -82,3 +92,4 @@ generateTestData(
     util.readTests('../uim_test-select/test3/test.txt'),
     '../uim_bag-of-visual-words/data/3/test36.txt'
 )
+'''
