@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import util
 
+# Utility to generate images for the thesis
+
 def extractAndDrawKeypoints (imagePath, resultPath):
     sift = cv2.xfeatures2d.SIFT_create()
     img = cv2.imread(imagePath)
@@ -44,14 +46,33 @@ def generateTestData (sourcePath, resultPath):
 		tests.append(test)
 	util.writeTests(resultPath, tests)
 
+# generate train data
 '''
+generateTrainData(
+	'../uim_test-select/test1/train.txt',
+	'../uim_bag-of-visual-words/data/1/train128.txt'
+)
+generateTrainData(
+	'../uim_test-select/test2/train.txt',
+	'../uim_bag-of-visual-words/data/2/train128.txt'
+)
 generateTrainData(
 	'../uim_test-select/test3/train.txt',
 	'../uim_bag-of-visual-words/data/3/train128.txt'
 )
 '''
 
+#generate test data
+
 generateTestData(
 	'../uim_test-select/test1/test.txt',
 	'../uim_bag-of-visual-words/data/1/test128.txt'
+)
+generateTestData(
+	'../uim_test-select/test2/test.txt',
+	'../uim_bag-of-visual-words/data/2/test128.txt'
+)
+generateTestData(
+	'../uim_test-select/test3/test.txt',
+	'../uim_bag-of-visual-words/data/3/test128.txt'
 )
