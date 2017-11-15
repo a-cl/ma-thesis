@@ -31,12 +31,10 @@ def computeDescriptors (image, keypoints):
     return desc
 
 def extractFeatures (imagePath):
-    print("Extracting features of", imagePath, end='')
     img = cv2.imread(imagePath)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     sift = cv2.xfeatures2d.SIFT_create()
     keypoints = sift.detect(gray, None)
-    print(" (", len(keypoints), "keypoints)")
     return computeDescriptors(gray, keypoints)
 
 def extractAllFeatures (imagePaths):

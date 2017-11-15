@@ -60,8 +60,10 @@ def writeTests (filePath, tests):
         file.write(test[0] + '\n')
         for feature in test[1]:
             file.write(",".join(map(lambda x: str(x), feature)))
+            file.write("|")
         file.write('\n' + test[2] + '\n')
         for feature in test[3]:
             file.write(",".join(map(lambda x: str(x), feature)))
+            file.write("|")
         file.write('\n' + test[4] + '\n')
     file.close()

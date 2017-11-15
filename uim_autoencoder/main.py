@@ -4,56 +4,81 @@ import cv2
 import extractor
 import util
 
-model = StackedAutoEncoder(
-    dims=[3042, 1024, 512, 128, 36],
-    activations=['sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
-    epoch=[500, 500, 500, 500, 500],
-    loss='rmse',
-    lr=0.03,
-    noise='mask-0.3',
-    batch_size=100,
-    print_step=50
-)
+# Model for transformation
+
+def makeModel ():
+    return StackedAutoEncoder(
+        dims=[3042, 1024, 512, 128, 36],
+        activations=['sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
+        epoch=[500, 500, 500, 500, 500],
+        loss='rmse',
+        lr=0.03,
+        noise='mask-0.3',
+        batch_size=100,
+        print_step=50
+    )
+
+# Training data generation
 
 def getFeatures (path):
     paths = util.readImagePaths(path)
     gradients = extractor.extractAllFeatures(paths)
     return util.featuresToArrays(gradients)
 
-def trainNet (train):
-    print('Starting training of the network.')
+def generateTrainData(train, test, target):
+    print('Generating train data.')
+    model = makeModel()
     model.fit(train)
+    print('Transforming data.')
+    result = model.transform(test)
+    print('Writing results.')
+    util.writeFeatures(target, result)
 
-def runNet(data):
-    print('Transform data.', end='')
-    result = model.transform(data)
-    print('Writing results.', end='')
-    print(' Done.')
+# Test data generation
 
-def generateTrainData(train, test):
-    trainNet(train)
-    result = runNet(test)
-    util.writeFeatures('../uim_bag-of-visual-words/data/3/train36.txt', result)
+def extractAndTransformFeatures (image, model):
+    features = extractor.extractFeatures(image)
+    converted = util.featuresToArrays(features)
+    return model.transform(converted)
 
-def generateTestData(train, imagePairs):
-    trainNet(train)
+def generateTestData(train, imagePairs, target):
+    print('Generating test data.')
+    model = makeModel()
+    model.fit(train)
     tests = []
+    i = 0
 
     for imagePair in imagePairs:
-        features1 = runNet(extractor.extractFeatures(imagePair[0]))
-        features2 = runNet(extractor.extractFeatures(imagePair[1]))
+        i = i + 1
+        print('Transforming pair', i)
+        features1 = extractAndTransformFeatures(imagePair[0], model)
+        features2 = extractAndTransformFeatures(imagePair[1], model)
         test = [imagePair[0], features1, imagePair[1], features2, imagePair[2]]
         tests.append(test)
-    util.writeTests(tests)
+    print('Writing results.')
+    util.writeTests(target, tests)
 
 # Test 3 train data
+'''
 generateTrainData(
     getFeatures('../uim_test-select/test3/train.txt'),
-    getFeatures('../uim_test-select/test3/train.txt')
+    getFeatures('../uim_test-select/test3/train.txt'),
+    '../uim_bag-of-visual-words/data/3/train36.txt'
 )
+'''
 
-# Test 3 test data
+generateTestData(
+    getFeatures('../uim_test-select/test1/train.txt'),
+    util.readTests('../uim_test-select/test1/test.txt'),
+    '../uim_bag-of-visual-words/data/1/test36.txt'
+)
+generateTestData(
+    getFeatures('../uim_test-select/test2/train.txt'),
+    util.readTests('../uim_test-select/test2/test.txt'),
+    '../uim_bag-of-visual-words/data/2/test36.txt'
+)
 generateTestData(
     getFeatures('../uim_test-select/test3/train.txt'),
-    util.readTests('../uim_test-select/test3/test.txt')
+    util.readTests('../uim_test-select/test3/test.txt'),
+    '../uim_bag-of-visual-words/data/3/test36.txt'
 )
