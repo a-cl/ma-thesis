@@ -101,12 +101,13 @@ Durch den Difference of Gaussian (DoG) Operator können insbesondere Kanten herv
 
 $$ DoG(x, y)_{\sigma_{1}, \sigma_{2}} = I * g_{\sigma_2}(x, y) - I * g_{\sigma_1}(x, y)$$
 
-\textbf{Gradienten} Ein Gradient beschreibt die Änderungen der Intensität eines Bildes in eine Richtung.  Ändert sich die Intensität beispielsweise proportional von Pixel zu Pixel, wird von einem linearen Gradienten gesprochen. In der Bildverarbeitung sind große bzw. plötzliche Änderungen in der Intensität von Bedeutung: Hier handelt es sich potentiell um Ecken oder Kanten, die für weitere Analysen des Bildes verwendet werden können. Da zunächst nur ein Pixel vorliegt, muss senkrecht zum Gradienten untersucht werden, ob ähnliche Veränderungen der Intensität vorliegen. In Abbildung \ref{img:grad} ist links wieder das Bild der Freiheitsstatue dargestellt, rechts die berechneten Gradienten (Laplace Operator).
+\textbf{Gradienten} 
+Ein Gradient ist ein Vektor, der die Richtung und Größe einer Änderung enthält. Bei Bildern wird so die Richtung und Veränderungen der Intensität gemessen. Starke Veränderungen der Intensität sind besonders von Bedeutung: Hier handelt es sich potentiell um Ecken oder Kanten, die für weitere Analysen des Bildes verwendet werden können. Da zunächst nur ein Pixel vorliegt, muss senkrecht zum Gradienten untersucht werden, ob ähnliche Veränderungen der Intensität vorliegen. In Abbildung \ref{img:grad} ist links wieder das Bild der Freiheitsstatue dargestellt, rechts die Kanten, die senkrecht zu den Gradientenvektoren verlaufen (Laplace Operator). Hier ist deutlich zu sehen, dass Kanten hervorgehoben und Details ausgeblendet werden.
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.5]{images/liberty_grad.png}
-	\caption{Links: Graustufenbild. Rechts: Ermittelte Gradienten eines Bildes in horizontale und vertikale Richtung.}
+	\caption{Links: Graustufenbild. Rechts: Kanten senkrecht zu den ermittelten Gradientenvektoren eines Bildes in horizontale und vertikale Richtung.}
 	\label{img:grad}
 \end{figure}
 
