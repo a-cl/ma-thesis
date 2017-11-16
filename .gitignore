@@ -30,13 +30,13 @@ uim_test-select/out
 uim_test-select/gen
 uim_test-select/.idea
 uim_test-select/.metadata
-uim_test-select/test1/bonsai
-uim_test-select/test1/Leopards
-uim_test-select/test2/bonsai
-uim_test-select/test2/Leopards
-uim_test-select/test3/airplanes
-uim_test-select/test3/watch
-uim_test-select/test3/Motorbikes
+uim_test-select/data/1/bonsai
+uim_test-select/data/1/Leopards
+uim_test-select/data/2/bonsai
+uim_test-select/data/2/Leopards
+uim_test-select/data/3/airplanes
+uim_test-select/data/3/watch
+uim_test-select/data/3/Motorbikes
 
 // excel-writer - generated files
 uim_excel-writer/out
