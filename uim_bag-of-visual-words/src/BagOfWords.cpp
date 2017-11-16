@@ -58,7 +58,9 @@ BagOfWords::~BagOfWords() {
 
 void BagOfWords::createModel(const string modelPath) {
 	cout << "Generating model ";
-	cout << (mode == 0 ? "(GPU)" : "(CPU)") << endl;
+	cout << (mode == 0 ? "(GPU:" : "(CPU");
+	cout << (mode == 0 ? variant == 0 ? "global" : "shared" : "");
+	cout << ")" << endl;
 	cout << "Extracting features" << endl;
 
 	Mat features = this->readFeatures(modelPath);

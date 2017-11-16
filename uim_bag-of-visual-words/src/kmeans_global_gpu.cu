@@ -13,7 +13,7 @@ using namespace std;
 
 // declarations
 
-static int ThreadsPerBlock = 512;
+static int ThreadsPerBlock = 256;
 
 static inline int nextPowerOfTwo_global(int n);
 
@@ -149,12 +149,13 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 
 	const unsigned int numBlocks = (count + ThreadsPerBlock - 1) / ThreadsPerBlock;
 	const unsigned int clusterBlockSharedDataSize = numBlocks * sizeof(unsigned char);
-
-	cout << "  Blocks: " << numBlocks << endl;
-	cout << "  Threads: " << ThreadsPerBlock << endl;
-
 	const unsigned int numReductionThreads = nextPowerOfTwo_global(numBlocks);
 	const unsigned int reductionBlockSharedDataSize = numReductionThreads * sizeof(unsigned int);
+
+	cout << "  NumBlocks: " << numBlocks << endl;
+	cout << "  Threads Per Block: " << ThreadsPerBlock << endl;
+	cout << "  NumRecutionThreads: " << numReductionThreads << endl;
+	cout << "  ReductionBlockSharedSize: " << reductionBlockSharedDataSize << endl;
 
 	cudaMalloc((void **) &deviceClusters, k * size * sizeof(float));
 	cudaMalloc((void **) &deviceObjects, count * size * sizeof(float));
@@ -169,13 +170,16 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 
 		nearest_cluster_global<<<numBlocks, ThreadsPerBlock, clusterBlockSharedDataSize>>>(size, count, k, deviceObjects,
 				deviceClusters, deviceMembership, deviceIntermediates);
+		checkCUDAError("kmeans after nearest cluster");
 
 		compute_delta_global<<<1, numReductionThreads, reductionBlockSharedDataSize>>>(deviceIntermediates, numBlocks,
 				numReductionThreads);
+		checkCUDAError("kmeans after compute delta");
 
 		cudaDeviceSynchronize();
 
 		cudaMemcpy(membership, deviceMembership, count * sizeof(int), cudaMemcpyDeviceToHost);
+		checkCUDAError("kmeans after membership copy");
 
 		for (int i = 0; i < count; i++) {
 			index = membership[i];
@@ -198,6 +202,7 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 
 		int d;
 		cudaMemcpy(&d, deviceIntermediates, sizeof(int), cudaMemcpyDeviceToHost);
+		checkCUDAError("kmeans 208");
 		delta = (float) d / count;
 	} while (delta > threshold && loop++ < 500);
 
@@ -215,6 +220,8 @@ void kmeans_global_gpu(float **points, float ** clusters, int *membership, const
 	cudaFree(deviceClusters);
 	cudaFree(deviceMembership);
 	cudaFree(deviceIntermediates);
+
+	checkCUDAError("kmeans 227");
 
 	free(dimObjects[0]);
 	free(dimClusters[0]);

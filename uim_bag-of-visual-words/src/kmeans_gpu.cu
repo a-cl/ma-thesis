@@ -196,6 +196,7 @@ void kmeans_gpu(float **points, float ** clusters, int *membership, const long c
 		cudaDeviceSynchronize();
 
 		cudaMemcpy(membership, deviceMembership, count * sizeof(int), cudaMemcpyDeviceToHost);
+		checkCUDAError("kmeans 199");
 
 		for (int i = 0; i < count; i++) {
 			index = membership[i];

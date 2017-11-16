@@ -19,12 +19,12 @@ int main(int argc, char *argv[]) {
 	const string trainPath = "data/2/train128.txt";
 	const string modelPath = "data/2/model";
 	const string testSourcePath = "data/2/test128.txt";
-	const string testTargetPath = "data/2/test128_k";
+	const string testTargetPath = "data/2/test128_g_k";
 	const int k = 500;
 
 	BagOfWords *bow = new BagOfWords(k);
-	bow->setMode(1);
-	bow->setVariant(0);
+	bow->setMode(0); 						// 0: GPU, 	  1: CPU
+	bow->setVariant(1);						// 0: global, 1: shared
 
 	if (TASK == 0) {
 		bow->createModel(trainPath);
