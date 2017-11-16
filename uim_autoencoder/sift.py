@@ -23,12 +23,12 @@ def extractDescriptors (sift, imagePath):
 	return des
 
 def generateTrainData (sourcePath, resultPath):
-	print('Generarting train data.')
+	print('Generating train data.')
 	sift = cv2.xfeatures2d.SIFT_create()
 	imagePaths = util.readImagePaths(sourcePath)
 	features = []
 	i = 0
-	
+
 	for imagePath in imagePaths:
 		i = i + 1
 		print("Processing image", i, "of", len(imagePaths))
@@ -39,7 +39,7 @@ def generateTrainData (sourcePath, resultPath):
 	print('Features saved.')
 
 def generateTestData (sourcePath, resultPath):
-	print('Generarting test data.')
+	print('Generating test data.')
 	sift = cv2.xfeatures2d.SIFT_create()
 	data = util.readTests(sourcePath)
 	tests = []
@@ -55,7 +55,6 @@ def generateTestData (sourcePath, resultPath):
 	util.writeTests(resultPath, tests)
 
 # generate train data
-'''
 generateTrainData(
 	'../uim_test-select/test1/train.txt',
 	'../uim_bag-of-visual-words/data/1/train128.txt'
@@ -68,10 +67,9 @@ generateTrainData(
 	'../uim_test-select/test3/train.txt',
 	'../uim_bag-of-visual-words/data/3/train128.txt'
 )
-'''
 
 #generate test data
-
+'''
 generateTestData(
 	'../uim_test-select/test1/test.txt',
 	'../uim_bag-of-visual-words/data/1/test128.txt'
@@ -84,3 +82,4 @@ generateTestData(
 	'../uim_test-select/test3/test.txt',
 	'../uim_bag-of-visual-words/data/3/test128.txt'
 )
+'''
