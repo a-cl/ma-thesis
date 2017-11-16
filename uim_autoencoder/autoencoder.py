@@ -31,22 +31,14 @@ class StackedAutoEncoder:
     def assertions(self):
         global allowed_activations, allowed_noises, allowed_losses
         assert self.loss in allowed_losses, 'Incorrect loss given'
-        assert 'list' in str(
-            type(self.dims)), 'dims must be a list even if there is one layer.'
-        assert len(self.epoch) == len(
-            self.dims), "No. of epochs must equal to no. of hidden layers"
-        assert len(self.activations) == len(
-            self.dims), "No. of activations must equal to no. of hidden layers"
-        assert all(
-            True if x > 0 else False
-            for x in self.epoch), "No. of epoch must be atleast 1"
-        assert set(self.activations + allowed_activations) == set(
-            allowed_activations), "Incorrect activation given."
-        assert noise_validator(
-            self.noise, allowed_noises), "Incorrect noise given"
+        assert 'list' in str(type(self.dims)), 'dims must be a list even if there is one layer.'
+        assert len(self.epoch) == len(self.dims), "No. of epochs must equal to no. of hidden layers"
+        assert len(self.activations) == len(self.dims), "No. of activations must equal to no. of hidden layers"
+        assert all(True if x > 0 else False for x in self.epoch), "No. of epoch must be atleast 1"
+        assert set(self.activations + allowed_activations) == set(allowed_activations), "Incorrect activation given."
+        assert noise_validator(self.noise, allowed_noises), "Incorrect noise given"
 
-    def __init__(self, dims, activations, epoch=1000, noise=None, loss='rmse',
-                 lr=0.001, batch_size=100, print_step=50):
+    def __init__(self, dims, activations, epoch=1000, noise=None, loss='rmse', lr=0.001, batch_size=100, print_step=50):
         self.print_step = print_step
         self.batch_size = batch_size
         self.lr = lr
@@ -121,12 +113,13 @@ class StackedAutoEncoder:
 
         # reconstruction loss
         loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(x_, decoded))))
-        train_op = tf.train.AdamOptimizer(lr).minimize(loss)
+        train_op = tf.train.GradientDescentOptimizer(lr).minimize(loss)
 
         sess.run(tf.global_variables_initializer())
 
         for i in range(epoch):
             b_x, b_x_ = get_batch(data_x, data_x_, batch_size)
+            #print("current batch", b_x)
             sess.run(train_op, feed_dict={x: b_x, x_: b_x_})
 
             if (i + 1) % print_step == 0:
