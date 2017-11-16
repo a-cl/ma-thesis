@@ -53,33 +53,32 @@ def generateTestData (sourcePath, resultPath):
 		test = [imagePair[0], features1, imagePair[1], features2, imagePair[2]]
 		tests.append(test)
 	util.writeTests(resultPath, tests)
-
+'''
 # generate train data
 generateTrainData(
-	'../uim_test-select/test1/train.txt',
+	'../uim_test-select/data/1/train.txt',
 	'../uim_bag-of-visual-words/data/1/train128.txt'
 )
 generateTrainData(
-	'../uim_test-select/test2/train.txt',
+	'../uim_test-select/data/2/train.txt',
 	'../uim_bag-of-visual-words/data/2/train128.txt'
 )
 generateTrainData(
-	'../uim_test-select/test3/train.txt',
+	'../uim_test-select/data/3/train.txt',
 	'../uim_bag-of-visual-words/data/3/train128.txt'
 )
+'''
 
 #generate test data
-'''
 generateTestData(
-	'../uim_test-select/test1/test.txt',
+	'../uim_test-select/data/1/test.txt',
 	'../uim_bag-of-visual-words/data/1/test128.txt'
 )
 generateTestData(
-	'../uim_test-select/test2/test.txt',
+	'../uim_test-select/data/2/test.txt',
 	'../uim_bag-of-visual-words/data/2/test128.txt'
 )
 generateTestData(
-	'../uim_test-select/test3/test.txt',
+	'../uim_test-select/data/3/test.txt',
 	'../uim_bag-of-visual-words/data/3/test128.txt'
 )
-'''
