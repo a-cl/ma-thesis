@@ -18,21 +18,21 @@ def makeModel ():
         print_step=50
     )
 
-# Training data generation
-
 def getFeatures (path):
     paths = util.readImagePaths(path)
     gradients = extractor.extractAllFeatures(paths)
     return util.featuresToArrays(gradients)
 
-def generateTrainData(train, test, target):
+def generateTrainData(trainPath, dataPath, targetPath):
+    train = getFeatures(trainPath)
+    data = getFeatures(dataPath)
     print('Generating train data.')
     model = makeModel()
     model.fit(train)
     print('Transforming data.')
-    result = model.transform(test)
+    result = model.transform(data)
     print('Writing results.')
-    util.writeFeatures(target, result)
+    util.writeFeatures(targetPath, result)
 
 # Test data generation
 
@@ -41,8 +41,10 @@ def extractAndTransformFeatures (image, model):
     converted = util.featuresToArrays(features)
     return model.transform(converted)
 
-def generateTestData(train, imagePairs, target):
+def generateTestData(trainPath, dataPath, targetPath):
     print('Generating test data.')
+    train = getFeatures(trainPath)
+    imagePairs = util.readTests(dataPath)
     model = makeModel()
     model.fit(train)
     tests = []
@@ -56,40 +58,29 @@ def generateTestData(train, imagePairs, target):
         test = [imagePair[0], features1, imagePair[1], features2, imagePair[2]]
         tests.append(test)
     print('Writing results.')
-    util.writeTests(target, tests)
+    util.writeTests(targetPath, tests)
 
-# train data
+# train data (DONE)
+'''
 generateTrainData(
-    getFeatures('../uim_test-select/test1/train.txt'),
-    getFeatures('../uim_test-select/test1/train.txt'),
-    '../uim_bag-of-visual-words/data/1/train36.txt'
-)
-generateTrainData(
-    getFeatures('../uim_test-select/test2/train.txt'),
-    getFeatures('../uim_test-select/test2/train.txt'),
+    '../uim_test-select/test2/train.txt',
+    '../uim_test-select/test2/train.txt',
     '../uim_bag-of-visual-words/data/2/train36.txt'
 )
-generateTrainData(
-    getFeatures('../uim_test-select/test3/train.txt'),
-    getFeatures('../uim_test-select/test3/train.txt'),
-    '../uim_bag-of-visual-words/data/3/train36.txt'
-)
-
-# test data
 '''
+# test data (IN PROGRESS)
 generateTestData(
-    getFeatures('../uim_test-select/test1/train.txt'),
-    util.readTests('../uim_test-select/test1/test.txt'),
+    '../uim_test-select/test1/train.txt',
+    '../uim_test-select/test1/test.txt',
     '../uim_bag-of-visual-words/data/1/test36.txt'
 )
 generateTestData(
-    getFeatures('../uim_test-select/test2/train.txt'),
-    util.readTests('../uim_test-select/test2/test.txt'),
+    '../uim_test-select/test2/train.txt',
+    '../uim_test-select/test2/test.txt',
     '../uim_bag-of-visual-words/data/2/test36.txt'
 )
 generateTestData(
-    getFeatures('../uim_test-select/test3/train.txt'),
-    util.readTests('../uim_test-select/test3/test.txt'),
+    '../uim_test-select/test3/train.txt',
+    '../uim_test-select/test3/test.txt',
     '../uim_bag-of-visual-words/data/3/test36.txt'
 )
-'''
