@@ -85,21 +85,83 @@ Beträgt die Ähnlichkeit von zwei Histogrammen 1 werden sie als identisch anges
 	\item \textbf{False Positives} In diesem Fall ist die Klassifizierung durch das Modell nicht korrekt: Bei gleicher Klasse wurde eine geringe Ähnlichkeit erkannt, bei verschiedenen eine Hohe.
 \end{itemize}
 
-Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt die \textit{True Positives} auf der Ordinate und die \textit{False-Positives} auf der Abzisse dar.
+Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt die \textit{True Positives} auf der Ordinate und die \textit{False Positives} auf der Abzisse dar.
 
 \section{Experimentdurchführung}
 
 Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigenschaften einer Bildmenge variiert, um zu beobachten, wie sich diese Veränderungen auf die Qualität der Ergebnisse auswirkt. Die Testmengen sind jeweils wie folgt gewählt:
 
 \begin{itemize}
-	\item \textbf{Test 1} besteht aus zwei Kategorien: \enquote{Bonsai} und \enquote{Leopard}. Es wurden \todo{x} Bilder verwendet, aus beiden Kategorien je \todo{x/2}. Von diesen Bildern sind 30\% für die Trainings- und die anderen 70\% für die Testphase bestimmt. Insgesamt liegen im Training ca. $41.000$ Features vor, ähnlich viele wie in Zhaos Experiment (dort ca. $40.000$).
-	\item \textbf{Test 2} enthält ebenfalls, wie Test 1, die Kategorien \enquote{Bonsai} und \enquote{Leopard}. Hier werden aber insgesamt \todo{2x} Bilder verwendet. Aus beiden Kategorien wurden wieder gleich viele Bilder gewählt und die Aufteilung in Trainings- bzw. Testdaten bleibt auch gleich. Durch SIFT wurden hier für das Training ca. $77.000$ Features ermittelt, also nicht ganz doppelt so viele wie in Test 1.
-	\item \textbf{Test 3} enthält drei Kategorien von Bildern, um zu testen, ob eine komplexere Kategorisierung prinzipiell möglich ist. Als Kategorien wurden hier \enquote{Flugzeug}, \enquote{Motorrad} und \enquote{Armbanduhr} gewählt. Insgesamt werden \todo{y} viele Bilder verwendet, jede Kategorie steuert ein Drittel der Bilder bei. Die Aufteilung in Trainings- und Testdaten wird auch hier beibehalten. In der Trainingsphase lagen \todo{z} Features vor.
+	\item \textbf{Test 1} besteht aus zwei Kategorien: \enquote{Bonsai} und \enquote{Leopard}. Es wurden 50 Bilder verwendet, aus beiden Kategorien je 25. Von diesen Bildern sind 30\% für die Trainings- und die anderen 70\% für die Testphase bestimmt. Im Training liegen ca. $10.000$ Features vor, im Test knapp $27.000$.
+	\item \textbf{Test 2} enthält ebenfalls, wie Test 1, die Kategorien \enquote{Bonsai} und \enquote{Leopard}. Hier werden aber insgesamt 100 Bilder verwendet. Aus beiden Kategorien wurden wieder gleich viele Bilder gewählt und die Aufteilung in Trainings- bzw. Testdaten bleibt auch gleich. Hier wurden für das Training ca. $21.000$ Features extrahiert und für den Test $55.000$.
+	\item \textbf{Test 3} enthält drei Kategorien von Bildern, um zu testen, ob eine komplexere Kategorisierung prinzipiell möglich ist. Als Kategorien wurden hier \enquote{Flugzeug}, \enquote{Motorrad} und \enquote{Armbanduhr} gewählt. Insgesamt werden 80 Bilder verwendet, jede Kategorie steuert ein Drittel der Bilder bei. Die Aufteilung in Trainings- und Testdaten wird auch hier beibehalten. In der Trainingsphase lagen ungefähr $18.000$ Features vor, in der Testphase ca. $52.000$.
 \end{itemize} 
+
+Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) verwendet. Bei dieser Grafikkarte stehen 48kB \textit{shared memory} zur Verfügung, sodass bei 1024 Threads 91 Cluster für SIFT und ca. 300 Cluster für die Autoencoder-Features möglich sind. Die Programme wurden unter CUDA 7.5 ausgeführt.\newline
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 1.}
+	\label{img:roc1}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 1.}
+	\label{img:roc2}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 2.}
+	\label{img:roc3}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 2.}
+	\label{img:roc4}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.35]{images/roc_ph.png}
+	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 2.}
+	\label{img:roc5}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[scale=0.3]{images/roc_ph.png}
+    \qquad
+    \begin{tabular}[t]{| r | c | c |}
+    	\hline
+		k 	 & AUC  \\ \hline    
+   		5    & 0.00 \\ \hline
+    	10   & 0.00 \\ \hline
+    	20   & 0.00 \\ \hline
+    	50   & 0.00 \\ \hline
+    	100  & 0.00 \\ \hline
+		250  & 0.00 \\ \hline
+		500  & 0.00 \\ \hline
+	\end{tabular}
+    \captionsetup{labelformat=andtable}
+    \caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 2.}
+    \label{img:roc6}
+\end{figure}
+
+Für die Experimente ist in den Abbildungen \ref{img:roc1} bis \ref{img:roc6} das Ergebnis der Klassifizierung der SIFT- und Autoencoder-Features dargestellt. Dabei handelt es sich um das Verhältnis der richtig erkannten Kategorien (\textit{True Positives}) zu falsch erkannten Kategorien (\textit{False Negatives}). Hieraus ist ersichtlich, dass das Clustering sowohl durch SIFT als auch der Autoencoder Features nicht erfolgreich war: Ein Kurve nahe der $45$\degree  Linie sagt aus, dass das Verhältnis zwischen \textit{TP} und \textit{FP} ausgeglichen ist. Die Fläche unter der ROC-Kurve beträgt in Experiment 1 für SIFT, je nach $k$, zwischen \todo{x\%} und \todo{y\%}. Das ist bei zwei Kategorien also kaum besser als \enquote{raten}. Ein ähnliches Bild zeichnet sich bei der gleichen Testgruppe, jedoch durch den Autoencoder komprimiert. Mit einer Präzision zwischen \todo{x\%} und \todo{y\%} ist auch hier für kein gewähltes $k$ eine erfolgreiche Klassifizierung durchgeführt worden.\newline
+Auch bei Verwendung einer größeren Trainings- und Testmenge (Abbildung \todo{ref} für SIFT, \todo{ref} für den Autoencoder) verbessern sich die Ergebnisse nicht nennenswert. 
+Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), bei den vorliegenden Testdaten und zwei bzw. drei Kategorien die Klassifizierung zunehmend schlechter ausfällt. Ein Grund hierfür könnte sein, dass nicht genug \enquote{einzigartige} Features vorhanden sind: Ein Cluster, der ein semantisches Merkmal abbildet, wird durch ein größeres $k$ möglicherweise aufgeteilt.
 
 \begin{table}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
+    \begin{tabular}[t]{| r | c | c |}
     \hline
 	     & SIFT & AE \\ \hline    
     5    & 0.00 & 0.00 \\ \hline
@@ -112,7 +174,7 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 	1000 & 0.00 & 0.00 \\ \hline  
     \end{tabular}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
+    \begin{tabular}[t]{| r | c | c |}
     \hline
 	     & SIFT & AE \\ \hline    
     5    & 0.00 & 0.00 \\ \hline
@@ -125,7 +187,7 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 	1000 & 0.00 & 0.00 \\ \hline    
     \end{tabular}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
+    \begin{tabular}[t]{| r | c | c |}
     \hline
 	     & SIFT & AE \\ \hline    
     5    & 0.00 & 0.00 \\ \hline
@@ -138,24 +200,36 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 	1000 & 0.00 & 0.00 \\ \hline    
     \end{tabular}
     \hfill
-	\caption{Laufzeiten der \textit{global memory} Implementierung des Bag of Visual Words. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
+	\caption{Laufzeiten der \textit{global memory} Implementierung des Bag of Visual Words in Sekunden. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
 \end{table}
 
 \begin{table}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
     \hline
 	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    90   & 0.00 & 0.00 \\ \hline
-	200  & -    & 0.00 \\ \hline
-	300  & -    & 0.00 \\ \hline    
+    5    &  1.20 & 0.00 \\ \hline
+    10   &  4.37 & 0.00 \\ \hline
+    20   & 12.09 & 0.00 \\ \hline
+    50   & 35.13 & 0.00 \\ \hline
+    90   & 43.01 & 0.00 \\ \hline
+	200  & -     & 0.00 \\ \hline
+	300  & -     & 0.00 \\ \hline    
     \end{tabular}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
+    \hline
+	     & SIFT & AE \\ \hline    
+    5    &   6.94 & 0.00 \\ \hline
+    10   &   7.63 & 0.00 \\ \hline
+    20   &  17.42 & 0.00 \\ \hline
+    50   &  37.01 & 0.00 \\ \hline
+    90   &  54.88 & 0.00 \\ \hline
+	200  &      - & 0.00 \\ \hline
+	300  & 	    - & 0.00 \\ \hline
+	\end{tabular}
+    \hfill
+    \begin{tabular}[t]{| r | c | c |}
     \hline
 	     & SIFT & AE \\ \hline    
     5    & 0.00 & 0.00 \\ \hline
@@ -167,17 +241,5 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 	300  & -    & 0.00 \\ \hline
 	\end{tabular}
     \hfill
-    \begin{tabular}[t]{ | r | c | c |}
-    \hline
-	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    90   & 0.00 & 0.00 \\ \hline
-	200  & -    & 0.00 \\ \hline
-	300  & -    & 0.00 \\ \hline
-	\end{tabular}
-    \hfill
-	\caption{Laufzeiten der \textit{shared memory} Implementierung des Bag of Visual Words. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
+	\caption{Laufzeiten der \textit{shared memory} Implementierung des Bag of Visual Words in Sekunden. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
 \end{table}
