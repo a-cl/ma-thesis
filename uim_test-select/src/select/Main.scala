@@ -3,8 +3,7 @@ package select
 /**
   * Runs the test selector. How to:
   *
-  * sourcePath:   Path to the image folders
-  * targetPath:   Path to write the results to
+  * path:         Path to the image folders and the resulting files
   * setCount:     Number of categories to use
   * trainPerSet:  Number of training samples per set
   * testPerSet:   Number of test samples per set
@@ -17,17 +16,16 @@ package select
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val sourcePath = args(0)
-    val targetPath = args(1)
-    val setCount = args(2).toInt
-    val trainPerSet = args(3).toInt
-    val testPerSet = args(4).toInt
-    val testCount = args(5).toInt
+    val path = args(0)
+    val setCount = args(1).toInt
+    val trainPerSet = args(2).toInt
+    val testPerSet = args(3).toInt
+    val testCount = args(4).toInt
 
-    val db = new Database(sourcePath)
+    val db = new Database(path)
     val data = db.createDataSet(setCount, trainPerSet, testPerSet, testCount)
 
-    Printer.print(targetPath, data)
+    Printer.print(path, data)
   }
 
 }
