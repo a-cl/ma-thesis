@@ -101,43 +101,43 @@ Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) ve
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\includegraphics[scale=0.7]{images/roc_ph.png}
 	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 1.}
 	\label{img:roc1}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\includegraphics[scale=0.7]{images/roc_ph.png}
 	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 1.}
 	\label{img:roc2}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\includegraphics[scale=0.7]{images/roc_ph.png}
 	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 2.}
 	\label{img:roc3}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.4]{images/roc_ph.png}
+	\includegraphics[scale=0.7]{images/roc_ph.png}
 	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 2.}
 	\label{img:roc4}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.4]{images/roc_ph.png}
-	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 2.}
+	\includegraphics[scale=0.7]{images/roc_ph.png}
+	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 3.}
 	\label{img:roc5}
 \end{figure}
 
 \begin{figure}
 	\centering
-    \includegraphics[scale=0.4]{images/roc_ph.png}
-    \caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 2.}
+    \includegraphics[scale=0.7]{images/roc_ph.png}
+    \caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 3.}
     \label{img:roc6}
 \end{figure}
 
@@ -162,6 +162,18 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     \hfill
     \begin{tabular}[t]{| r | c | c |}
     \hline
+	     & SIFT  & AE \\ \hline    
+    5    &  0.80 & 0.00 \\ \hline
+    10   &  4.30 & 0.00 \\ \hline
+    20   &  4.15 & 0.00 \\ \hline
+    50   & 12.52 & 0.00 \\ \hline
+    100  & 12.28 & 0.00 \\ \hline
+	250  & 22.83 & 0.00 \\ \hline
+	500  & 28.49 & 0.00 \\ \hline
+	\end{tabular}
+    \hfill
+    \begin{tabular}[t]{| r | c | c |}
+    \hline
 	     & SIFT & AE \\ \hline    
     5    & 0.00 & 0.00 \\ \hline
     10   & 0.00 & 0.00 \\ \hline
@@ -169,8 +181,7 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     50   & 0.00 & 0.00 \\ \hline
     100  & 0.00 & 0.00 \\ \hline
 	250  & 0.00 & 0.00 \\ \hline
-	500  & 0.00 & 0.00 \\ \hline
-	1000 & 0.00 & 0.00 \\ \hline  
+	500  & 0.00 & 0.00 \\ \hline    
     \end{tabular}
     \hfill
     \begin{tabular}[t]{| r | c | c |}
@@ -182,21 +193,7 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     50   & 0.00 & 0.00 \\ \hline
     100  & 0.00 & 0.00 \\ \hline
 	250  & 0.00 & 0.00 \\ \hline
-	500  & 0.00 & 0.00 \\ \hline
-	1000 & 0.00 & 0.00 \\ \hline    
-    \end{tabular}
-    \hfill
-    \begin{tabular}[t]{| r | c | c |}
-    \hline
-	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    100  & 0.00 & 0.00 \\ \hline
-	250  & 0.00 & 0.00 \\ \hline
-	500  & 0.00 & 0.00 \\ \hline
-	1000 & 0.00 & 0.00 \\ \hline    
+	500  & 0.00 & 0.00 \\ \hline    
     \end{tabular}
     \hfill
 	\caption{Laufzeiten der \textit{global memory} Implementierung des Bag of Visual Words in Sekunden. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
@@ -206,23 +203,23 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     \hfill
     \begin{tabular}[t]{| r | r | r |}
     \hline
-	     & SIFT & AE \\ \hline    
-    5    &  1.20 & 0.00 \\ \hline
-    10   &  4.37 & 0.00 \\ \hline
-    20   & 12.09 & 0.00 \\ \hline
-    50   & 35.13 & 0.00 \\ \hline
-    90   & 43.01 & 0.00 \\ \hline
+	     & SIFT  & AE \\ \hline    
+    5    &  0.77 & 0.00 \\ \hline
+    10   &  4.30 & 0.00 \\ \hline
+    20   &  4.19 & 0.00 \\ \hline
+    50   & 12.53 & 0.00 \\ \hline
+    90   & 12.33 & 0.00 \\ \hline
 	200  & -     & 0.00 \\ \hline
 	300  & -     & 0.00 \\ \hline    
     \end{tabular}
     \hfill
     \begin{tabular}[t]{| r | r | r |}
     \hline
-	     & SIFT & AE \\ \hline    
-    5    &   6.94 & 0.00 \\ \hline
-    10   &   7.63 & 0.00 \\ \hline
-    20   &  17.42 & 0.00 \\ \hline
-    50   &  37.01 & 0.00 \\ \hline
+	     & SIFT   & AE \\ \hline    
+    5    &   7.54 & 0.00 \\ \hline
+    10   &   6.90 & 0.00 \\ \hline
+    20   &  17.17 & 0.00 \\ \hline
+    50   &  36.86 & 0.00 \\ \hline
     90   &  54.88 & 0.00 \\ \hline
 	200  &      - & 0.00 \\ \hline
 	300  & 	    - & 0.00 \\ \hline
