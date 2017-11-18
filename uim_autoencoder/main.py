@@ -63,24 +63,36 @@ def generateTestData(trainPath, dataPath, targetPath):
 # train data (DONE)
 '''
 generateTrainData(
-    '../uim_test-select/test2/train.txt',
-    '../uim_test-select/test2/train.txt',
+    '../uim_test-select/data/2/train.txt',
+    '../uim_test-select/data/2/train.txt',
     '../uim_bag-of-visual-words/data/2/train36.txt'
 )
-'''
+generateTrainData(
+    '../uim_test-select/data/2/train.txt',
+    '../uim_test-select/data/2/train.txt',
+    '../uim_bag-of-visual-words/data/2/train36.txt'
+)
+generateTrainData(
+    '../uim_test-select/data/2/train.txt',
+    '../uim_test-select/data/2/train.txt',
+    '../uim_bag-of-visual-words/data/2/train36.txt'
+)
+
 # test data (IN PROGRESS)
 generateTestData(
-    '../uim_test-select/test1/train.txt',
-    '../uim_test-select/test1/test.txt',
+    '../uim_test-select/data/1/train.txt',
+    '../uim_test-select/data/1/test.txt',
     '../uim_bag-of-visual-words/data/1/test36.txt'
 )
+
 generateTestData(
-    '../uim_test-select/test2/train.txt',
-    '../uim_test-select/test2/test.txt',
+    '../uim_test-select/data/2/train.txt',
+    '../uim_test-select/data/2/test.txt',
     '../uim_bag-of-visual-words/data/2/test36.txt'
 )
+'''
 generateTestData(
-    '../uim_test-select/test3/train.txt',
-    '../uim_test-select/test3/test.txt',
+    '../uim_test-select/data/3/train.txt',
+    '../uim_test-select/data/3/test.txt',
     '../uim_bag-of-visual-words/data/3/test36.txt'
 )
