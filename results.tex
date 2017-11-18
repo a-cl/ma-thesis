@@ -160,40 +160,40 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
 
 \begin{table}
     \hfill
-    \begin{tabular}[t]{| r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
     \hline
 	     & SIFT  & AE \\ \hline    
-    5    &  0.80 & 0.00 \\ \hline
-    10   &  4.30 & 0.00 \\ \hline
-    20   &  4.15 & 0.00 \\ \hline
-    50   & 12.52 & 0.00 \\ \hline
-    100  & 12.28 & 0.00 \\ \hline
-	250  & 22.83 & 0.00 \\ \hline
-	500  & 28.49 & 0.00 \\ \hline
+    5    &  1.29 & 0.45 \\ \hline
+    10   &  2.57 & 0.79 \\ \hline
+    20   &  7.91 & 1.37 \\ \hline
+    50   & 14.34 & 2.28 \\ \hline
+    90   & 15.15 & 3.23 \\ \hline
+	200  & 22.30 & 3.70 \\ \hline
+	500  & 37.81 & 6.52 \\ \hline
 	\end{tabular}
     \hfill
-    \begin{tabular}[t]{| r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
     \hline
-	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    100  & 0.00 & 0.00 \\ \hline
-	250  & 0.00 & 0.00 \\ \hline
-	500  & 0.00 & 0.00 \\ \hline    
+	     & SIFT   & AE \\ \hline    
+    5    &   3.62 &  0.76 \\ \hline
+    10   &  12.44 &  2.73 \\ \hline
+    20   &  10.06 &  4.68 \\ \hline
+    50   &  34.13 &  4.44 \\ \hline
+    90   &  52.64 &  8.54 \\ \hline
+	200  &  67.24 & 12.47 \\ \hline
+	500  & 100.92 & 19.87 \\ \hline    
     \end{tabular}
     \hfill
-    \begin{tabular}[t]{| r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
     \hline
-	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    100  & 0.00 & 0.00 \\ \hline
-	250  & 0.00 & 0.00 \\ \hline
-	500  & 0.00 & 0.00 \\ \hline    
+	     & SIFT  & AE \\ \hline    
+    5    &  1.51 &  0.57 \\ \hline
+    10   &  3.41 &  1.05 \\ \hline
+    20   &  7.45 &  3.04 \\ \hline
+    50   & 12.95 &  5.02 \\ \hline
+    90   & 26.02 &  9.39 \\ \hline
+	200  & 69.52 & 12.26 \\ \hline
+	500  & 72.08 & 17.44 \\ \hline    
     \end{tabular}
     \hfill
 	\caption{Laufzeiten der \textit{global memory} Implementierung des Bag of Visual Words in Sekunden. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
@@ -204,37 +204,34 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     \begin{tabular}[t]{| r | r | r |}
     \hline
 	     & SIFT  & AE \\ \hline    
-    5    &  0.77 & 0.00 \\ \hline
-    10   &  4.30 & 0.00 \\ \hline
-    20   &  4.19 & 0.00 \\ \hline
-    50   & 12.53 & 0.00 \\ \hline
-    90   & 12.33 & 0.00 \\ \hline
-	200  & -     & 0.00 \\ \hline
-	300  & -     & 0.00 \\ \hline    
-    \end{tabular}
+    5    &  1.29 & 0.51 \\ \hline
+    10   &  2.58 & 0.95 \\ \hline
+    20   &  7.96 & 1.70 \\ \hline
+    50   & 14.41 & 2.93 \\ \hline
+    90   & 15.24 & 4.22 \\ \hline
+	200  & -     & 4.86 \\ \hline
+	\end{tabular}
     \hfill
     \begin{tabular}[t]{| r | r | r |}
     \hline
 	     & SIFT   & AE \\ \hline    
-    5    &   7.54 & 0.00 \\ \hline
-    10   &   6.90 & 0.00 \\ \hline
-    20   &  17.17 & 0.00 \\ \hline
-    50   &  36.86 & 0.00 \\ \hline
-    90   &  54.88 & 0.00 \\ \hline
-	200  &      - & 0.00 \\ \hline
-	300  & 	    - & 0.00 \\ \hline
+    5    &   3.02 &  0.78 \\ \hline
+    10   &  10.27 &  3.00 \\ \hline
+    20   &   8.28 &  5.19 \\ \hline
+    50   &  30.66 &  4.95 \\ \hline
+    90   &  46.93 &  9.78 \\ \hline
+	200  &      - & 14.13 \\ \hline
 	\end{tabular}
     \hfill
-    \begin{tabular}[t]{| r | c | c |}
+    \begin{tabular}[t]{| r | r | r |}
     \hline
-	     & SIFT & AE \\ \hline    
-    5    & 0.00 & 0.00 \\ \hline
-    10   & 0.00 & 0.00 \\ \hline
-    20   & 0.00 & 0.00 \\ \hline
-    50   & 0.00 & 0.00 \\ \hline
-    90   & 0.00 & 0.00 \\ \hline
-	200  & -    & 0.00 \\ \hline
-	300  & -    & 0.00 \\ \hline
+	     & SIFT  & AE \\ \hline    
+    5    &  1.51 &  0.57 \\ \hline
+    10   &  3.45 &  1.04 \\ \hline
+    20   &  7.54 &  3.08 \\ \hline
+    50   & 13.05 &  5.04 \\ \hline
+    90   & 28.12 &  9.46 \\ \hline
+	200  & -     & 12.33 \\ \hline
 	\end{tabular}
     \hfill
 	\caption{Laufzeiten der \textit{shared memory} Implementierung des Bag of Visual Words in Sekunden. Von links nach rechts ist Test 1 bis 3 aufgelistet.}
