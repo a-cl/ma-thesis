@@ -5,4 +5,4 @@ def printLine(file, line):
 			line -= 1
 		print(f.readline().rstrip())
 
-printLine("1/test128.txt", 2)
+printLine("2/test128.txt", 2)
