@@ -81,11 +81,11 @@ $$MSE(h_1, h_2) = \frac{1}{n}\sum_{i=0}^{n}(h_{1_i} - h_{2_i})^{2}$$
 Beträgt die Ähnlichkeit von zwei Histogrammen 1 werden sie als identisch angesehen. Werte nahe 0 drücken aus, dass die Histogramme sich sehr voneinander unterscheiden. Damit nun unterschieden werden kann, ob zwei Bilder in derselben Klasse sind, muss die Ähnlichkeit mit einem Schwellwert verglichen werden. So kann beispielsweise definiert werden, dass es sich bei einer Ähnlichkeit größer als $0.8$ um dieselbe Klasse handelt. Somit hat der Schwellwert unmittelbar Auswirkungen auf die Ergebnisse und sollte selbst Bestandteil des Experiments sein. Das Resultat eines solchen Vergleichs ist dann einer der beiden folgenden Kategorien zuzuordnen:
 
 \begin{itemize}
-	\item \textbf{True Positives} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
-	\item \textbf{False Positives} In diesem Fall ist die Klassifizierung durch das Modell nicht korrekt: Bei gleicher Klasse wurde eine geringe Ähnlichkeit erkannt, bei verschiedenen eine Hohe.
+	\item \textbf{True Positives (TP)} Bei \textit{True Positives} handelt es sich um zwei Bildern die entweder in der gleichen oder einer verschiedenen Klasse liegen und die Vorhersage des Modells diesbezüglich korrekt ist.
+	\item \textbf{False Positives (FP)} In diesem Fall ist die Klassifizierung durch das Modell nicht korrekt: Bei gleicher Klasse wurde eine geringe Ähnlichkeit erkannt, bei verschiedenen eine Hohe.
 \end{itemize}
 
-Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt die \textit{True Positives} auf der Ordinate und die \textit{False Positives} auf der Abzisse dar.
+Damit ein Modell zuverlässige Ergebnisse liefert, muss es größtenteils \textit{True Positives} erkennen, bzw. der Anteil der \textit{True Positives} sollte im Verhältnis zu den \textit{False Positives} bei weitem überwiegen. Für eine visuelle Darstellung dieses Verhältnisses eignet sich die \textit{Receiver Operating Characteristic (ROC)}: Diese stellt die \textit{TP} auf der Ordinate und die \textit{FP} auf der Abzisse dar.
 
 \section{Experimentdurchführung}
 
@@ -98,6 +98,8 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 \end{itemize} 
 
 Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) verwendet. Bei dieser Grafikkarte stehen 48kB \textit{shared memory} zur Verfügung, sodass bei 1024 Threads 91 Cluster für SIFT und ca. 300 Cluster für die Autoencoder-Features möglich sind. Die Programme wurden unter CUDA 7.5 ausgeführt.\newline
+
+\subsection{Qualität der Ergebnisse}
 
 \begin{figure}
 	\centering
@@ -162,9 +164,17 @@ Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) ve
 \label{tab:AUC}
 \end{table}
 
-Für die Experimente ist in den Abbildungen \ref{img:roc1} bis \ref{img:roc6} das Ergebnis der Klassifizierung der SIFT- und Autoencoder-Features dargestellt. Dabei handelt es sich um das Verhältnis der richtig erkannten Kategorien (\textit{True Positives}) zu falsch erkannten Kategorien (\textit{False Negatives}). Hieraus ist ersichtlich, dass das Clustering sowohl durch SIFT als auch der Autoencoder Features nicht erfolgreich war: Ein Kurve nahe der $45${\degree} Linie sagt aus, dass das Verhältnis zwischen \textit{TP} und \textit{FP} ausgeglichen ist. Die Fläche unter der ROC-Kurve beträgt in Experiment 1 für SIFT, je nach $k$, zwischen \todo{51\%} und \todo{56\%}\footnote{Das waren Die Zahlen der ersten Testlaufs. Eventuell wird es ja noch besser, ich gehe jetzt mal davon aus.}. Das ist bei zwei Kategorien also kaum besser als \enquote{raten}. Ein ähnliches Bild zeichnet sich bei der gleichen Testgruppe, jedoch durch den Autoencoder komprimiert. Mit einer Präzision zwischen \todo{x\%} und \todo{y\%} ist auch hier für kein gewähltes $k$ eine erfolgreiche Klassifizierung durchgeführt worden.\newline
-Auch bei Verwendung einer größeren Trainings- und Testmenge (Abbildung \ref{img:roc5} für SIFT, \ref{img:roc6} für den Autoencoder) verbessern sich die Ergebnisse nicht nennenswert. 
-Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), bei den vorliegenden Testdaten und zwei bzw. drei Kategorien die Klassifizierung zunehmend schlechter ausfällt. Ein Grund hierfür könnte sein, dass nicht genug \enquote{einzigartige} Features vorhanden sind: Ein Cluster, der ein semantisches Merkmal abbildet, wird durch ein größeres $k$ möglicherweise aufgeteilt.
+Für die Experimente ist in den Abbildungen \ref{img:roc1} bis \ref{img:roc6} das Ergebnis der Klassifizierung der SIFT- und Autoencoder-Features dargestellt. Hierbei handelt es sich um die \textit{global memory} Varianten. Die Werte der \textit{shared memory} Versionen sind die Gleichen, soweit diese erfasst werden konnten (bei SIFT sind maximal 90 Cluster und bei den Autoencoder-Features maximal 326 Cluster möglich). In den Grafiken wird das Verhältnis der richtig erkannten Kategorien (\textit{True Positives}) zu falsch erkannten Kategorien (\textit{False Negatives}). Hieraus ist ersichtlich, dass die Klassifizierung der SIFT- und Autoencoder-Features mäßig erfolgreich war: Ein Kurve nahe der $45${\degree} Linie sagt aus, dass das Verhältnis zwischen \textit{TP} und \textit{FP} ausgeglichen ist. In diesem Fall beträgt die Fläche unter der Kurve (\textit{Area Under Curve, AUC}) 50\%. Der \textit{AUC} für die verschiedenen Konfigurationen ist in Tabelle \ref{tab:AUC} dargestellt. Die Fläche unter der ROC-Kurve beträgt in Experiment 1 für SIFT, je nach $k$, zwischen $56.73$\% und $67.7$\%. Die Features des Autoencoders schneiden im gleichen Test meist schlechter ab. Mit einem Bestwert von $60.49$\% bei 200 Clustern, ist eine Klassifizierung nicht erfolgreich gewesen.\newline
+Ein ähnliches Bild zeichnet sich bei den anderen beiden Testgruppen ab: Meist weisen die SIFT-Features eine höhere \textit{AUC} als die Autoencoder-Features auf, die Bestwerte für ein Experiment erzielen stets die SIFT-Features ($68.31$\% in Experiment 2 und $69.65$\% in Experiment 3).\newline
+Auffallend ist auch, dass in Experiment 2 gegenüber Experiment 1, sowohl die Klassifizierung auf Basis der SIFT- als auch der Autoencoder-Features, erfolgreicher war. Der Aufbau beider Experimente ist recht ähnlich, nur das in Experiment zwei die doppelte Menge an Features für das Training verwendet wurde. Die Bestwerte steigen nur ein wenig ($+0.61$ für SIFT, $+2.75$ für den Autoencoder), doch die meisten Clusterkonfigurationen weisen bessere Ergebnisse auf.\newline
+Überraschend ist, dass in Experiment 3 die Klassifizierung für kleine $k$, bei Verwendung der SIFT-Features, am erfolgreichsten ist ($k=5$ ist die beste Konfiguration mit $69.65$\% \textit{AUC}). Alle anderen Experimente lassen erkennen, dass eine Verwendung von $50$ bis $200$ Clustern die besten Ergebnisse liefert.\newline
+Allgemein beträgt der  \textit{AUC} in allen Experimenten zwischen $50$\% und $70$\% und die Kurven verlaufen meist nah beieinander. Nur in Abbildung \ref{img:roc4} ist zu erkennen, das weniger als $20$ Cluster deutlich schlechter gegenüber Modellen mit mehr Clustern abschneiden. 
+
+\subsection{Laufzeiten}
+
+Für alle drei Experimente wurden sowohl die Laufzeiten der \textit{global} als auch der \textit{shared memory} Implementierung gemessen. Auf diese Weise können nicht nur die Laufzeiten der verschiedenen Features (SIFT, Autoencoder) gegenübergestellt werden, sondern auch überprüft werden, ob die Verwendung von \textit{shared memory} den Algorithmus beschleunigt. Da der durch den Autoencoder erzeugt Deskriptor ca. $3.5$ mal kleiner als der SIFT-Deskriptor ist, kann ein  Die Werte sind über zehn Testläufe gemittelt. \newline
+In Tabelle \ref{tab:runtimeGlobal} sind die Laufzeiten der \textit{global memory} Variante für beide Feature-Typen dargestellt. Es ist deutlich zu erkennen, dass das Clustering der Autoencoder-Features in allen Fällen, großteils sogar sehr deutlich, schneller abgeschlossen ist, als das Clustering der SIFT-Features. In Experiment 1 und 2 ist der Prozess im Schnitt $4$ mal schneller abgeschlossen, in Experiment 3 im Schnitt nur ca. $2.8$ mal schneller.
+Tabelle \ref{tab:runtimeShared} zeigt die Laufzeiten der \textit{shared memory} Implementierung. Auch hier ist das Clustering der Autoencoder-Features in Experiment 1 und 2 um einen ähnlichen Faktor schneller: Das Gruppieren des SIFT-Features ist in Experiment 1 ca. $4.6$ mal langsamer, in Experiment 2 $4.5$ mal. Für verschiedene $k$ schwankt die Reduzierung der Berechnungsdauer enorm: So ist in Experiment 2 das Clustering der Autoencoder-Features für $k=20$ gerade mal $1.8$ mal schneller, für $k=50$ hingegen fast $7$ mal schneller. Auch hier ist in Experiment 3 die Berechnung nicht so stark beschleunigt worden, wie in Experiment 1 und 2. Mit einem Faktor von $3.4$ ist dies aber immer noch näher an dem erwarteten Wert von $3.5$, als Experiment 3 der \textit{global memory} Variante.
 
 \begin{table}
     \centering
@@ -172,15 +182,16 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     \hline
 	       & \multicolumn{2}{|c|}{Experiment 1} & \multicolumn{2}{|c|}{Experiment 2} & \multicolumn{2}{|c|}{Experiment 3} \\ \hline
 	k    & SIFT  & AE   & SIFT   & AE    & SIFT  & AE    \\ \hline    
-    5    &  1.29 & 0.45 &  3.62  &  0.76 &  1.51 &  0.57 \\ \hline
-    10   &  2.57 & 0.79 &  12.44 &  2.73 &  3.41 &  1.05 \\ \hline
-    20   &  7.91 & 1.37 &  10.06 &  4.68 &  7.45 &  3.04 \\ \hline
-    50   & 14.34 & 2.28 &  34.13 &  4.44 & 12.95 &  5.02 \\ \hline
-    90   & 15.15 & 3.23 &  52.64 &  8.54 & 26.02 &  9.39 \\ \hline
-	200  & 22.30 & 3.70 &  67.24 & 12.47 & 69.52 & 12.26 \\ \hline
+    5    &  1.29 & 0.51 &  3.62  &  0.78 &  1.51 &  0.57 \\ \hline
+    10   &  2.57 & 0.95 &  12.44 &  3.00 &  3.45 &  1.05 \\ \hline
+    20   &  7.96 & 1.70 &  10.06 &  5.19 &  7.54 &  3.08 \\ \hline
+    50   & 14.41 & 2.93 &  34.13 &  4.95 & 13.05 &  5.04 \\ \hline
+    90   & 15.24 & 4.22 &  52.64 &  9.78 & 28.12 &  9.46 \\ \hline
+	200  & 22.30 & 4.86 &  67.24 & 14.13 & 69.52 & 12.33 \\ \hline
 	500  & 37.81 & 6.52 & 100.92 & 19.87 & 72.08 & 17.44 \\ \hline
 	\end{tabular}
 	\caption{Laufzeiten der \textit{global memory} Implementierung des Bag of Visual Words in Sekunden.}
+	\label{tab:runtimeGlobal}
 \end{table}
 
 \begin{table}
@@ -189,12 +200,13 @@ Auffallend ist durch alle Experimente auch, dass bei zu großem $k$ ($> 200$), b
     \hline
          & \multicolumn{2}{|c|}{Experiment 1} & \multicolumn{2}{|c|}{Experiment 2} & \multicolumn{2}{|c|}{Experiment 3} \\ \hline
 	k    & SIFT  & AE   & SIFT   & AE    & SIFT  & AE    \\ \hline    
-    5    &  1.29 & 0.51 &   3.02 &  0.78 &  1.51 &  0.57 \\ \hline
-    10   &  2.58 & 0.95 &  10.27 &  3.00 &  3.45 &  1.04 \\ \hline
-    20   &  7.96 & 1.70 &   8.28 &  5.19 &  7.54 &  3.08 \\ \hline
-    50   & 14.41 & 2.93 &  30.66 &  4.95 & 13.05 &  5.04 \\ \hline
-    90   & 15.24 & 4.22 &  46.93 &  9.78 & 28.12 &  9.46 \\ \hline
-	200  & 	   - & 4.86 &      - & 14.13 & -     & 12.33 \\ \hline
+    5    &  1.29 & 0.45 &   3.02 &  0.76 &  1.51 &  0.57 \\ \hline
+    10   &  2.58 & 0.79 &  10.27 &  2.73 &  3.41 &  1.04 \\ \hline
+    20   &  7.91 & 1.37 &   8.28 &  4.68 &  7.45 &  3.04 \\ \hline
+    50   & 14.34 & 2.28 &  30.66 &  4.44 & 12.95 &  5.02 \\ \hline
+    90   & 15.15 & 3.23 &  46.93 &  8.54 & 26.02 &  9.39 \\ \hline
+	200  & 	   - & 3.70 &      - & 12.47 & -     & 12.26 \\ \hline
 	\end{tabular}
 	\caption{Laufzeiten der \textit{shared memory} Implementierung des Bag of Visual Words in Sekunden.}
+	\label{tab:runtimeShared}
 \end{table}
