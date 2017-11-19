@@ -15,14 +15,15 @@ class Test (val image1: File, val image2: File, val same: Boolean, val error: Fl
 
 }
 
-class ExcelWriter {
+class ExcelWriter (val template: String) {
 
-  private val streamIn = new FileInputStream("roc_template.xlsx")
+  private val streamIn = new FileInputStream(template + ".xlsx")
   private val workbook = new XSSFWorkbook(streamIn)
 
   streamIn.close()
 
   def write (k: Int, tests: List[Test]): Unit = {
+    println("Working on", k)
     val count = tests.length + 1
     val sheet = workbook.getSheet("k = " + k)
     val first = sheet.createRow(0)
@@ -31,7 +32,7 @@ class ExcelWriter {
     first.createCell(1, 1).setCellValue("IMG2")
     first.createCell(2, 1).setCellValue("RAND")
     first.createCell(3, 1).setCellValue("SAME_CLASS")
-    first.createCell(4, 1).setCellValue("SIM (k=" + k + ")")
+    first.createCell(4, 1).setCellValue(" k = " + k)
     first.createCell(5, 1).setCellValue("PRE")
     first.createCell(6, 1).setCellValue("TPR")
     first.createCell(7, 1).setCellValue("FPR")

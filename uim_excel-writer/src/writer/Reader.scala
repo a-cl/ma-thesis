@@ -10,14 +10,17 @@ object Reader {
 
   type DataSheet = mutable.HashMap[Int, List[Test]]
 
+  val numberRegex = "[0-9]".r
+
+  val fileRegex = new Regex("test*")
+
+
   def read(path: String): DataSheet = {
     val file = new File(path)
     val map = new DataSheet
 
-    val regex = new Regex("tests\\d\\d?\\d?\\d?\\.txt")
-
     readDir(file).foreach { set =>
-      if (regex.findFirstIn(set.getName).isDefined) {
+      if (fileRegex.findFirstIn(set.getName).isDefined) {
         val tests = Source.fromFile(set).getLines().toList.map { line =>
           val tokens = line.split(" ")
           val image1 = new File(tokens(0))
@@ -46,22 +49,11 @@ object Reader {
   }
 
   def readDir (path: File): List[File] = path.listFiles().filter { file =>
-    file.isFile && hasK(file) && file.getName.endsWith(".txt")
+    file.isFile && file.getName.endsWith(".txt")
   }.toList
 
-  def hasK (file: File): Boolean = try {
-    Integer.parseInt(file.getName.replaceAll("[\\D]", ""))
-    true
-  } catch {
-    case _: Throwable => false
-  }
-
   def getK (file: File): Int = {
-    if (hasK(file)) {
-      Integer.parseInt(file.getName.replaceAll("[\\D]", ""))
-    } else {
-      throw new Exception("Invalid name (no k specified):" + file.getName)
-    }
+    Integer.parseInt(numberRegex.findAllIn(file.getName).mkString)
   }
 
 }

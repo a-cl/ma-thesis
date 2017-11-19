@@ -11,15 +11,13 @@ package writer
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val sourcePath = args(0)
-    val targetPath = args(1)
-    val excelWriter = new ExcelWriter
-    val textWriter = new TextWriter(targetPath)
+    val sourcePath = "E:/thesis_res/1/processed/shared/128"
+    val targetPath = "data/1/roc_shared_128"
+    val excelWriter = new ExcelWriter("data/template/roc90")
     val data = Reader.read(sourcePath)
 
     data.keys.foreach(k => excelWriter.write(k, data(k)))
     excelWriter.save(targetPath)
-    data.keys.foreach(k => textWriter.write(k, data(k)))
   }
 
 }
