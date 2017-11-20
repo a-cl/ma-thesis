@@ -18,8 +18,7 @@ def imageToArray (feature):
     vector = []
     vector.extend(points for vec in feature[0] for points in vec)
     vector.extend(points for vec in feature[1] for points in vec)
-    vector = list(map(lambda x: x / 255, vector))
-    return np.array(vector)
+    return np.array(list(map(lambda x: x / 255, vector)))
 
 def arrayToFeature (array):
     grad_x, grad_y = [], []
@@ -59,10 +58,12 @@ def writeTests (filePath, tests):
 
     for test in tests:
         file.write(test[0] + '\n')
+
         for feature in test[1]:
             file.write(",".join(map(lambda x: '{0:.10f}'.format(x), feature)))
             file.write("|")
         file.write('\n' + test[2] + '\n')
+        
         for feature in test[3]:
             file.write(",".join(map(lambda x: '{0:.10f}'.format(x), feature)))
             file.write("|")

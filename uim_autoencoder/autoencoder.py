@@ -1,3 +1,10 @@
+'''
+Stacked Denoising Autoencoder nach: https://github.com/rajarsheem/libsdae-autoencoder-tensorflow
+
+Das Projekt wurde für die Ausfürung unter Python 3.6 adaptiert (3.4 sollte untersützt werden, doch
+leider hat dies nicht geklappt, daher wurden einige wenige Stellen angepasst).
+'''
+
 import numpy as np
 import tensorflow as tf
 
@@ -31,12 +38,12 @@ class StackedAutoEncoder:
     def assertions(self):
         global allowed_activations, allowed_noises, allowed_losses
         assert self.loss in allowed_losses, 'Incorrect loss given'
-        assert 'list' in str(type(self.dims)), 'dims must be a list even if there is one layer.'
-        assert len(self.epoch) == len(self.dims), "No. of epochs must equal to no. of hidden layers"
-        assert len(self.activations) == len(self.dims), "No. of activations must equal to no. of hidden layers"
-        assert all(True if x > 0 else False for x in self.epoch), "No. of epoch must be atleast 1"
-        assert set(self.activations + allowed_activations) == set(allowed_activations), "Incorrect activation given."
-        assert noise_validator(self.noise, allowed_noises), "Incorrect noise given"
+        assert 'list' in str(type(self.dims)), 'dims must be a list even if there is one layer'
+        assert len(self.epoch) == len(self.dims), 'No. of epochs must equal to no. of hidden layers'
+        assert len(self.activations) == len(self.dims), 'No. of activations must equal to no. of hidden layers'
+        assert all(True if x > 0 else False for x in self.epoch), 'No. of epoch must be atleast 1'
+        assert set(self.activations + allowed_activations) == set(allowed_activations), 'Incorrect activation given'
+        assert noise_validator(self.noise, allowed_noises), 'Incorrect noise given'
 
     def __init__(self, dims, activations, epoch=1000, noise=None, loss='rmse', lr=0.001, batch_size=100, print_step=50):
         self.print_step = print_step
