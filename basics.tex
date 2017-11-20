@@ -83,10 +83,10 @@ Ein Filter (auch Filterkern, Faltungsmatrix) ist eine, meist quadratische, Matri
 Ein Gauß-Filter wird in der Bildbearbeitung verwendet um ein Bild zu verzerren und somit Rauschen aber auch Details zu unterdrücken. Diesem Filter liegt, wie der Name sagt, die Gauß-Funktion zu Grunde:
 
 $$
-g_{\sigma}(x)=\frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2}}{2\sigma^{2}}}, \quad g_{\sigma}(x, y) = \frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2} + y^{2}}{2\sigma^{2}}}
+g_{\sigma}(x)=\frac{1}{\sqrt{2\pi\sigma^{2}}}\mathrm{e}^{-\frac{x^{2}}{2\sigma^{2}}}, \quad g_{\sigma}(x, y) = \frac{1}{2\pi\sigma^{2}}\mathrm{e}^{-\frac{x^{2} + y^{2}}{2\sigma^{2}}}
 $$
 
-Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind. Für einen $3 \times 3$ Kernel mit einer Standardabweichung von $1.0$ ergibt sich folgende Matrix (Annäherung durch $1000$ Iterationen):
+Wird ein Gauß-Filter verwendet, so bedeutet dies, dass die Einträge der Matrix aus der Gauß-Funktion konstruiert sind. Für einen $3 \times 3$ Kernel mit einer Standardabweichung von $1.0$ ergibt sich folgende Matrix\footnote{Berechnet durch das Programm: http://dev.theomader.com/gaussian-kernel-calculator/} (Annäherung durch $1000$ Iterationen):
 
 $$
 \begin{bmatrix}
@@ -405,7 +405,7 @@ In der Praxis hat sich zur Korruption der Eingabe die \textit{masking corruption
 
 Das Bag of Visual Words lehnt sich an das Bag of Words Modell aus dem Bereich Information Retrival an. Daher soll zunächst die Funktionsweise des Bag of Word Modells erläutert werden, um darauf aufbauend den Bag of Visual Words einzuführen.\newline 
 Der Bag of Words wird zur Klassifizierung von Dokumenten genutzt. Dieses Verfahren zählt das Auftreten jedes Wortes in einem Dokument. Diese Anzahl wird durch die Anzahl aller Wörter im Vokabular dividiert, um die relative Häufigkeit eines Wortes zu ermitteln. Das Vokabular wird in diesem Kontext \textit{Codebook} genannt, die Wörter werden auch als \textit{Codewords} bezeichnet.\newline
-Dieses Modell wurde von Faheema und Rakshit \cite{bow2010} adaptiert, um für die digitale Bildverarbeitung von Nutzen zu sein. Der Bag of Visual Words lernt anhand der Features von Trainingsbildern ein visuelles Vokabular, dass zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert, der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor, der aus vielen Gleitkommazahlen besteht. Dies heißt, dass es keinen Sinn ergibt, Features direkt miteinander zu vergleichen: Die Komponenten zweier Vektoren sind unter Umständen ähnlich, aber unter fast keine Umständen gleichen. Um also eine Darstellung zu erhalten, die als Basis für einen Vergleich dienen kann, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. \newline
+Dieses Modell wurde von Faheema und Rakshit \cite{bow2010} adaptiert, um für die digitale Bildverarbeitung von Nutzen zu sein. Der Bag of Visual Words lernt anhand der Features von Trainingsbildern ein visuelles Vokabular, dass zur Klassifizierung von Bildern dient. Die Features können aber nicht direkt statt der Worthäufigkeit verwendet werden: Ein Wort ist ein diskreter Wert, der direkt verglichen werden kann, ein Feature hingegen ist ein Vektor, der aus vielen Gleitkommazahlen besteht. Dies heißt, dass es keinen Sinn ergibt, Features direkt miteinander zu vergleichen: Die Komponenten zweier Vektoren sind unter Umständen ähnlich, aber unter fast keine Umständen gleich. Um also eine Darstellung zu erhalten, die als Basis für einen Vergleich dienen kann, ist es notwendig, die Vektoren zu quantisieren. Die quantisierten Vektoren entsprechen dann den \textit{Codewords} und werden in diesem Kontext auch \textit{Visual Words} genannt. \newline
 Zunächst wird die Funktionsweise des Bag of Visual Words im folgenden Abschnitt näher betrachtet. Dem schließt eine Betrachtung des Kernstücks des Algorithms an: Das Clustering der Features. Hier wird ein k-means Algorithmus, Llyods heuristische Variante, verwendet. Es wird eine gängige sequentielle Implementierung angeführt, auf deren Basis dann die Parallelisierbarkeit durch Grafikkarten untersucht wird.\newline
 Bei der Einordnung eines Bildes wird ein Histogramm der \textit{Visual Words} generiert, daher wird im Anschluss ein sequentieller Histogramm Algorithmus vorgestellt, der auf Parallelisierbarkeit geprüft wird.
 
@@ -425,7 +425,7 @@ Der Testprozess erzeugt nun, auf Basis des \textit{Codebooks}, die \textit{Visua
 
 \subsection{K-means Clustering}
 
-Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means-Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der ihm am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Oft wird hier der quadrierte Fehler durch k-means minimiert, also beispielsweise $D = \|x_{i} - c_{j}\|^{2}$. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am Geringsten ist:
+Unter k-means Clustering werden Algorithmen zusammengefasst, die eine Menge Vektoren durch Zuweisung in $k$ vorgegebene Gruppen einteilen, die sogenannten Cluster. Aus den Vektoren werden initial $k$ Stück ausgewählt, die als anfängliche Schwerpunkte der Cluster dienen. Ein k-means-Algorithmus ordnet nun iterativ jeden Vektor dem Cluster zu, der ihm am nächsten ist. Formal werden $n$ Vektoren aus dem Raum $\mathbb{R}^{d}$ in $k$ Cluster eingeteilt. $D$ ist hierbei eine Distanzmetrik im euklidischen Raum. Oft wird hier der quadrierte Fehler durch k-means minimiert, also beispielsweise $D = \|x_{i} - c_{j}\|^{2}$. Jeder Vektor $x_{i}$ wird dem Cluster $c_{j}$ zugeordnet, dessen Distanz zum Vektor am geringsten ist:
 
 $$ C(x_i) = arg \min_{j = 0,...,k} D(x_i, c_j) \quad i = 0,...,n$$
 
@@ -433,7 +433,7 @@ Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische 
 
 \begin{enumerate}
 	\item \textbf{Initialisierung} Es werden zunächst $k$ Vektoren durch ein Verfahren (z.B. zufällig oder \textit{farthest-neighbour}) als Schwerpunkte der Cluster ausgewählt.
-	\item \textbf{Zuordnung}: Von den verbleibenden Vektoren wird nun mit jedem Clusterschwerpunkt die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am Geringsten bei Aufnahme des Vektors erhöht.
+	\item \textbf{Zuordnung}: Von den verbleibenden Vektoren wird nun mit jedem Clusterschwerpunkt die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am geringsten bei Aufnahme des Vektors erhöht.
 	\item \textbf{Vektoren zuweisen}: Die Zentren der Cluster werden neu berechnet, um die neue Zuordnung der Vektoren zu Clustern in Folgeberechnungen miteinzubeziehen.
 \end{enumerate}
 
@@ -448,7 +448,7 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 
 \subsection{Lloyds Algorithmus}
 
-Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. Im nachfolgenden Codelisting in Abbildung \ref{code:lloyd} ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Vektoren $V$, eine leere Menge Cluster $C$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster $c_j$ statt. Innerhalb der Schleife in Zeile 4 werden zunächst alle $k$ Cluster $C_j$ als leere Menge definiert. Anschließend wird für jeden Vektor $v_i$ aus $V$ der Index $j$ des nächsten Clusterschwerpunktes ermittelt. Der Vektor wird dann in den entsprechenden Cluster $C_j$ aufgenommen. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. Hierfür wird pro Cluster die Summe über alle enthaltenen Vektoren gebildet und anschließend normalisiert.
+Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. In dem Codelisting in Abbildung \ref{code:lloyd} ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Vektoren $V$, eine leere Menge Cluster $C$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster $c_j$ statt. Innerhalb der Schleife in Zeile 4 werden zunächst alle $k$ Cluster $C_j$ als leere Menge definiert. Anschließend wird für jeden Vektor $v_i$ aus $V$ der Index $j$ des nächsten Clusterschwerpunktes ermittelt. Der Vektor wird dann in den entsprechenden Cluster $C_j$ aufgenommen. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. Hierfür wird pro Cluster die Summe über alle enthaltenen Vektoren gebildet und anschließend normalisiert.
 
 \begin{figure}
 \lstset{language=C}
@@ -468,7 +468,7 @@ kmeans_lloyd ($V, C, k$)
 \label{code:lloyd}
 \end{figure}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Distanz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Distanzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Distanz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Distanzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren, aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
 
 \subsection{Histogramme}
 

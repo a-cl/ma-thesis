@@ -12,7 +12,7 @@ In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier z
 \begin{itemize}
 	\item \textbf{Extraktion} Zuerst muss das Verfahren bestimmt werden, mit denen die Features gewonnen werden sollen. Je nach Anwendungsfall sollte dieses Verfahren austauschbar sein. Zu Beginn werden aus den Bilddaten \textit{Images} durch einen Feature-Extraktor die Feature-Vektoren \textit{Features A} erhoben. Bei den Bilddaten handelt es sich um eine Liste von Matritzen, welche die Intensitätswerte von Bildpixeln kodiert. \textit{Features A} ist ein Vektor von Features, die abhängig vom Verfahren verschiedene Eigenschaften beschreiben.
 	\item \textbf{Komprimierung} Um die Komponenten in einem Feature-Vektor auf die Wesentlichen zu reduzieren, erfolgt eine Komprimierung durch einen Autoencoder. Die Phase des Autoencoders ist hierbei optional und daher gestrichelt dargestellt. Sollten die Features nicht durch den Autoencoder komprimiert werden, so ist der Vektor \textit{Features B} gleich dem Vektor \textit{Features A}. Andernfalls enthält \textit{Features B} die komprimierten Features.
-	\item \textbf{Gruppierung} In der dritten Phase nimmt der Bag of \textit{Visual Words} die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die \textit{Visual Words} des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie die Features in \textit{Features B}.
+	\item \textbf{Gruppierung} In der dritten Phase nimmt der Bag of Visual Words die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die \textit{Visual Words} des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie die Features in \textit{Features B}.
 \end{itemize} 
 
 \begin{figure}
@@ -75,7 +75,7 @@ Die Hyperparameter für das verwendete Modell sind vollständig dokumentiert. Da
 
 \section{Bag of Visual Words}
 
-In der Analyse wurde bereits sequentielle Varianten des Lloyd- und Histogramm-Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version abgeleitet, welche sich für die Realisierung als CUDA Programm eignen.
+In der Analyse wurde bereits eine sequentielle Varianten von Lloyds-Algorithmus und ein sequentieller Histogramm-Algorithmus vorgestellt und aufgezeigt, an welchen Stellen eine Parallelisierung der Berechnung durch Grafikkarten erfolgen kann. Im Folgenden wird aus diesen Informationen je Algorithmus eine parallele Version abgeleitet, welche sich für die Realisierung als CUDA Programm eignen.
 Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsaufrufe skizziert. Zur Interaktion stehen einem Anwender im Wesentlichen eine Funktion zu Generierung eines Modells und zur Berechnung der \textit{Visual Words} eines Bildes zur Verfügung.
 
 \subsection{Paralellisierung von Llyods Algorithmus}
