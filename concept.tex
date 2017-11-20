@@ -80,7 +80,7 @@ Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsauf
 
 \subsection{Paralellisierung von Llyods Algorithmus}
 
-Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. Das nachfolgende Listing aus der Arbeit von Zechner und Granitzer \cite{akc2009} illustriert den Ablauf solch eines Algorithmus in Pseudocode. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seine Feature-Vektoren die Distanz zu allen Clusterschwerpunkten. Der Index des Clusters, der am Nächsten ist, wird in einer Liste $l$ \textit{(labels)} unter dem Index des Vektors gespeichert. Dieser Prozess ist in Pseudocode in Zeile 6 und 7 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist. In Zeile 11 übernimmt der Master-Thread die Neuberechnung der Clusterschwerpunkte. In Zeile 13 werden die Vektoren in den jeweiligen Clusterschwerpunkt mitaufgenommen (aufsummiert). In Zeile 14 wird $m$ \textit{members}, die Anzahl der Vektoren pro Cluster, für jeden neuen Vektor inkrementiert. In Zeile 15 und 16 erfolgt dann die Berechnung des Durchschnitts aller Clusterschwerpunkte.
+Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. Das Listing aus Abbildung \ref{code:lloyd} der Arbeit von Zechner und Granitzer \cite{akc2009} illustriert den Ablauf solch eines Algorithmus in Pseudocode. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seine Feature-Vektoren die Distanz zu allen Clusterschwerpunkten. Der Index des Clusters, der am Nächsten ist, wird in einer Liste $l$ \textit{(labels)} unter dem Index des Vektors gespeichert. Dieser Prozess ist in Pseudocode in Zeile 6 und 7 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist. In Zeile 11 übernimmt der Master-Thread die Neuberechnung der Clusterschwerpunkte. In Zeile 13 werden die Vektoren in den jeweiligen Clusterschwerpunkt mitaufgenommen (aufsummiert). In Zeile 14 wird $m$ \textit{members}, die Anzahl der Vektoren pro Cluster, für jeden neuen Vektor inkrementiert. In Zeile 15 und 16 erfolgt dann die Berechnung des Durchschnitts aller Clusterschwerpunkte.
 
 \begin{figure}
 \begin{lstlisting}[mathescape=true, style=Math]
@@ -98,10 +98,11 @@ lloyd_gpu(V, C, k)
 			for each $v_{i} \in V$
 				$c_{l_i} = c_{l_i} + v_i$
 				$m_{l_i} = m_{l_i} + 1$
-			for each $c_j \in C$
-				$c_j = \frac{1}{m_j} c_j$
+			for each $C_{j} \in  C$
+				$c_j = \frac{1}{\|C_j\|} \sum_{v_i \in C_j} v_i$
 \end{lstlisting}
 \caption{Ablauf der parallelen Variante von Lloyds Algorithmus \cite{akc2009}. }
+\label{code:lloyd}
 \end{figure}
 
 \subsection{Parallele Reduzierung von Histogrammen}
