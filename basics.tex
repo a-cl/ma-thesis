@@ -30,11 +30,11 @@ Abhängig vom Typ des Bildes, besitzen die Pixel eine andere Struktur. In der Bi
 
 Die Intensität eines Pixels bzw. die Intensität seiner Vektoren wird mit in den meisten Programmen mit acht Bit dargestellt und umfasst daher 256 mögliche Werte. Dies ist für die meisten Anwendungen ausreichend und praktisch, da acht Bit genau einem Byte entsprechen und dies eine einfache computergestützte Darstellung und Verarbeitung ermöglicht. Die Werte für die Intensität werden im Folgenden normalisiert als Gleitkommazahlen im Intervall $[0, 1]$ verwendet.
 
-\subsection{Feature Detektion und Extraktion}
+\subsection{Detektion und Extraktion von Features}
 
 Um Bilder zu vergleichen, werden charakteristische Merkmale dieser betrachtet, die sogenannten Features. Ein Feature ist ein allgemeiner Begriff und enthält je nach Verfahren unterschiedliche Informationen. Dies ist notwendig, da nicht nur die Position oder Intensität eines Pixels, sondern auch generelle Eigenschaften von Interesse sind. Globale Verfahren berücksichtigen bei der Bewertung jeden Pixel des Bildes gleichermaßen, lokale hingegen betrachten nur ein kleine Fenster des Bildes, also einen Pixel und seine Nachbarschaft. Die Suche nach globalen Merkmalen, die ein Bild charakterisieren, kann aber keine Objekte und Details im Bild berücksichtigen. Hierfür eignet sich die Extraktion von lokalen Features. Um Objekte aus unterschiedlichen Perspektiven und in verschiedenen Größen wieder zu erkennen, ist es notwendig, dass die Features affin invariant sind. Abbildung \ref{img:liberty} zeigt dasselbe Objekt, jedoch rotiert, skaliert, verschoben und unter anderen Beleuchtungsverhältnissen. Ein Algorithmus sollte mit hoher Wahrscheinlichkeit erkennen, dass es sich hier um dasselbe Objekt handelt \cite{ifd2016}.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.6]{images/liberty.png}
 	\caption[Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen.]{Zwei Bilder mit dem gleichen Objekt aus unterschiedlicher Perspektive und in verschiedenen Lichtverhältnissen{\footnotemark}.}
@@ -51,7 +51,7 @@ Die Gewinnung der Features ist in die Schritte Detektion und Extraktion aufgetei
 	\item \textbf{Extraktion} Die Feature Extraktion erzeugt aus den vom Detektor gefundenen \textit{keypoints} und seinen lokalen Informationen den Deskriptor. Ein Feature-Deskriptor ist eine kompakte Darstellung eines Features. Die \textit{keypoints} und deren Nachbarschaften werden in Zahlen kodiert. Die meisten Deskriptoren kodieren die Informationen bereits normalisiert im Intervall zwischen 0 und 1. Diese Sequenz wird als ein Vektor notiert, sodass auch von Feature-Vektor gesprochen wird. Einige Verfahren reichern den Deskriptor mit zusätzlichen Informationen an, z.B. über die Stärke eines Gradienten bei der Kantendetektion.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.6]{images/liberty_kp.png}
 	\caption{Gefundene \textit{keypoints} der beiden vorigen Bilder der Freiheitsstatuen farblich hervorgehoben (SIFT Detektor)}
@@ -67,7 +67,7 @@ Zur Detektion und Extraktion von Features werden eine Reihe mathematischer Opera
 Ein Histogramm ist eine diskrete Funktion, welche die Häufigkeitsverteilung in einer Menge abbildet. Hierfür wird jeder Wert der Menge einer Klasse zugeordnet. Die Größe der Intervalle einer Klasse leiten sich aus der Größe des gesamten Wertebereichs ab. So kann beispielsweise die Verteilung der Pixel eines Bildes auf die Intensitäten als Histogramm betrachtet werden. Bei einem monochromatischen Bild liegen 256 Intensitätswerte vor, die je eine Klasse repräsentieren. Beim Bilden des Histogramms wird jeder Pixels betrachtet und der Zähler der Klasse um eins inkrementiert, in deren Wertebereich der Intensitätswert des Pixels fällt. Ein Histogramm ist normalisiert, wenn es die relative Verteilung in der Menge darstellt.
 In Abbildung \ref{img:hist} sind im Wesentlichen zwei Bereiche zu erkennen: ein sehr heller Hintergrund und eine dunkle Katze, die den Großteil des Bildes ausmacht. Dies spiegelt sich auch im Histogramm wieder: Es ist eine große Mengen an Punkten im dunklen Bereich vorhanden (Intensität $< 128$) und eine kleine, extreme Häufung im hellen Bereich.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.8]{images/big_cat.png}
 	\caption[Graustufenbild einer Katze und das Histogramm der Intensitätswerte.]{Graustufenbild einer Katze{\footnotemark} und das Histogramm der Intensitätswerte.}
@@ -104,7 +104,7 @@ $$ DoG(x, y)_{\sigma_{1}, \sigma_{2}} = I * g_{\sigma_2}(x, y) - I * g_{\sigma_1
 \textbf{Gradienten} 
 Ein Gradient ist ein Vektor, der die Richtung und Größe einer Änderung enthält. Bei Bildern wird so die Richtung und Veränderungen der Intensität gemessen. Starke Veränderungen der Intensität sind besonders von Bedeutung: Hier handelt es sich potentiell um Ecken oder Kanten, die für weitere Analysen des Bildes verwendet werden können. Da zunächst nur ein Pixel vorliegt, muss senkrecht zum Gradienten untersucht werden, ob ähnliche Veränderungen der Intensität vorliegen. In Abbildung \ref{img:grad} ist links wieder das Bild der Freiheitsstatue dargestellt, rechts die Kanten, die senkrecht zu den Gradientenvektoren verlaufen. Hier ist deutlich zu sehen, dass Kanten hervorgehoben und Details ausgeblendet werden.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.5]{images/liberty_grad.png}
 	\caption{Links: Graustufenbild. Rechts: Kanten senkrecht zu den ermittelten Gradientenvektoren eines Bildes in horizontale und vertikale Richtung.}
@@ -117,7 +117,7 @@ Der Histogram of Orientied Gradients (HOG) Deskriptor beschreibt die Features al
 Um ein HOG zu generieren, wird das Bild in gleich große Zellen eingeteilt, die eine Nachbarschaft von Pixeln umfassen. Über die Pixel jeder Zelle werden nun die lokalen Gradienten berechnet. Diese fließen proportional zu ihrer Stärke in den kumulierten Gradienten der Zelle ein. Dabei hat jede Zelle eine feste, vorgegebene Anzahl an Klassen für die Orientierungen der Gradienten. 
 Dalal und Triggs nutzten in ihrer Originalarbeit als Fenster eine 64 $\times$ 128 Nachbarschaft von Pixeln, eine Zellgröße von 8 $\times$ 8 Pixeln und $2 \times 2$ Zellen pro Block. In Abbildung \ref{img:hog} ist links das Fenster dargestellt und rechts die entsprechenden Gradienten der Zellen. 
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.5]{images/hog.png}
 	\caption{Schematische Darstellung des Histogram of Oriented Gradients  \cite{dif2004}}
@@ -131,14 +131,14 @@ SIFT ist ein Feature-Detektor und Deskriptor der 1999 von Lowe \cite{dif2004} en
 \begin{enumerate}
 	\item \textbf{Scale space} Im ersten Schritt wird der Maßstab behandelt. SIFT konstruiert hierfür einen \textit{scale space}. Hier werden aus dem Originalbild durch den \textit{Difference of Gaussians} immer verzerrtere Versionen erzeugt. Die Größe der neuen Bilder wird halbiert und die Prozedur wiederholt. Alle verzerrten Bilder einer Größe bilden eine sogenannte Oktave. SIFT verwendet vier Oktaven und fünf Bilder pro Oktave um den \textit{scale space} zu erzeugen. Um Ecken und Kanten in einem Bild zu ermitteln, die sich als Kandidaten für \textit{keypoints} eignen, wird nun zwischen allen aufeinanderfolgenden Bildern einer Oktave die Differenz gebildet. Das Prinzip ist für zwei Oktaven in Abbildung \ref{img:sift_dog} dargestellt. Das Ergebnis ist eine Approximation des \textit{Laplacian of Gaussians}\footnote{Der Laplacian of Gaussians (LoG) oder auch Marr-Hildreth-Operator dient ebenfalls der Kantendetektion in Bildern.}, jedoch ist dieses Verfahren weit weniger rechenintensiv. 
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.5]{images/sift_dog.png}
 	\caption{Schematische Darstellung der Subtraktion von Bildern im \textit{scale space} beim Difference of Gaussians Verfahren \cite{dif2004}.}
 	\label{img:sift_dog}
 \end{figure}	
 	\item \textbf{Keypoint Ermittlung} Nicht alle Kandidaten werden zu \textit{keypoints}. Aus den DoG-Bildern werden nun die Extrempunkte bestimmt. Hierfür wird immer eine Nachbarschaft des DoG-Bildes und des Vorigen und Nachfolgenden im \textit{scale space} betrachtet. Da die Extremwerte nicht immer exakt auf einem Pixel liegen, muss die genaue Position noch berechnet werden. SIFT verwendet hierfür eine Taylor Entwicklung im angenäherten \textit{keypoint}.
-	\item \textbf{Bestimmung der Orientierung} Bei dem Aufbau der Feature-Vektoren pro \textit{keypoint} wird die lokale Orientierung berechnet. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein Histogram of Oriented Gradients. Hierfür werden zufällig Punkte aus der Nachbarschaft des \textit{keypoints} ausgewählt. Das Maximum des Histogramms wird dann als dominante Orientierung verwendet.
+	\item \textbf{Bestimmung der Orientierung} Bei dem Aufbau der Feature-Vektoren pro \textit{keypoint} wird die lokale Orientierung berechnet. Auf diese Weise sind die SIFT Deskriptoren invariant gegenüber Rotationen. Der SIFT Algorithmus berechnet ein HOG. Hierfür werden zufällig Punkte aus der Nachbarschaft des \textit{keypoints} ausgewählt. Das Maximum des Histogramms wird dann als dominante Orientierung verwendet.
 	\item \textbf{Deskriptor} Für jeden durch den Detektor gefundenen \textit{keypoint} wird nun ein Feature-Vektor gebildet. Der Feature-Vektor enthält Informationen über die Nachbarschaft in Form der Gradienten. Das Fenster für die Auswahl der Nachbarschaft wird auf dem \textit{keypoint} zentriert und in vier Teilfenster unterteilt. Die Gradienten in allen Teilfenster werden in acht Richtungen gemessen, sodass der resultierende Deskriptor 128 Komponenten enthält.
 \end{enumerate}
 
@@ -181,7 +181,7 @@ Die unüberwachten Lernverfahren lassen sich in zwei Kategorien einteilen: Zum e
 \textbf{Clustering-Verfahren} quantisieren die Daten in Gruppen. Eine Gruppe steht hier für ein semantisches Merkmal und vertritt eine Menge von konkreten Daten. Unter Clustering-Verfahren fallen Algorithmen wie k-means, hierarchical clustering oder etwa das Gaussian Mixture Model.\newline
 Ein Clustering-Algorithmus hat in dem Kontext dieser Arbeit das Ziel, eine großen Menge Feature-Deskriptoren auf die Wesentlichen zu reduzieren. Durch diese Quantisierung in $n$ Gruppen müssen, bei einer Bewertung eines neuen Deskriptors, nur $n$ Deskriptoren betrachtet werden, statt jedes Deskriptors der Ursprungsmenge.\newline
 
-\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. Ein Vektor aus einem $n$-dimensionalen Raum wird auf einen $m$-dimensionalen Raum mit $m < n$ abgebildet. Um die Grundidee zu vermitteln, soll ein einfaches Beispiel dienen: Die roten Punkte in Abbildung \ref{img:compress2} stellen Messwerte dar. Durch die eingezeichnete Linie wird deutlich, dass die Funktion $f(x)=2y$ die Verteilung sehr gut annähert. Würden diese Werte beispielsweise über ein Netzwerk übertragen, so reicht es $x$ zu senden. Der Empfänger kann dann $y$ anhand der Funktion bestimmen. Dadurch könnte 50\% der Daten bei der Übertragung eingespart werden und nur wenig Information geht verloren. In der Praxis bestehen zwischen den Daten aber selten lineare Zusammenhänge, was das finden einer geeigneten Abbildung erschwert. \newline 
+\textbf{Verfahren zu Reduzierung der Dimensionalität} nehmen an, dass es eine unterliegende Struktur gibt, welche entdeckt werden kann. Ein Vektor aus einem $n$-dimensionalen Raum wird auf einen $m$-dimensionalen Raum mit $m < n$ abgebildet. Um die Grundidee zu vermitteln, soll ein einfaches Beispiel dienen: Die roten Punkte in Abbildung \ref{img:compress2} stellen Messwerte dar. Durch die eingezeichnete Linie wird deutlich, dass die Funktion $f(x)=2y$ die Verteilung sehr gut annähert. Würden diese Werte beispielsweise über ein Netzwerk übertragen, so reicht es $x$ zu senden. Der Empfänger kann dann $y$ anhand der Funktion bestimmen. Dadurch könnte 50\% der Daten bei der Übertragung eingespart werden und nur wenig Information geht verloren. In der Praxis bestehen zwischen den Daten aber selten lineare Zusammenhänge, was das Finden einer geeigneten Abbildung erschwert. \newline 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.65]{images/compress2d.png}
@@ -204,7 +204,7 @@ Ein neuronales Netz besteht aus einer Menge Neuronen, die in Schichten im Netzwe
 Das Netz verarbeitet ein Signal, welches hier als Vektor $x \in [0,1]^n$ aus $\mathbb{R}^n$ dargestellt wird. Die erste Schicht des Netzwerks, der \textit{Input Layer}, leitet das Signal nur an die nächste Schicht weiter und besitzt daher $n$ Neuronen. Die letzte Schicht, der \textit{Ouput Layer}, dient zur Ausgabe des Ergebnisvektors $z \in [0,1]^m$, wobei $m$ die Anzahl der Elemente des Vektors angibt. Zwischen diesen beiden Schichten können sich beliebig viele \textit{Hidden Layer} befinden. Die \textit{Hidden Layer} bilden somit den Kern des Netzes, deren Kantengewichtungen, Kanten oder Neuronen während eines Lernprozess angepasst werden können. \newline
 In Abbildung \ref{img:nnexample} ist ein Netz mit drei Schichten dargestellt. Der \textit{Input Layer} nimmt einen Vektor mit vier Komponenten als Eingabe entgegen. Die Werte des Vektors werden an jedes der fünf Neuron im \textit{Hidden Layer} weitergeleitet, was durch die Kanten symbolisiert wird. Jede Kante besitzt dabei ein Gewicht, dass aus Gründen der Übersicht nicht aufgeführt ist. Schließlich werden die Ausgaben des \textit{Hidden Layers} an das einzige Neuron des \textit{Output Layers} geschickt und von diesem als Ergebnis $z$ ausgegeben.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 
 	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
@@ -257,7 +257,7 @@ Die Variable $b$ ist hier der sogenannter Bias-Vektor, der dazu verwendet werden
 	\item \textbf{Ausgabefunktion} Wird ein Neuron aktiviert, so wird das resultierende Signal durch die Ausgabefunktion $net_{out}$ berechnet und an alle Neuronen in der folgenden Schicht weitergeleitet. Oft wird hier die Identitätsfunktion verwendet.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 
 	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersepN]
@@ -342,7 +342,7 @@ $W$ ist die Gewichtsmatrix der Größe $n \times p$ und $b$ der Bias-Vektor. Die
 $$z = decode_{W', b'}(y) = s(W'y + b')$$
 In Abbildung \ref{img:example_ae} ist ein Autoencoder abgebildet, der als Eingabe einen Vektor $x \in [0,1]^4$ entgegen nimmt. Dieser wird auf den Vektor $y$ mit drei Komponenten abbildet, da der \textit{Hidden Layer} drei Neuronen enthält. Die Rekonstruktion $z$ aus $y$ erfolgt dann durch die Berechnung der Dekodierungsfunktion.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 
 	\begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
@@ -416,7 +416,7 @@ Der Bag of Visual Words besteht aus einer Trainings- und Testphase, wie in Abbil
 Zu Beginn erfolgt die Trainingsphase, das Clustering der extrahierten Features. Das so erzeugte \textit{Codebook} ist das Modell, gegen das anschließend getestet werden kann. Die Idee ist, dass ähnliche Feature-Vektoren nah beieinander im Raum liegen und somit in die gleiche semantische Kategorie gehören. Durch einen Clustering-Algorithmus wie k-means kann die Größe des \textit{Codebooks} bestimmt werden. Wird für $k$ eine große Zahl gewählt, wird ein Vokabular von Exemplaren aufgebaut, ein kleines $k$ hingegen erkennt eher Kategorien. Die Schwerpunkte der Cluster vertreten dann eine Menge von ähnlichen Features und bilden das \textit{Codebook} bzw. Modell.\newline
 Der Testprozess erzeugt nun, auf Basis des \textit{Codebooks}, die \textit{Visual Words} von Bildern. Hierfür werden die Features eines Bildes extrahiert und ein Histogrammalgorithmus ermittelt die Verteilung der \text{Visual Words}: Für jedes Feature wird das ähnlichste \textit{Visual Word} des \textit{Codebooks} bestimmt und die entsprechende Klasse inkrementiert. Wird dieser Prozess auf zwei Bilder angewendet, so können die resultierenden Histogramme miteinander verglichen werden (z.B. mit dem \textit{MSE (mean squared error)} als Metrik).
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.65]{images/bovw_process.pdf}
 	\caption{Training- und Testprozess des Bag of Visual Word Modells.}
@@ -432,14 +432,14 @@ $$ C(x_i) = arg \min_{j = 0,...,k} D(x_i, c_j) \quad i = 0,...,n$$
 Soll ein globales Optimum gefunden werden, so ist k-means NP-schwer. Praktische Implementierungen approximieren daher meist die Schwerpunkte der Cluster, wie beispielsweise der Algorithmus von Llyod. Llyods Algorithmus beginnt mit einer Initialisierung der Schwerpunkte. Schritt zwei und drei werden dann solange wiederholt, bis der Algorithmus konvergiert, also die Vektor-Cluster-Zuordnung sich nicht mehr bzw. nur noch gering ändert oder eine maximale Anzahl an Iterationen erreicht wurde: 
 
 \begin{enumerate}
-	\item \textbf{Initialisierung} Es werden zunächst $k$ Vektoren durch ein Verfahren (z.B. zufällig oder \textit{farthest-neighbour}) als Schwerpunkte der Cluster ausgewählt.
+	\item \textbf{Initialisierung} Es werden zunächst $k$ Vektoren durch ein Verfahren (z.B. zufällig oder \textit{farthest neighbour}) als Schwerpunkte der Cluster ausgewählt.
 	\item \textbf{Zuordnung}: Von den verbleibenden Vektoren wird nun mit jedem Clusterschwerpunkt die neue Summe der Varianzen bei Aufnahme des Vektors berechnet. Es wird der Vektor dem Cluster zugeordnet, dessen Varianz sich am geringsten bei Aufnahme des Vektors erhöht.
 	\item \textbf{Vektoren zuweisen}: Die Zentren der Cluster werden neu berechnet, um die neue Zuordnung der Vektoren zu Clustern in Folgeberechnungen miteinzubeziehen.
 \end{enumerate}
 
 Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im zweidimensionalen Raum gegeben. Die Verteilung der Punkte ist in diesem Beispiel idealisiert, um bei einem Clustering mit einem $k = 3$, die Cluster in der rechten Grafik zu erhalten. Dies illustriert auch, dass abhängig von den Daten nicht immer sinvolle Cluster gebildet werden können. Die Wahl der initialen Clusterschwerpunkte kann das Ergebnis ebenfalls stark beeinflussen, daher sollte diese nicht immer zufällig gewählt werden. Beispielsweise wählt die \textit{farthest neighbour} Methode als initial Zentren die Vektoren, welche am weitesten voneinander entfernt sind \cite{mmd2011}.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.55]{images/kmeans.png}
 	\caption{K-means Clustering im zweidimensionalen Raum mit $k = 3$.}
@@ -448,11 +448,11 @@ Zur geometrischen Veranschaulichung sind in Abbildung \ref{img:kmeans} Punkte im
 
 \subsection{Lloyds Algorithmus}
 
-Im Grundlagenkapitel wurde bereits Lloyds Algorithmus eingeführt, hier soll zunächst näher auf die sequentielle Ausführung eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. In dem Codelisting in Abbildung \ref{code:lloyd} ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Vektoren $V$, eine leere Menge Cluster $C$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster $c_j$ statt. Innerhalb der Schleife in Zeile 4 werden zunächst alle $k$ Cluster $C_j$ als leere Menge definiert. Anschließend wird für jeden Vektor $v_i$ aus $V$ der Index $j$ des nächsten Clusterschwerpunktes ermittelt. Der Vektor wird dann in den entsprechenden Cluster $C_j$ aufgenommen. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. Hierfür wird pro Cluster die Summe über alle enthaltenen Vektoren gebildet und anschließend normalisiert.
+Zunächst soll näher auf die sequentielle Arbeitsweise von Lloyds Algorithmus eingegangen werden, um anschließend eine mögliche Parallelisierung zu diskutieren. In dem Codelisting in Abbildung \ref{code:lloyd} ist der Ablauf des Algorithmus nach Zechner und Granitzer \cite{akc2009} in Pseudocode beschrieben. Als Parameter werden die Vektoren $V$, eine leere Menge Cluster $C$ und die Anzahl der zu bildenden Cluster $k$ erwartet. In Zeile 2 findet die Auswahl der initialen Schwerpunkte der Cluster $c_j$ statt. Innerhalb der Schleife in Zeile 4 werden zunächst alle $k$ Cluster $C_j$ als leere Menge definiert. Anschließend wird für jeden Vektor $v_i$ aus $V$ der Index $j$ des nächsten Clusterschwerpunktes ermittelt. Der Vektor wird dann in den entsprechenden Cluster $C_j$ aufgenommen. Abschließend wird die Aktualisierung der Schwerpunkte aller Cluster in der Schleife in Zeile 8 und 9 durchgeführt. Hierfür wird pro Cluster die Summe über alle enthaltenen Vektoren gebildet und anschließend normalisiert.\newline
+Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Distanz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Distanzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren, aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
 
-\begin{figure}
-\lstset{language=C}
-\begin{lstlisting}[mathescape=true]
+\begin{figure}[!htb]
+\begin{lstlisting}[mathescape=true, style=Math]
 kmeans_lloyd ($V, C, k$)
 	$c_j = rand(v_i) \in V, \: j = 1,...,k, \: c_j \neq c_i \: \forall i \neq j$
 	
@@ -468,14 +468,12 @@ kmeans_lloyd ($V, C, k$)
 \label{code:lloyd}
 \end{figure}
 
-Die Initialisierungsphase muss für die Parallelisierung nicht beachtet werden: Sie nimmt nur wenig Zeit in Anspruch und wird einmalig zu Beginn ausgeführt. Die anderen beiden Schritte des Algorithmus bergen mehr Potential: In Zeile 5 bis 7 wird die Varianz jedes Cluster-Vektor Paares berechnet. Da die Berechnung der Distanz eines Paares unabhängig von der eines anderen ist, kann die Berechnung aller Distanzen parallel erfolgen. Nachdem für einen Durchgang die Veränderung der Mitgliedschaft von Vektoren zu Clustern berechnet wurde, müssen die Cluster-Schwerpunkte aktualisiert werden. Auch die Berechnung der neuen Schwerpunkte der Cluster kann unabhängig voneinander erfolgen: Die Vektoren, aus denen der Mittelwert berechnet wird, sind genau einem Cluster zugeordnet.
-
 \subsection{Histogramme}
 
 Ein sequentielles Histogramm kann als Programm in einer Schleife über die Daten ausgedrückt werden: Für jedes Element wird der Index der Klasse des Histogramms berechnet und um eins inkrementiert. Zur Normalisierung des Histogramms ist es anschließend notwendig, jede Klasse des Histogramms durch die Gesamtanzahl der Werte zu dividieren. Da es sich bei der Anzahl der Klassen jedoch um eine kleine Zahl, im Vergleich zur Anzahl der Elemente in den Daten, handelt, ist dieser Aufwand vernachlässigbar.
 Um das Histogramm der \textit{Visual Words} eines Bildes zu erzeugen, muss für jedes extrahierte Feature das nächste \textit{Visual Word} bestimmt werden. Dies entspricht in Abbildung \ref{code:histo} der doppelten Schleife über die Features $F$ und Cluster $C$ in Zeile 2 und 3. Der Index des nächsten Clusters wird dann in Zeile 4 durch $\arg \min D$ berechnet .In der folgenden Zeile wird das Histogramm $H$ an der entsprechenden Stelle $i$ inkrementiert. Abschließend erfolgt in der Schleife in Zeile 6 und 7 die Normalisierung des Histogramms.
 
-\begin{figure}
+\begin{figure}[!htb]
 \begin{lstlisting}[mathescape=true, style=Math]
 histogram ($P, C, H$)
 	for each $p \in P$
@@ -502,7 +500,7 @@ Bevor ein \textit{kernel} aufgerufen werden kann, muss der notwendige Speicher a
 Die Daten liegen in der Regel als Vektor oder Matrix vor. Der Zugriff auf verschiedene Elemente durch unterschiedliche \textit{kernel} erfolgt dann durch eine Indexberechnung. Diese wird anhand des Beispiels der Vektoraddition näher erläutert.\newline
 CUDA erfordert, dass ein Programmierer die Größe bzw. Anzahl von Grids und Blocks festlegt. Ein Block ist eine logische Einheit und entspricht einem Multiprozessor der Grafikkarte. Durch diese Strukturierung können die Blöcke parallel auf der Hardware ausgeführt werden. Das Grid enthält die Blöcke und kann ein, zwei oder dreidimensional sein. Beim Aufruf des \textit{kernels} muss die Anzahl der Threads pro Block und die Anzahl der Blocks in einem Grid angegeben werden. In Abbildung \ref{img:cuda1} ist ein zweidimensionales Grid mit sechs zweidimensionalen Blöcken á 12 Threads schematisch dargestellt. Ein Block kann auf aktuellen Grafikkarten bis zu 1024 Threads beinhalten.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.55]{images/cuda1.png}
 	\caption{Organisierung von Threads in Blocks in Grids \cite{cud2012}}
@@ -514,7 +512,7 @@ CUDA erfordert, dass ein Programmierer die Größe bzw. Anzahl von Grids und Blo
 
 Dadurch, dass die Daten vom \textit{host} zum \textit{device} kopiert werden müssen und vice versa, unterscheidet CUDA zwischen \textit{host memory} und \textit{device memory}. Darüber hinaus ist der \textit{device memory} bereits auf der Grafikkarte in verschiedene Bereiche organisiert, wie in Abbildung \ref{img:cuda_mem} dargestellt. Jeder Multiprozessor hat Zugriff auf den \textit{global memory} sowie einen eigenen lokalen \textit{shared memory}, \textit{constant} und \textit{texture cache}. Lokal erstellte Variablen werden als \textit{register} bezeichnet. Auf diese ist der Zugriff mitunter am schnellsten, jedoch sind sie lokal pro Thread. Die Daten liegen als Parameter zunächst im \textit{global memory} vor. Im \textit{constant cache} liegen alle durch das CUDA Schlüsselwort \textit{\textunderscore\textunderscore constant\textunderscore\textunderscore} deklarierte Werte. Zugriffe auf den \textit{global memory} sind am langsamsten, da der Speicherbereich zwischen allen Multiprozessoren geteilt wird und Zugriffe mitunter synchronisiert werden müssen. Durch Verwendung des \textit{shared memory} und \textit{texture cache} können Speicherzugriffe beschleunigt werden, jedoch können Daten aus diesen Bereichen nicht zwischen Blöcken geteilt werden.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.4]{images/cuda_mem.png}
 	\caption{Organisierung der verschiedenen Speichertypen \cite{cud2012}}
@@ -528,9 +526,10 @@ Durch den Einsatz von \textit{shared memory} können gegenüber Algorithmen die 
 
 \subsection{Vektoraddition}
 
-Am Beispiel der Vektoraddition soll der Aufbau und Ablauf eines cuda Programms illustriert werden. Hierfür wird zunächst die Funktion \textit{vecAdd} angelegt. In Zeile 8 - 10 wird durch \textit{cudaMalloc} der benötigte Speicher für die Vektoren und das Ergebnis allokiert. In den beiden folgenden Zeilen wird der Inhalt der Vektoren $a$ und $b$ vom \textit{host} zum \textit{device} kopiert. In Zeile 15 wird der \textit{kernel} \textit{add} aufgerufen, der auf der Grafikkarte ausgeführt wird. Einem \textit{kernel} muss durch Angabe in den dreifachen spitzen Klammern, die Dimension des Grids und der Blocks mitgeteilt werden. Im Beispiel werden pro Block 256 Threads verwendet (\textit{numThreads}) und die Anzahl der notwendigen Blocks aus der Vektorgröße und der Threadanzahl berechnet. Da die Verarbeitung asynchron erfolgt, wird durch \textit{cudaDeviceSynchronize} in der nächsten Zeile die Ausführung auf dem \textit{host} pausiert, bis die GPU fertig ist. In Zeile 17 wird das Ergebnis vom \textit{device} zurück zum \textit{host} kopiert und kann ausgegeben oder weiterverarbeitet werden.
+Am Beispiel der Vektoraddition in Abbildung \ref{code:vektor} soll der Aufbau und Ablauf eines CUDA-Programms illustriert werden. Hierfür wird zunächst die Funktion \textit{vecAdd} angelegt. In Zeile 8 - 10 wird durch \textit{cudaMalloc} der benötigte Speicher für die Vektoren und das Ergebnis allokiert. In den beiden folgenden Zeilen wird der Inhalt der Vektoren $a$ und $b$ vom \textit{host} zum \textit{device} kopiert. In Zeile 15 wird der \textit{kernel} \textit{add} aufgerufen, der auf der Grafikkarte ausgeführt wird. Einem \textit{kernel} muss durch Angabe in den dreifachen spitzen Klammern, die Dimension des Grids und der Blocks mitgeteilt werden. Im Beispiel werden pro Block 256 Threads verwendet (\textit{numThreads}) und die Anzahl der notwendigen Blocks aus der Vektorgröße und der Threadanzahl berechnet. Da die Verarbeitung asynchron erfolgt, wird durch \textit{cudaDeviceSynchronize} in der nächsten Zeile die Ausführung auf dem \textit{host} pausiert, bis die GPU fertig ist. In Zeile 17 wird das Ergebnis vom \textit{device} zurück zum \textit{host} kopiert und kann ausgegeben oder weiterverarbeitet werden.
 Der \textit{kernel} wird von jedem Thread ausgeführt. Jeder Thread kümmert sich um die Addition eines Elementes aus $a$ und aus $b$ am selben Index. Damit dieser Index global eindeutig ist, muss neben der $threadId$ in x-Richtung die Grid und Blockdimension des Threads berücksichtigt werden. Falls der berechnete Index innerhalb der Vektoren liegt, wird die Summe in $c$ geschrieben.
 
+\begin{figure}[!htb]
 \lstset{language=C}
 \begin{lstlisting}
 void vecAdd (float *a, float *b, float *c, int size) {
@@ -560,5 +559,8 @@ __global__ void add (float *a, float *b, float *c, int size) {
 	int id = blockDim.x * blockIdx.x + threadIdx.x;
 	if (id < size) c[id] = a[id] + b[id];
 }
-\end{lstlisting} 
+\end{lstlisting}
+\caption{Vektoraddition in CUDA C.}
+\label{code:vektor} 
+\end{figure}
 

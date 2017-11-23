@@ -33,7 +33,7 @@ Die Caltech101 Daten liegen nach Download kategorisiert im JPG-Format vor. Die S
 
 Abbildung \ref{img:strawberries} zeigt vier Bilder aus der Kategorie \enquote{Erdbeere}. Neben Bildern von realen Rosengewächsen sind auch Zeichnungen und Objekte enthalten, die Form und Farbe der Erdbeere nachempfunden sind. Auch sind die Objekte auf einem Bild zum Teil in unterschiedlicher Menge vorhanden. Durch diese Variation ist ein Algorithmus so gefordert, tatsächlich eine Abstraktion zu lernen.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.5]{images/strawberry.png}
 	\caption{Verschiedene Bilder aus der Kategorie \enquote{Erdbeere} der Caltech101 Bilddaten.}
@@ -97,57 +97,55 @@ Das Clustering wurde in drei Experimenten getestet. Pro Experiment wurden Eigens
 	\item \textbf{Test 3} enthält drei Kategorien von Bildern, um zu testen, ob eine komplexere Kategorisierung prinzipiell möglich ist. Als Kategorien wurden hier \enquote{Flugzeug}, \enquote{Motorrad} und \enquote{Armbanduhr} gewählt. Insgesamt werden 80 Bilder verwendet, jede Kategorie steuert ein Drittel der Bilder bei. Die Aufteilung in Trainings- und Testdaten wird auch hier beibehalten. In der Trainingsphase lagen ungefähr $18.000$ Features vor, in der Testphase ca. $52.000$.
 \end{itemize} 
 
-Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) verwendet. Bei dieser Grafikkarte stehen 48kB \textit{shared memory} zur Verfügung, sodass bei 1024 Threads 91 Cluster für SIFT und ca. 300 Cluster für die Autoencoder-Features möglich sind. Die Programme wurden unter CUDA 7.5 ausgeführt.\newline
+Für den Bag of Visual Words wurde eine maximale Anzahl von 500 Iterationen festgelegt, falls das Konvergenzkriterium nicht erreicht wurde. Dabei gilt, dass bei einer relative Veränderung der Vektor-Cluster-Zuordnung kleiner $0.02$\% das Konvergenzkriterum erfüllt ist. Als Schwellwert für eine positive Klassifizierung wurde hier $0.8$ gewählt.\newline
+Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) verwendet. Bei dieser Grafikkarte stehen 48kB \textit{shared memory} zur Verfügung, sodass bei 256 Threads 91 Cluster für SIFT und ca. 300 Cluster für die Autoencoder-Features möglich sind. Die Programme wurden unter CUDA 7.5 ausgeführt.\newline
 
 \subsection{Qualität der Ergebnisse}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.56]{images/exp1_roc128.png}
 	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 1.}
 	\label{img:roc1}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.56]{images/exp1_roc36.png}
 	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 1.}
 	\label{img:roc2}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.56]{images/exp2_roc128.png}
 	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 2.}
 	\label{img:roc3}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.56]{images/exp2_roc36.png}
 	\caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 2.}
 	\label{img:roc4}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.56]{images/exp3_roc128.png}
 	\caption{ROC-Kurven für die SIFT-Features und verschiedene $k$ aus Experiment 3.}
 	\label{img:roc5}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
     \includegraphics[scale=0.56]{images/exp3_roc36.png}
     \caption{ROC-Kurven für die Autoencoder-Features und verschiedene $k$ aus Experiment 3.}
     \label{img:roc6}
 \end{figure}
 
-% \multicolumn{2}{|c|}{Experiment 1} & \multicolumn{2}{|c|}{Experiment 2} & \multicolumn{2}{|c|}{Experiment 3}
-
-\begin{table}
+\begin{table}[!htb]
 \centering
-
 \begin{tabular}[t]{|r|r|r|r|r|r|r|}
 	\hline
        & \multicolumn{2}{|c|}{Experiment 1} & \multicolumn{2}{|c|}{Experiment 2} & \multicolumn{2}{|c|}{Experiment 3} \\ \hline
@@ -164,7 +162,7 @@ Als Grafikkarte für die Experimente wurde eine Nvidia Quadro M4000 (GM204GL) ve
 \label{tab:AUC}
 \end{table}
 
-Für die Experimente ist in den Abbildungen \ref{img:roc1} bis \ref{img:roc6} das Ergebnis der Klassifizierung der SIFT- und Autoencoder-Features dargestellt. Hierbei handelt es sich um die \textit{global memory} Varianten. Die Werte der \textit{shared memory} Versionen sind die Gleichen, soweit diese erfasst werden konnten (bei SIFT sind maximal 90 Cluster und bei den Autoencoder-Features maximal 326 Cluster möglich). Als Schwellwert für eine positive Klassifizierung wurde hier $0.8$ gewählt. In den Grafiken wird das Verhältnis der richtig erkannten Kategorien (\textit{True Positives}) zu falsch erkannten Kategorien (\textit{False Negatives}). Hieraus ist ersichtlich, dass die Klassifizierung der SIFT- und Autoencoder-Features mäßig erfolgreich war: Ein Kurve nahe der $45${\degree} Linie sagt aus, dass das Verhältnis zwischen \textit{TP} und \textit{FP} ausgeglichen ist. In diesem Fall beträgt die Fläche unter der Kurve (\textit{Area Under Curve, AUC}) 50\%. Der \textit{AUC} für die verschiedenen Konfigurationen ist in Tabelle \ref{tab:AUC} dargestellt. Die Fläche unter der ROC-Kurve beträgt in Experiment 1 für SIFT, je nach $k$, zwischen $56.73$\% und $67.7$\%. Die Features des Autoencoders schneiden im gleichen Test meist schlechter ab. Mit einem Bestwert von $60.49$\% bei 200 Clustern, ist eine Klassifizierung nicht erfolgreich gewesen.\newline
+Für die Experimente ist in den Abbildungen \ref{img:roc1} bis \ref{img:roc6} das Ergebnis der Klassifizierung der SIFT- und Autoencoder-Features dargestellt. Hierbei handelt es sich um die \textit{global memory} Varianten. Die Werte der \textit{shared memory} Versionen sind die Gleichen, soweit diese erfasst werden konnten (bei SIFT sind maximal 90 Cluster und bei den Autoencoder-Features maximal 326 Cluster möglich). In den Grafiken wird das Verhältnis der richtig erkannten Kategorien (\textit{True Positives}) zu falsch erkannten Kategorien (\textit{False Negatives}). Hieraus ist ersichtlich, dass die Klassifizierung der SIFT- und Autoencoder-Features mäßig erfolgreich war: Ein Kurve nahe der $45${\degree} Linie sagt aus, dass das Verhältnis zwischen \textit{TP} und \textit{FP} ausgeglichen ist. In diesem Fall beträgt die Fläche unter der Kurve (\textit{Area Under Curve, AUC}) 50\%. Der \textit{AUC} für die verschiedenen Konfigurationen ist in Tabelle \ref{tab:AUC} dargestellt. Die Fläche unter der ROC-Kurve beträgt in Experiment 1 für SIFT, je nach $k$, zwischen $56.73$\% und $67.7$\%. Die Features des Autoencoders schneiden im gleichen Test meist schlechter ab. Mit einem Bestwert von $60.49$\% bei 200 Clustern, ist eine Klassifizierung nicht erfolgreich gewesen.\newline
 Ein ähnliches Bild zeichnet sich bei den anderen beiden Testgruppen ab: Meist weisen die SIFT-Features eine höhere \textit{AUC} als die Autoencoder-Features auf, die Bestwerte für ein Experiment erzielen stets die SIFT-Features ($68.31$\% in Experiment 2 und $69.65$\% in Experiment 3).\newline
 Auffallend ist auch, dass in Experiment 2 gegenüber Experiment 1, sowohl die Klassifizierung auf Basis der SIFT- als auch der Autoencoder-Features, erfolgreicher war. Der Aufbau beider Experimente ist recht ähnlich, nur das in Experiment zwei die doppelte Menge an Features für das Training verwendet wurde. Die Bestwerte steigen nur ein wenig ($+0.61$ für SIFT, $+2.75$ für den Autoencoder), doch die meisten Clusterkonfigurationen weisen bessere Ergebnisse auf.\newline
 Überraschend ist, dass in Experiment 3 die Klassifizierung für kleine $k$, bei Verwendung der SIFT-Features, am erfolgreichsten ist ($k=5$ ist die beste Konfiguration mit $69.65$\% \textit{AUC}). Alle anderen Experimente lassen erkennen, dass eine Verwendung von $50$ bis $200$ Clustern die besten Ergebnisse liefert.\newline
@@ -176,7 +174,7 @@ Für alle drei Experimente wurden sowohl die Laufzeiten der \textit{global} als 
 In Tabelle \ref{tab:runtimeGlobal} sind die Laufzeiten der \textit{global memory} Variante für beide Feature-Typen dargestellt. Es ist deutlich zu erkennen, dass das Clustering der Autoencoder-Features in allen Fällen, großteils sogar sehr deutlich, schneller abgeschlossen ist, als das Clustering der SIFT-Features. In Experiment 1 und 2 ist der Prozess im Schnitt $4$ mal schneller abgeschlossen, in Experiment 3 im Schnitt nur ca. $2.8$ mal schneller.\newline
 Tabelle \ref{tab:runtimeShared} zeigt die Laufzeiten der \textit{shared memory} Implementierung. Auch hier ist das Clustering der Autoencoder-Features in Experiment 1 und 2 um einen ähnlichen Faktor schneller: Das Gruppieren des SIFT-Features ist in Experiment 1 ca. $4.6$ mal langsamer, in Experiment 2 $4.5$ mal. Für verschiedene $k$ schwankt die Reduzierung der Berechnungsdauer enorm: So ist in Experiment 2 das Clustering der Autoencoder-Features für $k=20$ gerade mal $1.8$ mal schneller, für $k=50$ hingegen fast $7$ mal schneller. Auch hier ist in Experiment 3 die Berechnung nicht so stark beschleunigt worden, wie in Experiment 1 und 2. Mit einem Faktor von $3.4$ ist dies aber immer noch näher an dem erwarteten Wert von $3.5$, als Experiment 3 der \textit{global memory} Variante.
 
-\begin{table}
+\begin{table}[!htb]
     \centering
     \begin{tabular}[t]{|r|r|r|r|r|r|r|}
     \hline

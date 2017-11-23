@@ -15,7 +15,7 @@ In der Analyse wurden die wesentlichen Bestandteile identifiziert, welche hier z
 	\item \textbf{Gruppierung} In der dritten Phase nimmt der Bag of Visual Words die Features aus der vorigen Phase entgegen und generiert hieraus das \textit{Codebook}. Da die \textit{Visual Words} des \textit{Codebooks} den erzeugten Clustern entsprechen, ist das Codebook selbst eine Liste von Clustern. Die Cluster wiederum sind Stellvertreter einer Menge von Features, daher sind sie ebenfalls ein Vektor mit der gleichen Anzahl an Komponenten wie die Features in \textit{Features B}.
 \end{itemize} 
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.85]{images/model.pdf}
 	\caption{Aufbau des Modells}
@@ -64,7 +64,7 @@ Durch \textit{encode} wird der Autoencoder genutzt, um die Testdaten zu komprimi
 
 Nachdem nun eine Struktur geschaffen wurde, in der sich beliebige Autoencoder definieren lassen, soll das von Zhao vorgeschlagene Netzwerk näher betrachtet werden. Die Leistung dieses Autoencoders wurden unter verschiedenen Kriterien mit denen der Hauptkomponentenanalyse (PCA) und SIFT-PCA verglichen. Dabei erkannte der Autoencoder in fast allen die gleichen Features, jedoch durch einen 36 statt 128-elementigen Feature-Vektor. Der Encoder des vorgeschlagenen Modells besteht aus fünf Schichten, deren Neuronenanzahl sukzessive reduziert wird, bis schließlich die kleinste Schicht mit 36 Neuronen erreicht wird. Abbildung \ref{img:ae_model} zeigt die Schichten des Encoders sowie Decoders. Der Decoder ist umgekehrt aufgebaut und auch die Gewichte der Kanten zwischen zwei Neuronen entsprechen ihren Pendants im Encoder.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.6]{images/ae_model.png}
 	\caption{Schichten des verwendeten Autoencoders \cite{aed2016}}
@@ -80,9 +80,9 @@ Im Abschnitt Modell wird dann der Aufbau des Modells und Ablauf der Funktionsauf
 
 \subsection{Paralellisierung von Llyods Algorithmus}
 
-Nachdem in der Analyse bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. Das Listing aus Abbildung \ref{code:lloyd} der Arbeit von Zechner und Granitzer \cite{akc2009} illustriert den Ablauf solch eines Algorithmus in Pseudocode. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seine Feature-Vektoren die Distanz zu allen Clusterschwerpunkten. Der Index des Clusters, der am Nächsten ist, wird in einer Liste $l$ \textit{(labels)} unter dem Index des Vektors gespeichert. Dieser Prozess ist in Pseudocode in Zeile 6 und 7 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist. In Zeile 11 übernimmt der Master-Thread die Neuberechnung der Clusterschwerpunkte. In Zeile 13 werden die Vektoren in den jeweiligen Clusterschwerpunkt mitaufgenommen (aufsummiert). In Zeile 14 wird $m$ \textit{members}, die Anzahl der Vektoren pro Cluster, für jeden neuen Vektor inkrementiert. In Zeile 15 und 16 erfolgt dann die Berechnung des Durchschnitts aller Clusterschwerpunkte.
+Da im der Grundlagenkapitel bereits anhand einer sequentiellen Variante von Lloyds Algorithmus, die zu parallelisierenden Berechnungen identifiziert wurden, wird hier der Ablauf einer parallelen Version vorgestellt. Das Listing aus Abbildung \ref{code:lloyd} der Arbeit von Zechner und Granitzer \cite{akc2009} illustriert den Ablauf solch eines Algorithmus in Pseudocode. Die Funktion \textit{lloyd\textunderscore gpu} erwartet als Parameter die zu quantisierenden Vektoren $V$ und eine initial leere Liste der Cluster $C$. Der Thread in einem Block mit der \textit{threadId} 0 fungiert hier als Master für die anderen Threads. Die Initialisierung der Cluster mit zufälligen Vektoren aus $V$ wird ebenfalls von diesem übernommen. Die Zuweisung von Vektoren zu Clustern kann parallelisiert werden, in dem pro Feature-Vektor ein Thread verwendet wird: Jeder Thread berechnet für seine Feature-Vektoren die Distanz zu allen Clusterschwerpunkten. Der Index des Clusters, der am Nächsten ist, wird in einer Liste $l$ \textit{(labels)} unter dem Index des Vektors gespeichert. Dieser Prozess ist in Pseudocode in Zeile 6 und 7 ausgedrückt. Bevor die Cluster aktualisiert werden, müssen die Threads synchronisiert werden: Andernfalls ist nicht garantiert, dass die Berechnung jedes Threads abgeschlossen ist. In Zeile 11 übernimmt der Master-Thread die Neuberechnung der Clusterschwerpunkte. In Zeile 13 werden die Vektoren in den jeweiligen Clusterschwerpunkt mitaufgenommen (aufsummiert). In Zeile 14 wird $m$ \textit{members}, die Anzahl der Vektoren pro Cluster, für jeden neuen Vektor inkrementiert. In Zeile 15 und 16 erfolgt dann die Berechnung des Durchschnitts aller Clusterschwerpunkte.
 
-\begin{figure}
+\begin{figure}[!htb]
 \begin{lstlisting}[mathescape=true, style=Math]
 lloyd_gpu(V, C, k)
 	if threadId == 0
@@ -108,8 +108,9 @@ lloyd_gpu(V, C, k)
 \subsection{Parallele Reduzierung von Histogrammen}
 
 Die Berechnung eines Histogramms kann parallelisiert werden, da die Operation assoziativ und kommutativ ist: Es spielt keine Rolle, in welcher Reihenfolge die Daten abgearbeitet werden bzw. in welcher Reihenfolge die Klassen inkrementiert werden. Wenn das zu beschreibende Histogramm im \textit{global memory} vorliegt, wird die Berechnungsgeschwindigkeit stark reduziert, da viele Threads auf die gleichen Speicheradressen des Histogramms schreibend zugreifen. Damit es nicht zu Lese- / Schreibanomalien kommt, muss das Inkrementieren einer Klasse atomar sein, d.h. zwischen Lese- und Schreibzugriff darf kein anderer Thread auf die Adresse zugreifen. Dies wird in CUDA durch die Operation \textit{atomicAdd} realisiert. Damit die Anzahl an Threads, die auf dieselbe Adresse schreiben eingeschränkt wird, arbeitet jeder Block auf einem lokalen Histogramm im \textit{shared memory}. Wenn alle Blöcke ihre lokalen Histogramme berechnet haben, müssen diese noch in das Histogramm im \textit{global memory} kumuliert werden.\newline
-In nachfolgendem Listing ist solch ein Histogrammalgorithmus unter CUDA aufgeführt. Als Parameter werden hier die Features \textit{features}, die Cluster \textit{clusters}, das zu beschreibende Histogramm \textit{histo}, die Anzahl an Komponenten in einem Feature \textit{featureSize}, die Anzahl der Features \textit{count} sowie die Anzahl der Cluster \textit{k} erwartet. Zunächst wird in Zeile 3 und 4 der nötige \textit{shared memory} allokiert. Das Schlüsselwort \textit{extern} gibt an, dass die Größe des \textit{shared memory} bei Aufruf des \textit{kernels} mitgegeben wird (in den dreifachen, spitzen Klammern). Die Klassen des privaten Histogramms werden alle mit 0 initialisiert und die Threads synchronisiert. In Zeile 11 wird der Index des ersten Features berechnet, dessen Cluster dieser Thread berechnen soll. Die Anzahl der Features die der Block insgesamt berechnet ergibt sich dann aus der Block- und Griddimension. Die \textit{while}-Schleife in Zeile 14 wird dann für all diese Features durchlaufen. Hier wird der Index des nächsten Clusters berechnet und die entsprechende Klasse des privaten Histogramms inkrementiert. Da nicht jeder Block unbedingt gleich viele Features bearbeitet, also wenn die Anzahl der Features nicht ein Vielfaches der Blockdimension ist, müssen die Threads nach der Schleife wieder synchronisiert werden. Abschließend werden die Werte des privaten Histogramms eines Blocks in das globale kopiert.
+In dem Codelisting in Abbildung \ref{code:histo} ist solch ein Histogrammalgorithmus in CUDA C aufgeführt. Als Parameter werden hier die Features \textit{features}, die Cluster \textit{clusters}, das zu beschreibende Histogramm \textit{histo}, die Anzahl an Komponenten in einem Feature \textit{featureSize}, die Anzahl der Features \textit{count} sowie die Anzahl der Cluster \textit{k} erwartet. Zunächst wird in Zeile 3 und 4 der nötige \textit{shared memory} allokiert. Das Schlüsselwort \textit{extern} gibt an, dass die Größe des \textit{shared memory} bei Aufruf des \textit{kernels} mitgegeben wird (in den dreifachen, spitzen Klammern). Die Klassen des privaten Histogramms werden alle mit 0 initialisiert und die Threads synchronisiert. In Zeile 11 wird der Index des ersten Features berechnet, dessen Cluster dieser Thread berechnen soll. Die Anzahl der Features die der Block insgesamt berechnet ergibt sich dann aus der Block- und Griddimension. Die \textit{while}-Schleife in Zeile 14 wird dann für all diese Features durchlaufen. Hier wird der Index des nächsten Clusters berechnet und die entsprechende Klasse des privaten Histogramms inkrementiert. Da nicht jeder Block unbedingt gleich viele Features bearbeitet, also wenn die Anzahl der Features nicht ein Vielfaches der Blockdimension ist, müssen die Threads nach der Schleife wieder synchronisiert werden. Abschließend werden die Werte des privaten Histogramms eines Blocks in das globale kopiert.
 
+\begin{figure}[!htb]
 \begin{lstlisting}[style=CUDA]
 __global__
 void histogram_kernel (float *features, float *clusters, unsigned int *histo, int featureSize, int count, int k) {
@@ -136,7 +137,10 @@ void histogram_kernel (float *features, float *clusters, unsigned int *histo, in
 		atomicAdd(&(histo[threadIdx.x]), histo_private[threadIdx.x]);		
 	}
 }
-\end{lstlisting} 
+\end{lstlisting}
+\caption{Histogramm-Algorithmus in CUDA C.} 
+\label{code:histo}
+\end{figure}
 
 \subsection{Aufbau des Bag of Visual Words Algorithmus}
 
@@ -144,7 +148,7 @@ Der Aufbau des Bag of Visual Words Modell ist als Klassendiagramm in Abbildung \
 Die BagOfVisualWords-Klasse selbst umfasst nur \textit{host code} und steuert den Prozessablauf. Die Kmeans-, Histogramm- und Shared-Klasse enthalten die CUDA \textit{kernels} und führen die Berechnungen auf der GPU aus.\newline
 Die folgenden Abschnitte \enquote{Generierung des Modells}, \enquote{Speichern und Laden eines Modells} und \enquote{Berechnung der Visual Words} illustrieren die Kernfunktionalitäten der BagOfVisualWords-Klasse sowie den jeweiligen Prozessablauf anhand des Klassendiagramms.
 
-\begin{figure}
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.57]{images/bovw_class.pdf}
 	\caption{Klassendiagramm des Bag of Visual Words}
