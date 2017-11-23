@@ -10,9 +10,6 @@
 *.toc
 *.log
 
-// output PDF
-thesis.pdf
-
 // image and data
 caltech101
 
